@@ -1,0 +1,206 @@
+import { useState } from 'react';
+import { AppShell } from '../../components/AppShell.js';
+import type { DriveListParams } from '../../types/drives.js';
+import { BulkBar } from './BulkBar.js';
+import { DrivesTable, type DriveRowAction, type DriveSortKey } from './DrivesTable.js';
+import { DrivesToolbar } from './DrivesToolbar.js';
+import { useDriveMutations } from './hooks/useDriveMutations.js';
+import { useDrives } from './hooks/useDrives.js';
+
+const ROWS_PER_PAGE_OPTIONS = [8, 15, 25];
+
+// TODO(Task 6): the create/edit wizard doesn't exist yet. `wizard` records *intent* (create vs.
+// edit-with-id) so Task 6 can render `<DriveWizard mode={wizard.mode} driveId={...} onClose={...} />`
+// here, wired to `wizard`/`setWizard` below, without touching any other state in this file.
+type WizardState = { mode: 'create' } | { mode: 'edit'; id: string } | null;
+
+interface Filters { q: string; status: string; month: string; stream: string; domain: string; }
+const EMPTY_FILTERS: Filters = { q: '', status: '', month: '', stream: '', domain: '' };
+
+function csvEscape(v: string | number): string {
+  return `"${String(v).replace(/"/g, '""')}"`;
+}
+
+// Self-wraps in AppShell (mirroring Dashboard/ComingSoon) — App.tsx must mount this directly
+// under ProtectedRoute with no outer AppShell of its own.
+export function DrivesPage() {
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [sort, setSort] = useState<DriveSortKey | undefined>(undefined);
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(8);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [wizard, setWizard] = useState<WizardState>(null);
+
+  const params: DriveListParams = { ...filters, sort, order, page, limit };
+  const { data, isLoading, isError, error } = useDrives(params);
+  const { update, clone, bulk } = useDriveMutations();
+
+  function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  }
+
+  function handleSort(key: DriveSortKey) {
+    if (sort === key) {
+      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSort(key);
+      setOrder('asc');
+    }
+    setPage(1);
+  }
+
+  function handleLimitChange(next: number) {
+    setLimit(next);
+    setPage(1);
+  }
+
+  function toggle(id: string) {
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  }
+
+  function toggleAll() {
+    const pageIds = (data?.items ?? []).map((d) => d.id);
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+    setSelectedIds((ids) => (allSelected ? ids.filter((id) => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]));
+  }
+
+  function handleRowAction(action: DriveRowAction, id: string) {
+    switch (action) {
+      case 'edit':
+        // TODO(Task 6): open <DriveWizard mode="edit" driveId={id} />
+        setWizard({ mode: 'edit', id });
+        break;
+      case 'clone':
+        clone.mutate(id);
+        break;
+      case 'publish':
+        update.mutate({ id, body: { status: 'Published' } });
+        break;
+      case 'archive':
+        if (window.confirm('Archive this drive?')) update.mutate({ id, body: { status: 'Archived' } });
+        break;
+    }
+  }
+
+  function handleCreate() {
+    // TODO(Task 6): open <DriveWizard mode="create" />
+    setWizard({ mode: 'create' });
+  }
+
+  function handleBulk(action: 'publish' | 'clone' | 'archive') {
+    if (selectedIds.length === 0) return;
+    if (action === 'archive' && !window.confirm(`Archive ${selectedIds.length} drive(s)?`)) return;
+    bulk.mutate({ ids: selectedIds, action }, { onSuccess: () => setSelectedIds([]) });
+  }
+
+  function handleExport() {
+    const rows = data?.items ?? [];
+    const head = ['Drive Name', 'Domain', 'Stream', 'Month', 'Frequency', 'Event Day', 'Candidate Capacity', 'Employer Capacity', 'Slot Capacity', 'Status', 'Created By'];
+    const csv = [head.join(',')]
+      .concat(rows.map((d) => [d.name, d.domain, d.stream, d.month, d.frequency, d.eventDay, d.candCap, d.empCap, d.slotCap, d.status, d.createdBy].map(csvEscape).join(',')))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'matchday-drives.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const total = data?.total ?? 0;
+  const effLimit = data?.limit ?? limit;
+  const effPage = data?.page ?? page;
+  const pages = Math.max(1, Math.ceil(total / effLimit));
+  const start = (effPage - 1) * effLimit;
+  const shown = data?.items.length ?? 0;
+
+  return (
+    <AppShell crumb="Operations" title="Drive Management">
+      <div className="content">
+        <DrivesToolbar
+          q={filters.q}
+          status={filters.status}
+          month={filters.month}
+          stream={filters.stream}
+          domain={filters.domain}
+          onQChange={(v) => updateFilter('q', v)}
+          onStatusChange={(v) => updateFilter('status', v)}
+          onMonthChange={(v) => updateFilter('month', v)}
+          onStreamChange={(v) => updateFilter('stream', v)}
+          onDomainChange={(v) => updateFilter('domain', v)}
+          onExport={handleExport}
+          onCreate={handleCreate}
+        />
+
+        <BulkBar
+          selectedCount={selectedIds.length}
+          onPublish={() => handleBulk('publish')}
+          onClone={() => handleBulk('clone')}
+          onArchive={() => handleBulk('archive')}
+          onClear={() => setSelectedIds([])}
+        />
+
+        {isError && (
+          <div className="card">
+            <p style={{ padding: '20px', color: 'var(--danger)' }}>
+              Failed to load drives: {error instanceof Error ? error.message : 'Unknown error'}
+            </p>
+          </div>
+        )}
+
+        <div className="dm-table-wrap">
+          <DrivesTable
+            items={data?.items ?? []}
+            selectedIds={selectedIds}
+            onToggle={toggle}
+            onToggleAll={toggleAll}
+            onSort={handleSort}
+            sort={sort}
+            order={order}
+            onRowAction={handleRowAction}
+            isLoading={isLoading}
+          />
+          <div className="dm-pager">
+            <div className="pinfo">
+              {total ? <>Showing <b>{start + 1}–{start + shown}</b> of <b>{total}</b> drives</> : 'No drives'}
+            </div>
+            <div className="rpp">
+              Rows: <select value={limit} onChange={(e) => handleLimitChange(Number(e.target.value))}>
+                {ROWS_PER_PAGE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div className="pctrl">
+              <button className="pbtn" disabled={effPage <= 1} onClick={() => setPage(effPage - 1)}>
+                <i className="ti ti-chevron-left" />
+              </button>
+              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`pbtn${p === effPage ? ' on' : ''}`} disabled={p === effPage} onClick={() => setPage(p)}>
+                  {p}
+                </button>
+              ))}
+              <button className="pbtn" disabled={effPage >= pages} onClick={() => setPage(effPage + 1)}>
+                <i className="ti ti-chevron-right" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/*
+          TODO(Task 6): replace the marker below with <DriveWizard>.
+          `wizard` (create vs. edit-with-id, set by handleCreate/handleRowAction('edit', id) above)
+          and `setWizard(null)` (close) are already wired — Task 6 only needs to add the component:
+          {wizard && (
+            <DriveWizard
+              mode={wizard.mode}
+              driveId={wizard.mode === 'edit' ? wizard.id : undefined}
+              onClose={() => setWizard(null)}
+            />
+          )}
+        */}
+        {wizard && <span data-testid="wizard-stub" data-mode={wizard.mode} hidden />}
+      </div>
+    </AppShell>
+  );
+}

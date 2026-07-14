@@ -13,7 +13,7 @@ interface NavItem {
 // Ported from matchday-admin-app_23.html lines ~1093-1109.
 const NAV: NavItem[] = [
   { label: 'Command Center', icon: 'ti-layout-dashboard', to: '/' },
-  { label: 'Drives', icon: 'ti-calendar-event', to: '/coming-soon/drives', count: 12 },
+  { label: 'Drives', icon: 'ti-calendar-event', to: '/drives', count: 12 },
   { label: 'Institutes', icon: 'ti-building-community', to: '/coming-soon/institutes', count: 21, group: 'Supply' },
   { label: 'Jobseekers', icon: 'ti-users', to: '/coming-soon/jobseekers' },
   { label: 'Evaluations', icon: 'ti-clipboard-check', to: '/coming-soon/evaluations' },
