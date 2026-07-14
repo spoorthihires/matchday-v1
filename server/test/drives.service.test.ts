@@ -1,0 +1,97 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
+import { Drive } from '../src/models/Drive.js';
+import {
+  listDrives, createDrive, getDrive, updateDrive, cloneDrive, bulkAction,
+} from '../src/modules/drives/drives.service.js';
+
+const NOW = new Date('2026-07-12T00:00:00.000Z');
+
+beforeAll(setupTestDb);
+afterAll(teardownTestDb);
+beforeEach(clearDb);
+
+const baseInput = () => ({
+  name: 'Frontend Cohort', domain: 'Frontend', stream: 'B.Tech', status: 'Draft' as const,
+  candType: 'Freshers' as const, mode: 'Hybrid' as const, frequency: 'One-time' as const,
+  eventDay: 'Wednesday' as const, eventDates: [new Date('2026-07-15T04:30:00.000Z')],
+  candCap: 500, empCap: 9, slotCap: 360,
+  eligibility: { sources: ['Institutes'], branches: ['CSE'], gradYears: [2026], expType: 'Freshers only' },
+  evaluation: [{ key: 'mcq' as const, enabled: true, config: { questions: 30 } }],
+  visibility: { employerReg: 'Invite-only' as const, instituteVis: 'Selected institutes' as const, candidateAccess: 'Eligible only' as const },
+});
+
+async function seedThree() {
+  await createDrive({ ...baseInput(), name: 'Alpha Frontend', domain: 'Frontend', stream: 'B.Tech', status: 'Published' }, 'Admin');
+  await createDrive({ ...baseInput(), name: 'Beta Backend', domain: 'Backend', stream: 'M.Tech', status: 'Draft', eventDates: [new Date('2026-08-19T04:30:00.000Z')] }, 'Admin');
+  await createDrive({ ...baseInput(), name: 'Gamma Data', domain: 'Data / ML', stream: 'MCA', status: 'Active' }, 'Admin');
+}
+
+describe('drives.service', () => {
+  it('creates a drive persisting the full payload with createdBy', async () => {
+    const d = await createDrive(baseInput(), 'Platform Admin');
+    expect(d.createdBy).toBe('Platform Admin');
+    expect(d.eventDates).toHaveLength(1);
+    expect(d.eligibility.branches).toEqual(['CSE']);
+  });
+
+  it('lists with pagination metadata', async () => {
+    await seedThree();
+    const res = await listDrives({ page: 1, limit: 2 }, NOW);
+    expect(res.total).toBe(3);
+    expect(res.items).toHaveLength(2);
+    expect(res.page).toBe(1);
+    expect(res.limit).toBe(2);
+  });
+
+  it('filters by status, domain, and search q', async () => {
+    await seedThree();
+    expect((await listDrives({ status: 'Draft' }, NOW)).total).toBe(1);
+    expect((await listDrives({ domain: 'Backend' }, NOW)).total).toBe(1);
+    expect((await listDrives({ q: 'front' }, NOW)).total).toBe(1); // case-insensitive on name/domain/stream
+  });
+
+  it('filters by month (YYYY-MM) using event dates', async () => {
+    await seedThree();
+    expect((await listDrives({ month: '2026-08' }, NOW)).total).toBe(1); // only Beta (Aug)
+    expect((await listDrives({ month: '2026-07' }, NOW)).total).toBe(2); // Alpha + Gamma (Jul)
+  });
+
+  it('sorts by name ascending', async () => {
+    await seedThree();
+    const res = await listDrives({ sort: 'name', order: 'asc' }, NOW);
+    expect(res.items.map((d) => d.name)).toEqual(['Alpha Frontend', 'Beta Backend', 'Gamma Data']);
+  });
+
+  it('returns a month display label derived from the primary event date', async () => {
+    await createDrive(baseInput(), 'Admin');
+    const res = await listDrives({}, NOW);
+    expect(res.items[0].month).toBe('Jul 2026');
+  });
+
+  it('gets, updates status, and 404s on missing', async () => {
+    const d = await createDrive(baseInput(), 'Admin');
+    const got = await getDrive(String(d._id));
+    expect(got.name).toBe('Frontend Cohort');
+    const upd = await updateDrive(String(d._id), { status: 'Published' });
+    expect(upd.status).toBe('Published');
+    await expect(getDrive('64b000000000000000000000')).rejects.toThrow();
+  });
+
+  it('clones a drive as a new Draft named "(copy)"', async () => {
+    const d = await createDrive({ ...baseInput(), status: 'Published' }, 'Admin');
+    const c = await cloneDrive(String(d._id));
+    expect(c.status).toBe('Draft');
+    expect(c.name).toBe('Frontend Cohort (copy)');
+    expect(String(c._id)).not.toBe(String(d._id));
+    expect(await Drive.countDocuments({})).toBe(2);
+  });
+
+  it('bulk-archives selected drives', async () => {
+    await seedThree();
+    const ids = (await Drive.find({}).select('_id')).map((d) => String(d._id));
+    const res = await bulkAction(ids, 'archive');
+    expect(res.affected).toBe(3);
+    expect(await Drive.countDocuments({ status: 'Archived' })).toBe(3);
+  });
+});
