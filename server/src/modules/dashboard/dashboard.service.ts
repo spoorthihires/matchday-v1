@@ -64,10 +64,18 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   ]);
 
   // ---- Drives ----
-  const [activeDrives, upcomingWed] = await Promise.all([
-    Drive.countDocuments({ status: 'Active' }),
-    Drive.countDocuments({ status: 'Active', eventDate: { $gte: now } }),
+  const activeDrives = await Drive.countDocuments({ status: 'Active' });
+  const upcomingWedAgg = await Drive.aggregate<{ n: number }>([
+    { $match: { status: 'Active', eventDate: { $gte: now } } },
+    { $addFields: {
+      _dow: { $dayOfWeek: { date: '$eventDate', timezone: 'UTC' } },
+      _day: { $dateToString: { date: '$eventDate', format: '%Y-%m-%d', timezone: 'UTC' } },
+    } },
+    { $match: { _dow: 4 } },            // $dayOfWeek: 1=Sun..7=Sat; 4 = Wednesday
+    { $group: { _id: '$_day' } },
+    { $count: 'n' },
   ]);
+  const upcomingWed = upcomingWedAgg[0]?.n ?? 0;
 
   // ---- Employers / Institutes ----
   const [employerRegistrations, instituteParticipation] = await Promise.all([
@@ -177,6 +185,11 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
       Jobseeker.countDocuments({}), // slice-level approximation; real per-drive linkage is a later slice
     ]);
     const bookedForDrive = await Slot.countDocuments({ driveId: d._id, status: 'booked' });
+    const ed = new Date(d.eventDate as Date);
+    const sameUtcDay =
+      ed.getUTCFullYear() === nextMd.getUTCFullYear() &&
+      ed.getUTCMonth() === nextMd.getUTCMonth() &&
+      ed.getUTCDate() === nextMd.getUTCDate();
     return {
       date: new Date(d.eventDate as Date).toISOString(),
       title: `MatchDay · ${d.name}`,
@@ -184,7 +197,7 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
       slots: slotCount,
       candidates: candCount,
       prepPct: pct(bookedForDrive, slotCount),
-      status: (new Date(d.eventDate as Date).getTime() === nextMd.getTime() ? 'prep' : 'open') as 'prep' | 'open',
+      status: (sameUtcDay ? 'prep' : 'open') as 'prep' | 'open',
     };
   }));
 

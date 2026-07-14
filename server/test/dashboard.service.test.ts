@@ -27,6 +27,7 @@ async function seedFixture() {
   await Drive.create({ name: 'Frontend Cohort', domain: 'Web', stream: 'Frontend', status: 'Active', eventDate: new Date('2026-07-15T04:30:00.000Z'), candCap: 500, empCap: 9, slotCap: 360, createdAt: old });
   await Drive.create({ name: 'Fullstack Cohort', domain: 'Web', stream: 'Fullstack', status: 'Active', eventDate: new Date('2026-07-22T04:30:00.000Z'), candCap: 280, empCap: 7, slotCap: 280, createdAt: recent });
   await Drive.create({ name: 'Old Draft', domain: 'Data', stream: 'DE', status: 'Draft', eventDate: new Date('2026-06-01T04:30:00.000Z'), candCap: 100, empCap: 3, slotCap: 90, createdAt: old });
+  await Drive.create({ name: 'Thursday Drive', domain: 'Data', stream: 'DE', status: 'Active', eventDate: new Date('2026-07-16T04:30:00.000Z'), candCap: 100, empCap: 3, slotCap: 90, createdAt: recent });
 
   // 10 jobseekers with known stages/flags. 6 created recent, 4 old.
   const mk = (over: Record<string, unknown>, createdAt: Date, inst = cbit._id) =>
@@ -57,7 +58,8 @@ describe('getOverview', () => {
     await seedFixture();
     const o = await getOverview(NOW);
     const kpi = (k: string) => o.kpis.find((x) => x.key === k)!;
-    expect(kpi('activeDrives').value).toBe(2);
+    expect(kpi('activeDrives').value).toBe(3);
+    expect(kpi('upcomingWednesdays').value).toBe(2);
     expect(kpi('employerRegistrations').value).toBe(3);
     expect(kpi('instituteParticipation').value).toBe(2);
     expect(kpi('jobseekersAdded').value).toBe(10);
@@ -109,5 +111,6 @@ describe('getOverview', () => {
     expect(o.readiness.nextMatchDay.startsWith('2026-07-15')).toBe(true);
     expect(o.schedule.events.length).toBeGreaterThanOrEqual(1);
     expect(o.schedule.events[0].title).toContain('Frontend');
+    expect(o.schedule.events[0].status).toBe('prep');
   });
 });

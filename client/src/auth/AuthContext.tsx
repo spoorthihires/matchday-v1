@@ -12,16 +12,13 @@ interface AuthValue {
 const AuthContext = createContext<AuthValue | null>(null);
 const STORAGE_KEY = 'matchday.auth';
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+function readStored(): { token: string; user: User } | null {
+  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
 
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { const p = JSON.parse(raw); setToken(p.token); setUser(p.user); } catch { /* ignore */ }
-    }
-  }, []);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(() => readStored()?.token ?? null);
+  const [user, setUser] = useState<User | null>(() => readStored()?.user ?? null);
 
   const logout = useCallback(() => {
     setToken(null); setUser(null); localStorage.removeItem(STORAGE_KEY);
