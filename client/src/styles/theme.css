@@ -137,6 +137,8 @@
   #auth-screen .success-panel{text-align:center;padding:14px 0 6px}
   #auth-screen .success-panel .tick{width:64px;height:64px;border-radius:50%;background:var(--success-bg);color:var(--success);display:grid;place-items:center;font-size:34px;margin:0 auto 18px;animation:pop .4s ease}
   @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  /* ---- below: added for the React LoginPage (task 9), not part of the prototype's verbatim CSS ---- */
+  .auth-error{color:var(--danger);font-size:13px;margin:8px 0}
   #auth-screen .success-panel h2{margin:0 0 6px}
   #auth-screen .success-panel .redir{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-top:8px}
   #auth-screen .success-panel .redir .spin{width:14px;height:14px;border:2px solid var(--line-strong);border-top-color:var(--indigo);border-radius:50%;animation:spin .7s linear infinite}
