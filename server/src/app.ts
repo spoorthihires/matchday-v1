@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -11,7 +12,7 @@ export function createApp(): Express {
   app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
   // Route modules mounted in later tasks:
-  // app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authRoutes);
   // app.use('/api/dashboard', dashboardRoutes);
 
   app.use(errorHandler);
