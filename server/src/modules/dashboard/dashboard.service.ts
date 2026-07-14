@@ -56,9 +56,9 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
     Jobseeker.countDocuments({ profileCompleted: true }),
     Jobseeker.countDocuments({ evaluationStatus: 'completed' }),
     Jobseeker.countDocuments({ evaluationStatus: 'pending' }),
-    Jobseeker.countDocuments({ stage: 'MatchReady' }),
-    Jobseeker.countDocuments({ stage: 'Shortlisted' }),
-    Jobseeker.countDocuments({ stage: 'Offer' }),
+    Jobseeker.countDocuments({ stage: { $in: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'] } }),
+    Jobseeker.countDocuments({ stage: { $in: ['Shortlisted', 'Offer', 'Joined'] } }),
+    Jobseeker.countDocuments({ stage: { $in: ['Offer', 'Joined'] } }),
     Jobseeker.countDocuments({ stage: 'Joined' }),
     Jobseeker.countDocuments({ stage: 'DroppedOff' }),
   ]);
@@ -100,7 +100,7 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   // ---- Leaderboards ----
   const instLb = await Jobseeker.aggregate([
     { $match: { stage: { $in: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'] } } },
-    { $group: { _id: '$instituteId', ready: { $sum: { $cond: [{ $eq: ['$stage', 'MatchReady'] }, 1, 0] } }, total: { $sum: 1 } } },
+    { $group: { _id: '$instituteId', ready: { $sum: 1 }, total: { $sum: 1 } } },
     { $sort: { ready: -1 } },
     { $limit: 5 },
     { $lookup: { from: 'institutes', localField: '_id', foreignField: '_id', as: 'inst' } },

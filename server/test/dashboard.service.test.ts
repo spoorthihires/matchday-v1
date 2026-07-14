@@ -63,10 +63,10 @@ describe('getOverview', () => {
     expect(kpi('jobseekersAdded').value).toBe(10);
     expect(kpi('profilesCompleted').value).toBe(8);
     expect(kpi('evaluationsCompleted').value).toBe(6);
-    expect(kpi('matchReady').value).toBe(3);   // stage === MatchReady only
-    expect(kpi('shortlisted').value).toBe(1);
-    expect(kpi('offersSent').value).toBe(1);
-    expect(kpi('joined').value).toBe(1);
+    expect(kpi('matchReady').value).toBe(6);   // reached match-ready or beyond (MatchReady 3 + Shortlisted 1 + Offer 1 + Joined 1)
+    expect(kpi('shortlisted').value).toBe(3);  // Shortlisted 1 + Offer 1 + Joined 1
+    expect(kpi('offersSent').value).toBe(2);   // Offer 1 + Joined 1
+    expect(kpi('joined').value).toBe(1);       // unchanged
   });
 
   it('computes slot utilization', async () => {
@@ -92,7 +92,7 @@ describe('getOverview', () => {
     await seedFixture();
     const o = await getOverview(NOW);
     expect(o.leaderboards.institutes[0].name).toBe('CBIT');
-    expect(o.leaderboards.institutes[0].ready).toBe(2);
+    expect(o.leaderboards.institutes[0].ready).toBe(4);
     expect(o.leaderboards.institutes[0].rank).toBe(1);
   });
 
