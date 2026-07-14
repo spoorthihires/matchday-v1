@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { AppShell } from './components/AppShell.js';
+import { ComingSoon } from './components/ComingSoon.js';
 import { AuthProvider } from './auth/AuthContext.js';
 import { ForgotStub } from './auth/ForgotStub.js';
 import { LoginPage } from './auth/LoginPage.js';
@@ -12,7 +14,17 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/mfa" element={<MfaStub />} />
         <Route path="/forgot" element={<ForgotStub />} />
-        <Route path="/*" element={<ProtectedRoute><div>dashboard placeholder</div></ProtectedRoute>} />
+        <Route path="/coming-soon/:slug" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <AppShell crumb="Overview" title="Command Center">
+                <div>dashboard placeholder</div>
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
