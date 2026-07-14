@@ -15,7 +15,6 @@ const driveSchema = new Schema({
   mode: { type: String, enum: ['Online', 'Onsite', 'Hybrid'], default: 'Hybrid' },
   frequency: { type: String, enum: ['Weekly', 'Bi-weekly', 'Monthly', 'One-time'], default: 'One-time' },
   eventDay: { type: String, enum: ['Wednesday', 'Saturday'], default: 'Wednesday' },
-  eventDate: { type: Date },                 // legacy, removed in Task 4
   eventDates: { type: [Date], default: [] },
   candCap: { type: Number, default: 0 },
   empCap: { type: Number, default: 0 },

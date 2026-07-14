@@ -73,14 +73,31 @@ async function run() {
     const upcoming = i < 3;
     drives.push(await Drive.create({
       name: upcoming ? driveNames[i] : `Drive ${i + 1}`,
-      domain: pick(rng, ['Web', 'Data', 'ML', 'Cloud']),
-      stream: pick(rng, ['Frontend', 'Backend', 'DE', 'MLE']),
+      domain: pick(rng, ['Frontend', 'Backend', 'Full-stack', 'Data / ML', 'DevOps']),
+      stream: pick(rng, ['B.Tech', 'M.Tech', 'MCA', 'MBA']),
       status: 'Active',
-      eventDate: upcoming ? upcomingDates[i] : new Date(NOW.getTime() + intBetween(rng, 30, 90) * DAY),
+      candType: pick(rng, ['Freshers', 'Experienced', 'Both']),
+      mode: pick(rng, ['Online', 'Onsite', 'Hybrid']),
+      frequency: pick(rng, ['Weekly', 'Bi-weekly', 'Monthly', 'One-time']),
+      eventDay: 'Wednesday',
+      eventDates: upcoming ? [upcomingDates[i]] : [new Date(NOW.getTime() + intBetween(rng, 30, 90) * DAY)],
       candCap: intBetween(rng, 150, 500), empCap: intBetween(rng, 5, 9), slotCap: intBetween(rng, 180, 360),
+      eligibility: {
+        sources: ['Institutes'], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
+      },
+      evaluation: [
+        { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 } },
+        { key: 'coding', enabled: true, config: { problems: 3, durationMin: 60 } },
+        { key: 'tara', enabled: true, config: { durationMin: 20 } },
+        { key: 'assignments', enabled: false, config: { deadlineDays: 3 } },
+      ],
+      visibility: { employerReg: 'Invite-only', instituteVis: 'Selected institutes', candidateAccess: 'Eligible only' },
+      createdBy: 'Platform Admin',
       createdAt: spread(),
     }));
   }
+  drives[0].set('eventDates', upcomingDates.slice(0, 2));
+  await drives[0].save();
 
   // 1284 jobseekers with a stage distribution that yields the target funnel numbers.
   // Targets: profiles ~968, evals complete ~742, match-ready ~531, shortlisted ~196, offers ~84, joined ~41, dropped ~ (rest of completed path).

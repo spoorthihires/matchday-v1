@@ -24,10 +24,10 @@ async function seedFixture() {
   await Employer.create({ name: 'Aetherverse', industry: 'ML', status: 'Active', offersExtended: 14, slotsFillRate: 87, createdAt: recent });
   await Employer.create({ name: 'Pending Co', industry: 'SaaS', status: 'Pending', offersExtended: 0, slotsFillRate: 0, createdAt: recent });
 
-  await Drive.create({ name: 'Frontend Cohort', domain: 'Web', stream: 'Frontend', status: 'Active', eventDate: new Date('2026-07-15T04:30:00.000Z'), candCap: 500, empCap: 9, slotCap: 360, createdAt: old });
-  await Drive.create({ name: 'Fullstack Cohort', domain: 'Web', stream: 'Fullstack', status: 'Active', eventDate: new Date('2026-07-22T04:30:00.000Z'), candCap: 280, empCap: 7, slotCap: 280, createdAt: recent });
-  await Drive.create({ name: 'Old Draft', domain: 'Data', stream: 'DE', status: 'Draft', eventDate: new Date('2026-06-01T04:30:00.000Z'), candCap: 100, empCap: 3, slotCap: 90, createdAt: old });
-  await Drive.create({ name: 'Thursday Drive', domain: 'Data', stream: 'DE', status: 'Active', eventDate: new Date('2026-07-16T04:30:00.000Z'), candCap: 100, empCap: 3, slotCap: 90, createdAt: recent });
+  await Drive.create({ name: 'Frontend Cohort', domain: 'Web', stream: 'Frontend', status: 'Active', eventDates: [new Date('2026-07-15T04:30:00.000Z')], candCap: 500, empCap: 9, slotCap: 360, createdAt: old });
+  await Drive.create({ name: 'Fullstack Cohort', domain: 'Web', stream: 'Fullstack', status: 'Active', eventDates: [new Date('2026-07-22T04:30:00.000Z')], candCap: 280, empCap: 7, slotCap: 280, createdAt: recent });
+  await Drive.create({ name: 'Old Draft', domain: 'Data', stream: 'DE', status: 'Draft', eventDates: [new Date('2026-06-01T04:30:00.000Z')], candCap: 100, empCap: 3, slotCap: 90, createdAt: old });
+  await Drive.create({ name: 'Thursday Drive', domain: 'Data', stream: 'DE', status: 'Active', eventDates: [new Date('2026-07-16T04:30:00.000Z')], candCap: 100, empCap: 3, slotCap: 90, createdAt: recent });
 
   // 10 jobseekers with known stages/flags. 6 created recent, 4 old.
   const mk = (over: Record<string, unknown>, createdAt: Date, inst = cbit._id) =>

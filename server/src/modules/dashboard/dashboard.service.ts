@@ -66,10 +66,12 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   // ---- Drives ----
   const activeDrives = await Drive.countDocuments({ status: 'Active' });
   const upcomingWedAgg = await Drive.aggregate<{ n: number }>([
-    { $match: { status: 'Active', eventDate: { $gte: now } } },
+    { $match: { status: 'Active' } },
+    { $unwind: '$eventDates' },
+    { $match: { eventDates: { $gte: now } } },
     { $addFields: {
-      _dow: { $dayOfWeek: { date: '$eventDate', timezone: 'UTC' } },
-      _day: { $dateToString: { date: '$eventDate', format: '%Y-%m-%d', timezone: 'UTC' } },
+      _dow: { $dayOfWeek: { date: '$eventDates', timezone: 'UTC' } },
+      _day: { $dateToString: { date: '$eventDates', format: '%Y-%m-%d', timezone: 'UTC' } },
     } },
     { $match: { _dow: 4 } },            // $dayOfWeek: 1=Sun..7=Sat; 4 = Wednesday
     { $group: { _id: '$_day' } },
@@ -177,21 +179,29 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
 
   // ---- Schedule ----
   const nextMd = nextWednesday(now);
-  const eventDocs = await Drive.find({ status: 'Active', eventDate: { $gte: new Date(now.getTime() - DAY) } })
-    .sort({ eventDate: 1 }).limit(3).lean();
-  const events = await Promise.all(eventDocs.map(async (d) => {
-    const [slotCount, candCount] = await Promise.all([
+  const eventDrives = await Drive.aggregate([
+    { $match: { status: 'Active' } },
+    { $addFields: {
+      _upcoming: { $filter: { input: '$eventDates', as: 'd', cond: { $gte: ['$$d', new Date(now.getTime() - DAY)] } } },
+    } },
+    { $addFields: { nearest: { $min: '$_upcoming' } } },
+    { $match: { nearest: { $ne: null } } },
+    { $sort: { nearest: 1 } },
+    { $limit: 3 },
+  ]);
+  const events = await Promise.all(eventDrives.map(async (d: Record<string, unknown>) => {
+    const nearest = new Date(d.nearest as Date);
+    const [slotCount, bookedForDrive] = await Promise.all([
       Slot.countDocuments({ driveId: d._id }),
-      Jobseeker.countDocuments({}), // slice-level approximation; real per-drive linkage is a later slice
+      Slot.countDocuments({ driveId: d._id, status: 'booked' }),
     ]);
-    const bookedForDrive = await Slot.countDocuments({ driveId: d._id, status: 'booked' });
-    const ed = new Date(d.eventDate as Date);
+    const candCount = await Jobseeker.countDocuments({});
     const sameUtcDay =
-      ed.getUTCFullYear() === nextMd.getUTCFullYear() &&
-      ed.getUTCMonth() === nextMd.getUTCMonth() &&
-      ed.getUTCDate() === nextMd.getUTCDate();
+      nearest.getUTCFullYear() === nextMd.getUTCFullYear() &&
+      nearest.getUTCMonth() === nextMd.getUTCMonth() &&
+      nearest.getUTCDate() === nextMd.getUTCDate();
     return {
-      date: new Date(d.eventDate as Date).toISOString(),
+      date: nearest.toISOString(),
       title: `MatchDay · ${d.name}`,
       employers: (d.empCap as number) ?? 0,
       slots: slotCount,
