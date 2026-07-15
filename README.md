@@ -19,6 +19,7 @@ Sign in with the admin credentials printed by the seed (`admin@matchday.dev` / `
 
 ## Features
 - **Drives** — List with filters, sort, and pagination; bulk archive/unarchive; create/edit via 6-step wizard. Available at `/drives`.
+- **Institutes** — List with overview KPIs and derived funnel; filter, sort, and pagination; bulk approve/disable; create/edit via modal. Detail page with tabs: Overview, Candidates, Funnel, Performance, Ownership, Audit. Available at `/institutes`.
 
 ## Tests
 ```bash
