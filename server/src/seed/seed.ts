@@ -1,11 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 import { env } from '../config/env.js';
 import { connectDb, disconnectDb } from '../db/connect.js';
 import { hashPassword } from '../modules/auth/auth.service.js';
 import { User } from '../models/User.js';
 import { Institute } from '../models/Institute.js';
 import { Employer } from '../models/Employer.js';
-import { Drive } from '../models/Drive.js';
+import { RegistrationRequest } from '../models/RegistrationRequest.js';
+import { Drive, type DriveDoc } from '../models/Drive.js';
 import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
 import { AuditLog } from '../models/AuditLog.js';
@@ -37,6 +38,7 @@ async function run() {
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
+    RegistrationRequest.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -65,20 +67,31 @@ async function run() {
   }
 
   // 48 employers; offersExtended descending-ish so the leaderboard is meaningful.
+  const EMPLOYER_SIZES = ['1–50', '51–200', '201–1000', '1000+'];
   const employers = [];
   for (let i = 0; i < 48; i++) {
     const base = EMPLOYER_SEED[i % EMPLOYER_SEED.length];
     const offers = Math.max(0, 20 - Math.floor(i / 2));
+    const name = i < EMPLOYER_SEED.length ? base[0] : `${base[0]} ${i}`;
+    const slug = name.toLowerCase().replace(/[^a-z]+/g, '').slice(0, 10) || 'emp';
     employers.push(await Employer.create({
-      name: i < EMPLOYER_SEED.length ? base[0] : `${base[0]} ${i}`,
+      name,
       industry: base[1], status: i < 46 ? 'Active' : 'Pending',
       offersExtended: offers, slotsFillRate: intBetween(rng, 55, 96), createdAt: spread(),
+      size: pick(rng, EMPLOYER_SIZES),
+      spoc: `${pick(rng, FIRST)} ${pick(rng, LAST)}`,
+      email: `talent@${slug}.com`,
+      activeDrives: intBetween(rng, 0, 4),
+      candidatesViewed: intBetween(rng, 40, 420),
+      shortlistRate: intBetween(rng, 20, 60),
+      offerRate: intBetween(rng, 8, 35),
+      respHours: intBetween(rng, 4, 96),
     }));
   }
 
   // 12 active drives; 3 upcoming Wednesdays (Jul 15/22/29).
   const upcomingDates = [new Date('2026-07-15T04:30:00.000Z'), new Date('2026-07-22T04:30:00.000Z'), new Date('2026-07-29T04:30:00.000Z')];
-  const drives = [];
+  const drives: HydratedDocument<DriveDoc>[] = [];
   const driveNames = ['Frontend & Data cohort', 'Full-stack cohort', 'ML/AI specialist cohort'];
   for (let i = 0; i < 12; i++) {
     const upcoming = i < 3;
@@ -109,6 +122,94 @@ async function run() {
   }
   drives[0].set('eventDates', upcomingDates.slice(0, 2));
   await drives[0].save();
+
+  // 4 employer registration requests (prototype data) — driveId/driveName point at real
+  // seeded drives, matched by domain (each drive's `domain` is independently randomized,
+  // so match on it rather than name) with a claim-set to guarantee 4 distinct drives.
+  const usedDriveIds = new Set<string>();
+  const claimDrive = (domain: string, fallbackIdx: number) => {
+    const found = drives.find((d) => d.domain === domain && !usedDriveIds.has(String(d._id)));
+    const chosen = found ?? drives.find((d) => !usedDriveIds.has(String(d._id))) ?? drives[fallbackIdx];
+    usedDriveIds.add(String(chosen._id));
+    return chosen;
+  };
+  const regDrives = {
+    vaultline: claimDrive('Backend', 9), // Backend Engineer role → a Backend-domain drive
+    northpeak: claimDrive('DevOps', 1), // SRE role → a DevOps-domain drive
+    aetherverse: claimDrive('Data / ML', 2), // ML Engineer role → 'ML/AI specialist cohort'
+    cartsy: claimDrive('Frontend', 0), // Frontend Engineer role → 'Frontend & Data cohort'
+  };
+  const hoursAgo = (n: number) => new Date(NOW.getTime() - n * 3600 * 1000);
+  const daysAgo = (n: number) => new Date(NOW.getTime() - n * DAY);
+  const registrations = [
+    {
+      company: 'Vaultline Systems', industry: 'Fintech', role: 'Backend Engineer (Go)',
+      driveId: regDrives.vaultline._id, driveName: regDrives.vaultline.name,
+      openings: 6, ctcRange: '₹18–26 LPA', skills: ['Go', 'PostgreSQL', 'gRPC', 'Kubernetes', 'Redis'],
+      slot: 'Wed, Jul 16 · 10:00–12:00',
+      panel: [
+        { name: 'A. Khanna', role: 'Engineering Manager' },
+        { name: 'R. Das', role: 'Staff Engineer' },
+        { name: 'P. Sinha', role: 'HR Partner' },
+      ],
+      jd: 'Backend engineers to build low-latency payment infrastructure.\nOwn Go microservices, PostgreSQL schemas, and gRPC service contracts.\n2–5 years building production backend systems.',
+      submittedBy: 'D. Sharma', status: 'Pending review',
+      createdAt: hoursAgo(2),
+      activity: [{ action: 'Submitted for review', by: 'D. Sharma (Vaultline)', at: hoursAgo(2) }],
+    },
+    {
+      company: 'Northpeak Cloud', industry: 'Cloud Infra', role: 'Site Reliability Engineer',
+      driveId: regDrives.northpeak._id, driveName: regDrives.northpeak.name,
+      openings: 4, ctcRange: '₹20–30 LPA', skills: ['AWS', 'Terraform', 'Prometheus', 'Python', 'Linux'],
+      slot: 'Wed, Jul 23 · 10:00–12:00',
+      panel: [
+        { name: 'K. Menon', role: 'SRE Lead' },
+        { name: 'S. Roy', role: 'Principal Engineer' },
+      ],
+      jd: 'Join our platform team to keep large-scale cloud systems reliable.\nOwn observability, incident response, and Terraform automation.\nImprove deployment pipelines and SLOs.',
+      submittedBy: 'K. Menon', status: 'Pending review',
+      createdAt: hoursAgo(5),
+      activity: [{ action: 'Submitted for review', by: 'K. Menon (Northpeak)', at: hoursAgo(5) }],
+    },
+    {
+      company: 'Aetherverse AI', industry: 'ML / AI Platform', role: 'ML Engineer — NLP',
+      driveId: regDrives.aetherverse._id, driveName: regDrives.aetherverse.name,
+      openings: 3, ctcRange: '₹24–34 LPA', skills: ['Python', 'PyTorch', 'Transformers', 'MLOps', 'SQL'],
+      slot: 'Wed, Jul 16 · 14:00–16:00',
+      panel: [
+        { name: 'S. Banerjee', role: 'ML Director' },
+        { name: 'N. Verma', role: 'Senior MLE' },
+        { name: 'P. Sinha', role: 'HR Partner' },
+      ],
+      jd: 'Build and ship NLP models for our AI hiring copilot.\nFine-tune transformer models and own evaluation pipelines.\nPartner with product on model behaviour.',
+      submittedBy: 'S. Banerjee', status: 'Changes requested',
+      createdAt: daysAgo(1),
+      activity: [
+        { action: 'Submitted for review', by: 'S. Banerjee (Aetherverse)', at: daysAgo(1) },
+        { action: 'Changes requested — clarify CTC band', by: 'Platform Admin', at: hoursAgo(6) },
+      ],
+    },
+    {
+      company: 'Cartsy Commerce', industry: 'E-commerce', role: 'Frontend Engineer',
+      driveId: regDrives.cartsy._id, driveName: regDrives.cartsy.name,
+      openings: 5, ctcRange: '₹14–20 LPA', skills: ['React', 'TypeScript', 'Redux', 'CSS', 'Testing'],
+      slot: 'Sat, Jul 26 · 11:00–13:00',
+      panel: [
+        { name: 'N. Rao', role: 'Frontend Lead' },
+        { name: 'A. Jain', role: 'Design Systems' },
+      ],
+      jd: 'Own customer-facing storefront experiences at scale.\nBuild reusable React component libraries and improve Core Web Vitals.\nCollaborate closely with design.',
+      submittedBy: 'N. Rao', status: 'Approved',
+      createdAt: daysAgo(2),
+      activity: [
+        { action: 'Submitted for review', by: 'N. Rao (Cartsy)', at: daysAgo(2) },
+        { action: 'Approved', by: 'Platform Admin', at: daysAgo(1) },
+      ],
+    },
+  ];
+  for (const r of registrations) {
+    await RegistrationRequest.create(r);
+  }
 
   // 1284 jobseekers with a stage distribution that yields the target funnel numbers.
   // Targets: profiles ~968, evals complete ~742, match-ready ~531, shortlisted ~196, offers ~84, joined ~41, dropped ~ (rest of completed path).
