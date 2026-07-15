@@ -9,6 +9,7 @@ import { JobseekersToolbar } from './JobseekersToolbar.js';
 import { ViewPills, type JobseekerView } from './ViewPills.js';
 import { useJobseekerMutations } from './hooks/useJobseekerMutations.js';
 import { useJobseekers } from './hooks/useJobseekers.js';
+import { UploadWizard } from './upload/UploadWizard.js';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 20, 50];
 
@@ -38,8 +39,6 @@ export function JobseekersPage() {
   const [limit, setLimit] = useState(10);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
-  // TODO(Task 7): render <UploadWizard open={uploadOpen} onClose={() => setUploadOpen(false)} />
-  // once the import wizard lands — for now the button just flips this flag; nothing renders yet.
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const { data: institutesData } = useInstitutes({ limit: 100 });
@@ -157,7 +156,7 @@ export function JobseekersPage() {
           instituteOptions={instituteOptions}
           onQChange={handleQChange}
           onViewFilterChange={handleViewFilterChange}
-          onUpload={() => setUploadOpen((v) => !v)}
+          onUpload={() => setUploadOpen(true)}
           onExport={handleExport}
           onCreate={handleCreate}
         />
@@ -221,6 +220,8 @@ export function JobseekersPage() {
             onClose={() => setModal(null)}
           />
         )}
+
+        {uploadOpen && <UploadWizard onClose={() => setUploadOpen(false)} />}
       </div>
     </AppShell>
   );
