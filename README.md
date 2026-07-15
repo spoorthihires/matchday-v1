@@ -22,6 +22,7 @@ Sign in with the admin credentials printed by the seed (`admin@matchday.dev` / `
 - **Institutes** — List with overview KPIs and derived funnel; filter, sort, and pagination; bulk approve/disable; create/edit via modal. Detail page with tabs: Overview, Candidates, Funnel, Performance, Ownership, Audit. Available at `/institutes`.
 - **Jobseekers** — Candidate list with view lenses and filters, add/edit modal, and block capability. Bulk import wizard (5 steps: CSV/XLSX upload, duplicate detection, validation, summary, confirmation) with automatic deduplication. Available at `/jobseekers`.
 - **Employers** — List with performance stats, filters, sort, and pagination; bulk approve/disable; create/edit via modal. Available at `/employers`. Registration approvals master-detail queue with approve/reject/request-changes/move-drive/change-slot actions at `/employers/approvals`.
+- **Slots** — Month, Week, and Day slot calendar with session CRUD; manage capacity and booked counts, set meeting links, reschedule sessions, and track no-shows. Available at `/slots`.
 
 ## Tests
 ```bash
