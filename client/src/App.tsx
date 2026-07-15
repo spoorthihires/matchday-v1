@@ -7,6 +7,7 @@ import { MfaStub } from './auth/MfaStub.js';
 import { ProtectedRoute } from './auth/ProtectedRoute.js';
 import { Dashboard } from './pages/Dashboard/index.js';
 import { DrivesPage } from './pages/Drives/index.js';
+import { ApprovalsPage } from './pages/Employers/approvals/ApprovalsPage.js';
 import { EmployersPage } from './pages/Employers/index.js';
 import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/institutes/:id" element={<ProtectedRoute><InstituteDetail /></ProtectedRoute>} />
         <Route path="/jobseekers" element={<ProtectedRoute><JobseekersPage /></ProtectedRoute>} />
         <Route path="/employers" element={<ProtectedRoute><EmployersPage /></ProtectedRoute>} />
+        <Route path="/employers/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
         <Route path="/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
