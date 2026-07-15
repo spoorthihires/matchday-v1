@@ -37,13 +37,15 @@ async function analyze(rows: RawRow[]): Promise<RowResult[]> {
     if (!instName) errors.push('Institute is required');
     else if (!inst) errors.push('Unknown institute');
     let gradYear: number | null = null;
-    if (row.gradYear != null && clean(row.gradYear) !== '') {
+    if (clean(row.gradYear) === '') errors.push('Graduation year is required');
+    else {
       const y = Number(row.gradYear);
       if (!Number.isInteger(y) || y < 2020 || y > 2030) errors.push('Graduation year must be 2020–2030');
       else gradYear = y;
     }
     let cgpa: number | null = null;
-    if (row.cgpa != null && clean(row.cgpa) !== '') {
+    if (clean(row.cgpa) === '') errors.push('CGPA is required');
+    else {
       const c = Number(row.cgpa);
       if (Number.isNaN(c) || c < 0 || c > 10) errors.push('CGPA must be 0–10');
       else cgpa = c;
@@ -84,7 +86,8 @@ export async function commitImport(rows: RawRow[]) {
   if (toInsert.length) {
     await Jobseeker.insertMany(toInsert.map((r) => ({
       name: r.data.name, email: r.data.email, instituteId: new Types.ObjectId(r.data.instituteId as string),
-      branch: r.data.branch, gradYear: r.data.gradYear ?? 2026, cgpa: r.data.cgpa ?? 0, source: 'Bulk import',
+      // valid rows always have both — required in analyze()
+      branch: r.data.branch, gradYear: r.data.gradYear as number, cgpa: r.data.cgpa as number, source: 'Bulk import',
       stage: 'Applied', evaluationStatus: 'na', profileCompleted: false, consent: 'Granted',
     })));
   }

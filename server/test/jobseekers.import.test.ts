@@ -53,6 +53,19 @@ describe('jobseekers import', () => {
     expect(summary.willImport).toBe(1);
   });
 
+  it('requires gradYear and cgpa', async () => {
+    await seedInstitute();
+    const rows = [
+      goodRow({ email: 'g1@cbit.edu', gradYear: '' }),
+      goodRow({ email: 'g2@cbit.edu', cgpa: '' }),
+    ];
+    const { rows: r, summary } = await previewImport(rows);
+    expect(r[0].valid).toBe(false); expect(r[0].errors.join()).toMatch(/year/i);
+    expect(r[1].valid).toBe(false); expect(r[1].errors.join()).toMatch(/cgpa/i);
+    expect(summary.invalid).toBe(2);
+    expect(summary.willImport).toBe(0);
+  });
+
   it('commits only valid non-duplicate rows with defaults', async () => {
     await seedInstitute();
     const rows = [
