@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
 import type { DriveListParams } from '../../types/drives.js';
 import { BulkBar } from './BulkBar.js';
@@ -6,12 +7,12 @@ import { DrivesTable, type DriveRowAction, type DriveSortKey } from './DrivesTab
 import { DrivesToolbar } from './DrivesToolbar.js';
 import { useDriveMutations } from './hooks/useDriveMutations.js';
 import { useDrives } from './hooks/useDrives.js';
+import { DriveWizard } from './wizard/DriveWizard.js';
 
 const ROWS_PER_PAGE_OPTIONS = [8, 15, 25];
 
-// TODO(Task 6): the create/edit wizard doesn't exist yet. `wizard` records *intent* (create vs.
-// edit-with-id) so Task 6 can render `<DriveWizard mode={wizard.mode} driveId={...} onClose={...} />`
-// here, wired to `wizard`/`setWizard` below, without touching any other state in this file.
+// `wizard` records *intent* (create vs. edit-with-id); when non-null we render <DriveWizard>
+// below in create or edit mode.
 type WizardState = { mode: 'create' } | { mode: 'edit'; id: string } | null;
 
 interface Filters { q: string; status: string; month: string; stream: string; domain: string; }
@@ -31,6 +32,21 @@ export function DrivesPage() {
   const [limit, setLimit] = useState(8);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [wizard, setWizard] = useState<WizardState>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Cross-page "New Drive" wiring (Command Center → /drives?new=1): open the create wizard once
+  // on mount when the query param is present, then strip it so a later refresh/back-nav doesn't
+  // reopen it.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setWizard({ mode: 'create' });
+      const next = new URLSearchParams(searchParams);
+      next.delete('new');
+      setSearchParams(next, { replace: true });
+    }
+    // Intentionally run once on mount only — re-running on every searchParams change would
+    // reopen the wizard right after `new` is stripped above.
+  }, []);
 
   const params: DriveListParams = { ...filters, sort, order, page, limit };
   const { data, isLoading, isError, error } = useDrives(params);
@@ -69,7 +85,6 @@ export function DrivesPage() {
   function handleRowAction(action: DriveRowAction, id: string) {
     switch (action) {
       case 'edit':
-        // TODO(Task 6): open <DriveWizard mode="edit" driveId={id} />
         setWizard({ mode: 'edit', id });
         break;
       case 'clone':
@@ -85,7 +100,6 @@ export function DrivesPage() {
   }
 
   function handleCreate() {
-    // TODO(Task 6): open <DriveWizard mode="create" />
     setWizard({ mode: 'create' });
   }
 
@@ -187,19 +201,13 @@ export function DrivesPage() {
           </div>
         </div>
 
-        {/*
-          TODO(Task 6): replace the marker below with <DriveWizard>.
-          `wizard` (create vs. edit-with-id, set by handleCreate/handleRowAction('edit', id) above)
-          and `setWizard(null)` (close) are already wired — Task 6 only needs to add the component:
-          {wizard && (
-            <DriveWizard
-              mode={wizard.mode}
-              driveId={wizard.mode === 'edit' ? wizard.id : undefined}
-              onClose={() => setWizard(null)}
-            />
-          )}
-        */}
-        {wizard && <span data-testid="wizard-stub" data-mode={wizard.mode} hidden />}
+        {wizard && (
+          <DriveWizard
+            mode={wizard.mode}
+            driveId={wizard.mode === 'edit' ? wizard.id : undefined}
+            onClose={() => setWizard(null)}
+          />
+        )}
       </div>
     </AppShell>
   );
