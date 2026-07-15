@@ -7,11 +7,12 @@ import { MonthView } from './MonthView.js';
 import { WeekView } from './WeekView.js';
 import { DayView, type SlotActionKind } from './DayView.js';
 import { useSlots } from './hooks/useSlots.js';
+import { SlotModal } from './SlotModal.js';
+import { SlotActionModal } from './SlotActionModal.js';
 
 type View = 'month' | 'week' | 'day';
 
-// TODO(Task 6): these record *intent*; SlotModal/SlotActionModal will render below when non-null
-// (mirrors EmployersPage's `modal` state pattern). Nothing renders from them yet.
+// Mirrors EmployersPage's `modal` state pattern — rendered below via <SlotModal>/<SlotActionModal>.
 type ModalState = { mode: 'create'; date: string } | { mode: 'edit'; slot: SlotItem } | null;
 type ActionModalState = { kind: 'link' | 'resch' | 'noshow'; slot: SlotItem } | null;
 
@@ -22,8 +23,7 @@ export function SlotsPage() {
   const [refDate, setRefDate] = useState<Date>(() => new Date());
   const [employerId, setEmployerId] = useState('');
   const [modal, setModal] = useState<ModalState>(null);
-  // TODO(Task 6): `actionModal` will be set by Day view's quick-action buttons (Task 5) and
-  // consumed by <SlotActionModal>; nothing sets or renders it yet, so it's declared but idle.
+  // Set by Day view's quick-action buttons (Task 5) and consumed by <SlotActionModal> below.
   const [actionModal, setActionModal] = useState<ActionModalState>(null);
 
   const { from, to } = visibleRange(view, refDate);
@@ -61,7 +61,6 @@ export function SlotsPage() {
   }
 
   function handleChipClick(slot: SlotItem) {
-    // TODO(Task 6): open SlotModal in edit mode.
     setModal({ mode: 'edit', slot });
   }
   function handleMoreClick(dateKey: string) {
@@ -69,20 +68,16 @@ export function SlotsPage() {
     setRefDate(parseYmd(dateKey));
   }
   function handleCellClick(dateKey: string) {
-    // TODO(Task 6): open SlotModal in create mode, pre-dated to dateKey.
     setModal({ mode: 'create', date: dateKey });
   }
   function handleCreate() {
-    // TODO(Task 6): open SlotModal in create mode, pre-dated to the current refDate.
     setModal({ mode: 'create', date: ymd(refDate) });
   }
   function handleSlotAction(kind: SlotActionKind, slot: SlotItem) {
     if (kind === 'edit') {
-      // TODO(Task 6): open SlotModal in edit mode.
       setModal({ mode: 'edit', slot });
       return;
     }
-    // TODO(Task 6): open SlotActionModal for link/reschedule/no-shows.
     setActionModal({ kind, slot });
   }
 
@@ -153,8 +148,21 @@ export function SlotsPage() {
           <DayView slots={daySlots} onAction={handleSlotAction} />
         )}
 
-        {/* TODO(Task 6): render <SlotModal> when `modal` is non-null and <SlotActionModal> when
-            `actionModal` is non-null; wire onClose={() => setModal(null)} / setActionModal(null). */}
+        {modal && (
+          <SlotModal
+            mode={modal.mode}
+            date={modal.mode === 'create' ? modal.date : undefined}
+            slot={modal.mode === 'edit' ? modal.slot : undefined}
+            onClose={() => setModal(null)}
+          />
+        )}
+        {actionModal && (
+          <SlotActionModal
+            kind={actionModal.kind}
+            slot={actionModal.slot}
+            onClose={() => setActionModal(null)}
+          />
+        )}
       </div>
     </AppShell>
   );
