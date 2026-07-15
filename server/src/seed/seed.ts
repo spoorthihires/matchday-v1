@@ -25,9 +25,9 @@ const INSTITUTE_SEED = [
   ['Amrita', 'Coimbatore'], ['Manipal', 'Manipal'], ['PES University', 'Bengaluru'], ['MSRIT', 'Bengaluru'],
 ];
 const EMPLOYER_SEED = [
-  ['Nexatech Labs', 'Product'], ['Aetherverse AI', 'ML platform'], ['Quantbridge', 'Fintech'],
-  ['Helioserv', 'Cloud infra'], ['Meridian Core', 'Enterprise SaaS'], ['Brightwave', 'Consumer'],
-  ['Corvexa', 'Cybersecurity'], ['Lumenar', 'Analytics'],
+  ['Nexatech Labs', 'Product · SaaS'], ['Aetherverse AI', 'ML / AI Platform'], ['Quantbridge', 'Fintech'],
+  ['Helioserv', 'Cloud Infra'], ['Meridian Core', 'Enterprise'], ['Brightwave', 'E-commerce'],
+  ['Corvexa', 'Enterprise'], ['Lumenar', 'Product · SaaS'],
 ];
 
 async function run() {
