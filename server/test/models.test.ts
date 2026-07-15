@@ -4,6 +4,8 @@ import { Institute } from '../src/models/Institute.js';
 import { Jobseeker } from '../src/models/Jobseeker.js';
 import { Drive } from '../src/models/Drive.js';
 import { AuditLog } from '../src/models/AuditLog.js';
+import { Employer } from '../src/models/Employer.js';
+import { RegistrationRequest } from '../src/models/RegistrationRequest.js';
 
 beforeAll(setupTestDb);
 afterAll(teardownTestDb);
@@ -91,5 +93,28 @@ describe('models', () => {
     await expect(
       Jobseeker.create({ name: 'C', instituteId: inst._id, branch: 'CSE', gradYear: 2026, cgpa: 8, source: 'Campus', consent: 'Maybe' as never }),
     ).rejects.toThrow();
+  });
+
+  it('persists employer additive fields with defaults', async () => {
+    const e = await Employer.create({ name: 'Nexatech', industry: 'Product · SaaS' });
+    expect(e.size).toBe('51–200');
+    expect(e.respHours).toBe(0);
+    const f = await Employer.create({ name: 'Full', industry: 'Fintech', size: '1000+', spoc: 'A B', email: 't@x.com', activeDrives: 3, candidatesViewed: 120, shortlistRate: 40, offerRate: 15, respHours: 12 });
+    expect(f.size).toBe('1000+');
+    expect(f.shortlistRate).toBe(40);
+  });
+
+  it('persists a registration request with panel and activity', async () => {
+    const r = await RegistrationRequest.create({
+      company: 'Vaultline Systems', industry: 'Fintech', role: 'Backend Engineer (Go)',
+      openings: 6, ctcRange: '₹18–26 LPA', skills: ['Go', 'PostgreSQL'],
+      slot: 'Wed, Jul 16 · 10:00–12:00', panel: [{ name: 'A. Khanna', role: 'Engineering Manager' }],
+      jd: 'We are hiring…', submittedBy: 'D. Sharma',
+      activity: [{ action: 'Submitted for review', by: 'D. Sharma (Vaultline)' }],
+    });
+    expect(r.status).toBe('Pending review');
+    expect(r.panel[0].name).toBe('A. Khanna');
+    expect(r.activity[0].at).toBeInstanceOf(Date);
+    await expect(RegistrationRequest.create({ company: 'X', industry: 'Y', role: 'Z', status: 'Maybe' as never })).rejects.toThrow();
   });
 });
