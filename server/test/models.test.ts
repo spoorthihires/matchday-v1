@@ -3,6 +3,7 @@ import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Institute } from '../src/models/Institute.js';
 import { Jobseeker } from '../src/models/Jobseeker.js';
 import { Drive } from '../src/models/Drive.js';
+import { AuditLog } from '../src/models/AuditLog.js';
 
 beforeAll(setupTestDb);
 afterAll(teardownTestDb);
@@ -50,5 +51,28 @@ describe('models', () => {
     await expect(
       Drive.create({ name: 'X', domain: 'Frontend', stream: 'B.Tech', mode: 'Telepathic' as never }),
     ).rejects.toThrow();
+  });
+
+  it('persists an institute with owner/email/ownershipHistory', async () => {
+    const inst = await Institute.create({
+      name: 'CBIT', city: 'Hyderabad', type: 'Engineering College', status: 'Active',
+      owner: 'Sharath P.', email: 'spoc@cbit.edu',
+      ownershipHistory: [{ owner: 'Sharath P.', email: 'spoc@cbit.edu', changedBy: 'Platform Admin' }],
+    });
+    expect(inst.owner).toBe('Sharath P.');
+    expect(inst.ownershipHistory).toHaveLength(1);
+    expect(inst.ownershipHistory[0].changedAt).toBeInstanceOf(Date);
+  });
+
+  it('accepts a legacy institute without owner/email (additive defaults)', async () => {
+    const inst = await Institute.create({ name: 'X', city: 'Y', type: 'Engineering' });
+    expect(inst.owner).toBe('');
+    expect(inst.ownershipHistory).toEqual([]);
+  });
+
+  it('writes an audit log', async () => {
+    const log = await AuditLog.create({ entityType: 'institute', entityId: '64b000000000000000000000', action: 'created', actor: 'Platform Admin', detail: 'Created CBIT' });
+    expect(log.action).toBe('created');
+    expect(log.at).toBeInstanceOf(Date);
   });
 });
