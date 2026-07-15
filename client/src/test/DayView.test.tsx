@@ -38,13 +38,30 @@ describe('DayView', () => {
     expect(screen.getByRole('button', { name: /Join/ })).toBeInTheDocument();
   });
 
-  it('hides Join for a Cancelled slot even with a link, and shows Attended/No-shows for Completed', () => {
+  it('hides Join for a Cancelled slot even with a link', () => {
     render(
       <DayView
         slots={[mkSlot({ status: 'Cancelled', link: 'https://meet.example.com/x' })]}
         onAction={vi.fn()}
       />,
     );
+    expect(screen.queryByRole('button', { name: /Join/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the Attended/No-shows row and the st-active badge for a Completed slot', () => {
+    render(
+      <DayView
+        slots={[mkSlot({ status: 'Completed', booked: 8, attended: 6, noShow: 2, link: '' })]}
+        onAction={vi.fn()}
+      />,
+    );
+    // The exact-text matches land on the `<b>` value elements; their parent spans carry the labels.
+    expect(screen.getByText('6').parentElement).toHaveTextContent('Attended: 6');
+    expect(screen.getByText('2').parentElement).toHaveTextContent('No-shows: 2');
+    const badge = screen.getByText('Completed');
+    expect(badge).toHaveClass('badge-st');
+    expect(badge).toHaveClass('st-active');
+    // No link on this slot — Join must stay hidden even though it is not Cancelled.
     expect(screen.queryByRole('button', { name: /Join/ })).not.toBeInTheDocument();
   });
 
