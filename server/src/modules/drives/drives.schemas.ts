@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const evalStage = z.object({
+export const evalStage = z.object({
   key: z.enum(['mcq', 'coding', 'tara', 'assignments']),
   enabled: z.boolean(),
   config: z.record(z.number()).default({}),
@@ -33,6 +33,22 @@ export const createDriveSchema = z.object({
     instituteVis: z.enum(['All institutes', 'Selected institutes', 'Private link']),
     candidateAccess: z.enum(['Public', 'Eligible only', 'Invite']),
   }),
+});
+
+// Draft saves may be incomplete (spec §11): relax the minimum-length / refine
+// constraints while keeping enums, types, and defaults. The full minimums
+// only apply once a drive moves to Published/Active — that path still uses
+// createDriveSchema unchanged.
+export const draftDriveSchema = createDriveSchema.extend({
+  name: z.string().trim().default(''),
+  eventDates: z.array(z.coerce.date()).default([]),
+  eligibility: z.object({
+    sources: z.array(z.string()).default([]),
+    branches: z.array(z.string()).default([]),
+    gradYears: z.array(z.number().int()).default([]),
+    expType: z.string().default('Freshers only'),
+  }),
+  evaluation: z.array(evalStage).default([]),
 });
 
 export const updateDriveSchema = createDriveSchema.partial();

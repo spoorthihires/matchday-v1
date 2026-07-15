@@ -35,8 +35,38 @@ describe('drives routes', () => {
   });
 
   it('400s on invalid body (no enabled evaluation stage)', async () => {
-    const bad = { ...validBody, evaluation: [{ key: 'mcq', enabled: false, config: {} }] };
+    // Draft saves relax this constraint (see below), so exercise it against
+    // a non-Draft status where the full createDriveSchema still applies.
+    const bad = { ...validBody, status: 'Published', evaluation: [{ key: 'mcq', enabled: false, config: {} }] };
     const res = await auth(request(createApp()).post('/api/drives').send(bad));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+
+  it('saves an incomplete draft', async () => {
+    const draft = {
+      status: 'Draft', name: '', domain: 'Frontend', stream: 'B.Tech', candType: 'Freshers', mode: 'Hybrid',
+      frequency: 'One-time', eventDay: 'Wednesday', eventDates: [],
+      candCap: 0, empCap: 0, slotCap: 0,
+      eligibility: { sources: [], branches: [], gradYears: [], expType: 'Freshers only' },
+      evaluation: [],
+      visibility: { employerReg: 'Invite-only', instituteVis: 'Selected institutes', candidateAccess: 'Eligible only' },
+    };
+    const res = await auth(request(createApp()).post('/api/drives').send(draft));
+    expect(res.status).toBe(201);
+    expect(res.body.status).toBe('Draft');
+  });
+
+  it('400s publishing an incomplete drive', async () => {
+    const draft = {
+      status: 'Published', name: '', domain: 'Frontend', stream: 'B.Tech', candType: 'Freshers', mode: 'Hybrid',
+      frequency: 'One-time', eventDay: 'Wednesday', eventDates: [],
+      candCap: 0, empCap: 0, slotCap: 0,
+      eligibility: { sources: [], branches: [], gradYears: [], expType: 'Freshers only' },
+      evaluation: [],
+      visibility: { employerReg: 'Invite-only', instituteVis: 'Selected institutes', candidateAccess: 'Eligible only' },
+    };
+    const res = await auth(request(createApp()).post('/api/drives').send(draft));
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('validation');
   });

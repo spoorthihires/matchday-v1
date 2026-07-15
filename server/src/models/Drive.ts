@@ -7,9 +7,13 @@ const evaluationStageSchema = new Schema({
 }, { _id: false });
 
 const driveSchema = new Schema({
-  name: { type: String, required: true },
-  domain: { type: String, required: true },
-  stream: { type: String, required: true },
+  // Not `required` at the persistence layer: Drafts may be saved incomplete
+  // (spec §11). The Zod schemas (drives.schemas.ts) are the source of truth
+  // for requiredness — createDriveSchema enforces non-empty values on the
+  // Published/Active path, draftDriveSchema relaxes them for Draft saves.
+  name: { type: String, default: '' },
+  domain: { type: String, default: '' },
+  stream: { type: String, default: '' },
   status: { type: String, enum: ['Active', 'Published', 'Draft', 'Archived'], default: 'Draft' },
   candType: { type: String, enum: ['Freshers', 'Experienced', 'Both'], default: 'Freshers' },
   mode: { type: String, enum: ['Online', 'Onsite', 'Hybrid'], default: 'Hybrid' },
