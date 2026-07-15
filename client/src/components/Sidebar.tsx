@@ -15,7 +15,7 @@ const NAV: NavItem[] = [
   { label: 'Command Center', icon: 'ti-layout-dashboard', to: '/' },
   { label: 'Drives', icon: 'ti-calendar-event', to: '/drives', count: 12 },
   { label: 'Institutes', icon: 'ti-building-community', to: '/institutes', count: 21, group: 'Supply' },
-  { label: 'Jobseekers', icon: 'ti-users', to: '/coming-soon/jobseekers' },
+  { label: 'Jobseekers', icon: 'ti-users', to: '/jobseekers' },
   { label: 'Evaluations', icon: 'ti-clipboard-check', to: '/coming-soon/evaluations' },
   { label: 'Templates', icon: 'ti-template', to: '/coming-soon/templates' },
   { label: 'Streams', icon: 'ti-git-branch', to: '/coming-soon/streams' },
