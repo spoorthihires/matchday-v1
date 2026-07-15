@@ -113,4 +113,24 @@ describe('getOverview', () => {
     expect(o.schedule.events[0].title).toContain('Frontend');
     expect(o.schedule.events[0].status).toBe('prep');
   });
+
+  it('excludes non-active institutes from the institute leaderboard', async () => {
+    const active = await Institute.create({ name: 'Active Uni', city: 'Hyderabad', type: 'University', status: 'Active' });
+    const disabled = await Institute.create({ name: 'Disabled Uni', city: 'Hyderabad', type: 'University', status: 'Disabled' });
+    const mk = (instId: unknown, stage: string) => Jobseeker.create({
+      name: 'JS', instituteId: instId, branch: 'CSE', gradYear: 2026, cgpa: 8, source: 'Campus',
+      profileCompleted: true, evaluationStatus: 'completed', stage,
+    });
+    // Disabled has MORE match-ready than Active → would rank #1 if the leaderboard didn't filter by status.
+    await mk(active._id, 'MatchReady');
+    await mk(active._id, 'MatchReady');
+    await mk(disabled._id, 'MatchReady');
+    await mk(disabled._id, 'MatchReady');
+    await mk(disabled._id, 'MatchReady');
+    const o = await getOverview(NOW);
+    const names = o.leaderboards.institutes.map((i) => i.name);
+    expect(names).toContain('Active Uni');
+    expect(names).not.toContain('Disabled Uni');
+    expect(o.leaderboards.institutes[0].name).toBe('Active Uni');
+  });
 });

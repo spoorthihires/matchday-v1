@@ -111,10 +111,11 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   const instLb = await Jobseeker.aggregate([
     { $match: { stage: { $in: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'] } } },
     { $group: { _id: '$instituteId', ready: { $sum: 1 }, total: { $sum: 1 } } },
-    { $sort: { ready: -1 } },
-    { $limit: 5 },
     { $lookup: { from: 'institutes', localField: '_id', foreignField: '_id', as: 'inst' } },
     { $unwind: '$inst' },
+    { $match: { 'inst.status': 'Active' } }, // only participating institutes appear on the leaderboard
+    { $sort: { ready: -1 } },
+    { $limit: 5 },
   ]);
   // conversion per institute = ready / (all jobseekers at that institute)
   const perInstituteTotals = await Jobseeker.aggregate<{ _id: Types.ObjectId; n: number }>([
