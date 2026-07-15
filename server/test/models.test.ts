@@ -6,6 +6,7 @@ import { Drive } from '../src/models/Drive.js';
 import { AuditLog } from '../src/models/AuditLog.js';
 import { Employer } from '../src/models/Employer.js';
 import { RegistrationRequest } from '../src/models/RegistrationRequest.js';
+import { Slot } from '../src/models/Slot.js';
 
 beforeAll(setupTestDb);
 afterAll(teardownTestDb);
@@ -116,5 +117,13 @@ describe('models', () => {
     expect(r.panel[0].name).toBe('A. Khanna');
     expect(r.activity[0].at).toBeInstanceOf(Date);
     await expect(RegistrationRequest.create({ company: 'X', industry: 'Y', role: 'Z', status: 'Maybe' as never })).rejects.toThrow();
+  });
+
+  it('persists a session slot and rejects an invalid status', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 12, booked: 9, held: 1 });
+    expect(s.status).toBe('Scheduled');
+    expect(s.employerId).toBeNull();
+    await expect(Slot.create({ driveId: d._id, date: new Date(), start: '10:00', end: '12:00', status: 'Open' as never })).rejects.toThrow();
   });
 });

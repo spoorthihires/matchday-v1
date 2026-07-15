@@ -4,7 +4,7 @@ import { connectDb, disconnectDb } from '../db/connect.js';
 import { hashPassword } from '../modules/auth/auth.service.js';
 import { User } from '../models/User.js';
 import { Institute } from '../models/Institute.js';
-import { Employer } from '../models/Employer.js';
+import { Employer, type EmployerDoc } from '../models/Employer.js';
 import { RegistrationRequest } from '../models/RegistrationRequest.js';
 import { Drive, type DriveDoc } from '../models/Drive.js';
 import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
@@ -68,7 +68,7 @@ async function run() {
 
   // 48 employers; offersExtended descending-ish so the leaderboard is meaningful.
   const EMPLOYER_SIZES = ['1–50', '51–200', '201–1000', '1000+'];
-  const employers = [];
+  const employers: HydratedDocument<EmployerDoc>[] = [];
   for (let i = 0; i < 48; i++) {
     const base = EMPLOYER_SEED[i % EMPLOYER_SEED.length];
     const offers = Math.max(0, 20 - Math.floor(i / 2));
@@ -239,18 +239,56 @@ async function run() {
   }
   await Jobseeker.insertMany(jobseekerDocs);
 
-  // Slots for the next MatchDay (Jul 15): 360 total => 288 booked, 36 held, 72 available.
-  const md = drives[0];
-  const slotDocs = [];
-  const statusPlan: ('booked' | 'held' | 'available')[] = [
-    ...Array(288).fill('booked'), ...Array(36).fill('held'), ...Array(72).fill('available'),
-  ];
-  for (let i = 0; i < statusPlan.length; i++) {
-    slotDocs.push({
-      driveId: md._id, employerId: statusPlan[i] === 'available' ? null : employers[i % 9]._id,
-      date: upcomingDates[0], start: '10:00', end: '12:00', status: statusPlan[i], createdAt: spread(),
-    });
+  // Interview slot sessions across Jul 2026 (Wed & Sat). Option B sums: cap 360 / booked 288 / held 36.
+  const SLOT_DAYS = [1, 4, 8, 11, 15, 18, 22, 25, 29];
+  const WINDOWS: [string, string][] = [['10:00', '12:00'], ['14:00', '16:00'], ['16:30', '18:00']];
+  type SeedSession = { day: number; start: string; end: string; capacity: number; booked: number; held: number };
+  const sessions: SeedSession[] = [];
+  for (const day of SLOT_DAYS) {
+    const nWindows = day % 3 === 0 ? 3 : 2;
+    for (let w = 0; w < nWindows; w++) {
+      const [start, end] = WINDOWS[w];
+      sessions.push({ day, start, end, capacity: intBetween(rng, 12, 20), booked: 0, held: 0 });
+    }
   }
+  // normalize capacities to exactly 360
+  let capSum = sessions.reduce((a, s) => a + s.capacity, 0);
+  for (let i = 0; capSum !== 360; i++) {
+    const s = sessions[i % sessions.length];
+    if (capSum > 360 && s.capacity > 8) { s.capacity--; capSum--; }
+    else if (capSum < 360 && s.capacity < 50) { s.capacity++; capSum++; }
+  }
+  // booked ≈ 80% of capacity, adjusted to exactly 288
+  for (const s of sessions) s.booked = Math.floor(s.capacity * 0.8);
+  let bookedSum = sessions.reduce((a, s) => a + s.booked, 0);
+  for (let i = 0; bookedSum !== 288; i++) {
+    const s = sessions[i % sessions.length];
+    if (bookedSum < 288 && s.booked < s.capacity) { s.booked++; bookedSum++; }
+    else if (bookedSum > 288 && s.booked > 0) { s.booked--; bookedSum--; }
+  }
+  // held = 36, preferring future sessions with slack; fall back to any session with slack
+  let heldSum = 0;
+  const bySlackPref = [...sessions.filter((s) => s.day >= 15), ...sessions.filter((s) => s.day < 15)];
+  for (let i = 0, guard = 0; heldSum < 36 && guard < 100000; i++, guard++) {
+    const s = bySlackPref[i % bySlackPref.length];
+    if (s.booked + s.held < s.capacity) { s.held++; heldSum++; }
+  }
+  if (capSum !== 360 || bookedSum !== 288 || heldSum !== 36) throw new Error(`slot seed sums off: cap=${capSum} booked=${bookedSum} held=${heldSum}`);
+  const slotDocs = sessions.map((s, idx) => {
+    const past = s.day < 15;
+    const cancelled = idx === 5 || idx === 13;   // two deterministic cancellations
+    const attended = past && !cancelled ? Math.max(0, s.booked - intBetween(rng, 0, 3)) : 0;
+    return {
+      driveId: (s.day === 15 ? drives[0] : drives[idx % 3])._id,
+      employerId: employers[idx % 9]._id,
+      date: new Date(Date.UTC(2026, 6, s.day)),
+      start: s.start, end: s.end, capacity: s.capacity, booked: s.booked, held: s.held,
+      status: cancelled ? 'Cancelled' : past ? 'Completed' : 'Scheduled',
+      link: past ? '' : `https://meet.hiringhood.com/${Math.floor(rng() * 2176782336).toString(36)}`,
+      attended, noShow: past && !cancelled ? s.booked - attended : 0,
+      createdAt: spread(),
+    };
+  });
   await Slot.insertMany(slotDocs);
 
   // Audit logs for institutes

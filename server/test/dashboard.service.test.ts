@@ -47,10 +47,14 @@ async function seedFixture() {
 
   const drive = await Drive.findOne({ name: 'Frontend Cohort' });
   const emp = await Employer.findOne({ name: 'Nexatech' });
-  // slots for next matchday (Jul 15): 6 booked, 2 held, 2 available => total 10, util 60%
-  for (let i = 0; i < 6; i++) await Slot.create({ driveId: drive!._id, employerId: emp!._id, date: new Date('2026-07-15T04:30:00.000Z'), start: '10:00', end: '12:00', status: 'booked' });
-  for (let i = 0; i < 2; i++) await Slot.create({ driveId: drive!._id, employerId: emp!._id, date: new Date('2026-07-15T04:30:00.000Z'), start: '14:00', end: '16:00', status: 'held' });
-  for (let i = 0; i < 2; i++) await Slot.create({ driveId: drive!._id, employerId: null, date: new Date('2026-07-15T04:30:00.000Z'), start: '16:30', end: '18:00', status: 'available' });
+  // slots for next matchday (Jul 15): two sessions of capacity 5 (3 booked, 1 held each) => total 10, booked 6, held 2, available 2, util 60%
+  for (let i = 0; i < 2; i++) {
+    await Slot.create({
+      driveId: drive!._id, employerId: emp!._id, date: new Date('2026-07-15T00:00:00.000Z'),
+      start: i === 0 ? '10:00' : '14:00', end: i === 0 ? '12:00' : '16:00',
+      capacity: 5, booked: 3, held: 1, status: 'Scheduled',
+    });
+  }
 }
 
 describe('getOverview', () => {

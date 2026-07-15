@@ -86,14 +86,13 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   ]);
 
   // ---- Slots ----
-  const slotAgg = await Slot.aggregate<{ _id: string; n: number }>([
-    { $group: { _id: '$status', n: { $sum: 1 } } },
+  const slotAgg = await Slot.aggregate<{ _id: null; booked: number; held: number; capacity: number }>([
+    { $group: { _id: null, booked: { $sum: '$booked' }, held: { $sum: '$held' }, capacity: { $sum: '$capacity' } } },
   ]);
-  const slotBy = Object.fromEntries(slotAgg.map((s) => [s._id, s.n]));
-  const booked = slotBy.booked ?? 0;
-  const held = slotBy.held ?? 0;
-  const available = slotBy.available ?? 0;
-  const totalSlots = booked + held + available;
+  const booked = slotAgg[0]?.booked ?? 0;
+  const held = slotAgg[0]?.held ?? 0;
+  const totalSlots = slotAgg[0]?.capacity ?? 0;
+  const available = Math.max(0, totalSlots - booked - held);
 
   // ---- 30-day deltas (count metrics) ----
   const [jsAddedPrev, employersPrev, institutesPrev] = await Promise.all([
@@ -192,10 +191,12 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   ]);
   const events = await Promise.all(eventDrives.map(async (d: Record<string, unknown>) => {
     const nearest = new Date(d.nearest as Date);
-    const [slotCount, bookedForDrive] = await Promise.all([
-      Slot.countDocuments({ driveId: d._id }),
-      Slot.countDocuments({ driveId: d._id, status: 'booked' }),
+    const driveAgg = await Slot.aggregate<{ _id: null; cap: number; booked: number }>([
+      { $match: { driveId: d._id } },
+      { $group: { _id: null, cap: { $sum: '$capacity' }, booked: { $sum: '$booked' } } },
     ]);
+    const driveCap = driveAgg[0]?.cap ?? 0;
+    const driveBooked = driveAgg[0]?.booked ?? 0;
     const candCount = await Jobseeker.countDocuments({});
     const sameUtcDay =
       nearest.getUTCFullYear() === nextMd.getUTCFullYear() &&
@@ -205,9 +206,9 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
       date: nearest.toISOString(),
       title: `MatchDay · ${d.name}`,
       employers: (d.empCap as number) ?? 0,
-      slots: slotCount,
+      slots: driveCap,
       candidates: candCount,
-      prepPct: pct(bookedForDrive, slotCount),
+      prepPct: pct(driveBooked, driveCap),
       status: (sameUtcDay ? 'prep' : 'open') as 'prep' | 'open',
     };
   }));
