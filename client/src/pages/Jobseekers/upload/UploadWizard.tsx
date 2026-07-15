@@ -3,6 +3,11 @@ import { useImportCommit } from '../hooks/useImportCommit.js';
 import { useImportPreview } from '../hooks/useImportPreview.js';
 import { parseFile } from './parse.js';
 import { SAMPLE_ROWS, type RawRow } from './template.js';
+import { StepCompletion } from './StepCompletion.js';
+import { StepDuplicates } from './StepDuplicates.js';
+import { StepSummary } from './StepSummary.js';
+import { StepUpload } from './StepUpload.js';
+import { StepValidation } from './StepValidation.js';
 
 // Ported from matchday-admin-app_23.html lines 2211-2252 (#upWizard overlay: .wiz-top/.glyph/.wt/
 // .x, .wiz-body/.wiz-rail/.rlabel/.stepper with 5 .st items, .wiz-main/.wiz-progress/.pbar,
@@ -11,10 +16,10 @@ import { SAMPLE_ROWS, type RawRow } from './template.js';
 // rail. theme.css already declares `#upWizard{position:fixed;...}` / `#upWizard.show{display:flex}`
 // alongside the shared `.wiz-*`/`.st`/`.stepper` rules (ported for DriveWizard already).
 //
-// This task (7) builds the SHELL only: nav, the preview/commit mutation wiring, and per-step
-// PLACEHOLDERS. Task 8 replaces each `renderStep` case with the real step component (dropzone +
-// file chip, duplicate table, validation table, import summary, completion report) — see the
-// `// TODO(Task 8)` markers below for exactly where those plug in.
+// Task 7 built the SHELL: nav, the preview/commit mutation wiring, and per-step placeholders.
+// Task 8 replaces each placeholder with the real step component (StepUpload/StepDuplicates/
+// StepValidation/StepSummary/StepCompletion) and adds `onRemoveRow` (drop a row from the
+// duplicates table and re-preview in place, without leaving the step).
 
 export interface UploadWizardProps {
   onClose: () => void;
@@ -31,6 +36,9 @@ function errMsg(err: unknown, fallback: string): string {
 export function UploadWizard({ onClose }: UploadWizardProps) {
   const [step, setStep] = useState(0);
   const [rows, setRows] = useState<RawRow[]>([]);
+  // Display label for the file chip only (StepUpload) — separate from `rows` because removing a
+  // duplicate row (onRemoveRow) replaces `rows` in place without that being a new file/sample pick.
+  const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Which `rows` array the in-flight/completed preview was requested for. Compared by REFERENCE —
@@ -44,8 +52,9 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
   const preview = useImportPreview();
   const commit = useImportCommit();
   const busy = preview.isPending || commit.isPending;
-  // Once a commit has succeeded, step 4 shows its result and there's no further nav — closing
-  // (X) is the only exit until Task 8 adds a "Done" action.
+  // Once a commit has succeeded, step 4 shows its result and there's no further wiz-foot nav —
+  // StepCompletion renders its own "Done" (-> onClose) alongside the report, since the shared
+  // footer's Back/Continue buttons are hidden entirely below once `committed`.
   const committed = step === TOTAL_STEPS - 1 && !!commit.data;
 
   // Any new set of rows invalidates a stale preview (a fresh file/sample means the previously
@@ -57,21 +66,51 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
     setError(null);
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (busy) return; // e.g. file dialog opened pre-preview, file picked while it's in flight
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  // Shared by both file-input selection and drag/drop — parses the file, labels the chip with its
+  // name, and (via handleRowsChange) invalidates any stale preview. Errors from a bad/corrupt file
+  // surface as the shell's top-of-step error banner, same as before Task 8 split this out.
+  async function processFile(file: File) {
     try {
-      handleRowsChange(await parseFile(file));
+      const parsed = await parseFile(file);
+      setFileName(file.name);
+      handleRowsChange(parsed);
     } catch (err) {
       setError(errMsg(err, 'Failed to parse file.'));
     }
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (busy) return; // e.g. file dialog opened pre-preview, file picked while it's in flight
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    await processFile(file);
+  }
+
+  function handleFileDrop(file: File) {
+    if (busy) return;
+    void processFile(file);
+  }
+
   function handleLoadSample() {
     if (busy) return;
+    setFileName('sample-candidates.csv');
     handleRowsChange(SAMPLE_ROWS);
+  }
+
+  // StepDuplicates' per-row Remove: drop that row from `rows`, invalidate the stale preview (same
+  // as any other rows change), then re-run the preview immediately against the trimmed array and
+  // stay on this step — no navigation, so the refreshed duplicate/validation results just replace
+  // what's on screen. Guarded by a stale-preview check (previewForRef) exactly like handleContinue's
+  // step-0 preview kickoff, so a second removal fired before the first settles can't clobber it.
+  function handleRemoveRow(index: number) {
+    if (busy) return;
+    const next = rows.filter((_, i) => i !== index);
+    handleRowsChange(next);
+    previewForRef.current = next;
+    preview.mutateAsync(next).catch((err: unknown) => {
+      if (previewForRef.current === next) setError(errMsg(err, 'Failed to preview the import.'));
+    });
   }
 
   function goStep(target: number) {
@@ -171,55 +210,28 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
             </div>
           )}
 
-          {/* TODO(Task 8): render real step component for each case below (dropzone + file chip
-              for step 0, duplicate table for step 1, validation table for step 2, import summary
-              for step 3, completion report for step 4) instead of these placeholders. */}
           {step === 0 && (
-            <div className="wstep active">
-              Step 1 — CSV Upload
-              <div style={{ marginTop: 12 }}>
-                <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} disabled={busy} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <button className="btn btn-ghost" onClick={handleLoadSample} disabled={busy}>Use a sample dataset</button>
-              </div>
-              {rows.length > 0 && <p className="fnote">{rows.length} row(s) loaded.</p>}
-            </div>
+            <StepUpload
+              rows={rows}
+              fileName={fileName}
+              busy={busy}
+              fileInputRef={fileInputRef}
+              onFileChange={handleFileChange}
+              onFileDrop={handleFileDrop}
+              onLoadSample={handleLoadSample}
+            />
           )}
           {step === 1 && (
-            <div className="wstep active">
-              Step 2 — Duplicate Check
-              {preview.data && (
-                <p className="fnote">{preview.data.summary.duplicates} duplicate row(s) found out of {preview.data.summary.total}.</p>
-              )}
-            </div>
+            <StepDuplicates preview={preview.data} busy={busy} onRemoveRow={handleRemoveRow} />
           )}
           {step === 2 && (
-            <div className="wstep active">
-              Step 3 — Validation
-              {preview.data && (
-                <p className="fnote">{preview.data.summary.invalid} invalid row(s) out of {preview.data.summary.total}.</p>
-              )}
-            </div>
+            <StepValidation preview={preview.data} />
           )}
           {step === 3 && (
-            <div className="wstep active">
-              Step 4 — Import Summary
-              {preview.data && (
-                <p className="fnote">{willImport} of {preview.data.summary.total} row(s) will be imported.</p>
-              )}
-            </div>
+            <StepSummary summary={preview.data?.summary} />
           )}
           {step === 4 && (
-            <div className="wstep active">
-              Step 5 — Completion Report
-              {commit.data && (
-                <p className="fnote">
-                  Imported {commit.data.imported}, skipped {commit.data.skipped}
-                  {' '}({commit.data.skippedReasons.duplicates} duplicate(s), {commit.data.skippedReasons.invalid} invalid).
-                </p>
-              )}
-            </div>
+            <StepCompletion commit={commit.data} previewRows={preview.data?.rows ?? []} onClose={onClose} />
           )}
         </main>
       </div>

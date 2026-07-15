@@ -1,0 +1,103 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '../auth/AuthContext.js';
+import { UploadWizard } from '../pages/Jobseekers/upload/UploadWizard.js';
+
+// Mirrors the SAMPLE_ROWS seeded in upload/template.ts (Aarav Sharma / Diya Reddy / a repeated
+// Aarav Sharma row) — the server's analyze() would flag the third row as a within-file email
+// duplicate; this mock reproduces that shape instead of hitting a real server.
+const PREVIEW_RESPONSE = {
+  rows: [
+    {
+      index: 0,
+      data: { name: 'Aarav Sharma', email: 'aarav@cbit.edu', instituteId: 'inst-1', instituteName: 'CBIT', branch: 'CSE', gradYear: 2026, cgpa: 8.4, source: 'Campus' },
+      valid: true, errors: [], dupe: false,
+    },
+    {
+      index: 1,
+      data: { name: 'Diya Reddy', email: 'diya@cbit.edu', instituteId: 'inst-1', instituteName: 'CBIT', branch: 'IT', gradYear: 2026, cgpa: 9.1, source: 'Campus' },
+      valid: true, errors: [], dupe: false,
+    },
+    {
+      index: 2,
+      data: { name: 'Aarav Sharma', email: 'aarav@cbit.edu', instituteId: 'inst-1', instituteName: 'CBIT', branch: 'CSE', gradYear: 2026, cgpa: 8.4, source: 'Campus' },
+      valid: true, errors: [], dupe: true, dupeReason: 'Duplicate email within file',
+    },
+  ],
+  summary: { total: 3, valid: 3, invalid: 0, duplicates: 1, willImport: 2 },
+};
+
+const COMMIT_RESPONSE = { imported: 2, skipped: 1, skippedReasons: { duplicates: 1, invalid: 0 } };
+
+function renderWizard() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <AuthProvider>
+        <UploadWizard onClose={vi.fn()} />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+}
+
+describe('UploadWizard', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    // Seed a logged-in session so the preview/commit mutations' `token` (from useAuth) is
+    // populated (mirrors AuthContext's STORAGE_KEY/readStored shape — see InstituteDetail.test.tsx).
+    localStorage.setItem('matchday.auth', JSON.stringify({
+      token: 'test-token',
+      user: { id: 'u1', name: 'Test Admin', email: 'admin@matchday.io', role: 'admin' },
+    }));
+    // Routes on the request URL: /import/preview vs /import/commit get their own canned payload,
+    // since a single wizard run hits both endpoints with different expected responses.
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('/import/preview')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => PREVIEW_RESPONSE });
+      }
+      if (url.includes('/import/commit')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => COMMIT_RESPONSE });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('walks the sample dataset through duplicates, validation and summary to a completed import', async () => {
+    renderWizard();
+    const user = userEvent.setup();
+
+    // Step 1 (CSV Upload): the sample-dataset link sets rows without needing a real File.
+    await user.click(screen.getByText(/use a sample dataset/i));
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Step 2 (Duplicate Check): the seeded dup from the mocked preview payload is flagged, with
+    // a Remove action available.
+    expect(await screen.findByRole('heading', { name: 'Duplicate Check' })).toBeInTheDocument();
+    expect(screen.getByText('Duplicate email within file')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Step 3 (Validation): no invalid rows in the mocked payload.
+    expect(await screen.findByRole('heading', { name: 'Validation' })).toBeInTheDocument();
+    expect(screen.getByText(/all rows valid/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Step 4 (Import Summary): willImport (2) rendered as a stat tile.
+    expect(await screen.findByRole('heading', { name: 'Import Summary' })).toBeInTheDocument();
+    const willImportTile = screen.getByText('Will import').closest('.kpi') as HTMLElement;
+    expect(within(willImportTile).getByText('2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /import 2 candidates/i }));
+
+    // Step 5 (Completion Report): imported count from the mocked commit response.
+    expect(await screen.findByRole('heading', { name: 'Completion Report' })).toBeInTheDocument();
+    const importedTile = screen.getByText('Imported').closest('.kpi') as HTMLElement;
+    expect(within(importedTile).getByText('2')).toBeInTheDocument();
+  });
+});
