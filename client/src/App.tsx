@@ -7,6 +7,7 @@ import { MfaStub } from './auth/MfaStub.js';
 import { ProtectedRoute } from './auth/ProtectedRoute.js';
 import { Dashboard } from './pages/Dashboard/index.js';
 import { DrivesPage } from './pages/Drives/index.js';
+import { InstitutesPage } from './pages/Institutes/index.js';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/forgot" element={<ForgotStub />} />
         <Route path="/coming-soon/:slug" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
         <Route path="/drives" element={<ProtectedRoute><DrivesPage /></ProtectedRoute>} />
+        <Route path="/institutes" element={<ProtectedRoute><InstitutesPage /></ProtectedRoute>} />
         <Route path="/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
