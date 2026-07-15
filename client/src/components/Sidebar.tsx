@@ -21,7 +21,7 @@ const NAV: NavItem[] = [
   { label: 'Streams', icon: 'ti-git-branch', to: '/coming-soon/streams' },
   { label: 'Employers', icon: 'ti-briefcase', to: '/employers', count: 48, group: 'Demand' },
   { label: 'Recruiters', icon: 'ti-user-search', to: '/coming-soon/recruiters' },
-  { label: 'Slots', icon: 'ti-calendar-time', to: '/coming-soon/slots' },
+  { label: 'Slots', icon: 'ti-calendar-time', to: '/slots' },
   { label: 'Reports', icon: 'ti-chart-bar', to: '/coming-soon/reports', group: 'Operate' },
   { label: 'Audit Trail', icon: 'ti-history', to: '/coming-soon/audit' },
   { label: 'Settings', icon: 'ti-settings', to: '/coming-soon/settings' },

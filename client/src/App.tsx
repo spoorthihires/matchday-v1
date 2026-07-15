@@ -12,6 +12,7 @@ import { EmployersPage } from './pages/Employers/index.js';
 import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
+import { SlotsPage } from './pages/Slots/index.js';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/jobseekers" element={<ProtectedRoute><JobseekersPage /></ProtectedRoute>} />
         <Route path="/employers" element={<ProtectedRoute><EmployersPage /></ProtectedRoute>} />
         <Route path="/employers/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
+        <Route path="/slots" element={<ProtectedRoute><SlotsPage /></ProtectedRoute>} />
         <Route path="/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
