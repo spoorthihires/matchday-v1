@@ -4,6 +4,8 @@ import { useEmployers } from '../Employers/hooks/useEmployers.js';
 import type { SlotItem } from '../../types/slots.js';
 import { DOW_FULL, MON, parseYmd, slotDayKey, visibleRange, ymd } from './calendarUtils.js';
 import { MonthView } from './MonthView.js';
+import { WeekView } from './WeekView.js';
+import { DayView, type SlotActionKind } from './DayView.js';
 import { useSlots } from './hooks/useSlots.js';
 
 type View = 'month' | 'week' | 'day';
@@ -74,8 +76,17 @@ export function SlotsPage() {
     // TODO(Task 6): open SlotModal in create mode, pre-dated to the current refDate.
     setModal({ mode: 'create', date: ymd(refDate) });
   }
+  function handleSlotAction(kind: SlotActionKind, slot: SlotItem) {
+    if (kind === 'edit') {
+      // TODO(Task 6): open SlotModal in edit mode.
+      setModal({ mode: 'edit', slot });
+      return;
+    }
+    // TODO(Task 6): open SlotActionModal for link/reschedule/no-shows.
+    setActionModal({ kind, slot });
+  }
 
-  const dayCount = slotsOn(ymd(refDate)).length;
+  const daySlots = slotsOn(ymd(refDate));
 
   return (
     <AppShell crumb="Demand" title="Slot Calendar">
@@ -131,18 +142,15 @@ export function SlotsPage() {
           />
         )}
         {!isLoading && view === 'week' && (
-          // TODO(Task 5): WeekView — `.cal-week` of 7 `.cal-wcol`s; day-header click → Day view.
-          <div className="dm-empty" style={{ padding: 50 }}>
-            <i className="ti ti-calendar-week" />
-            Week view coming in Task 5 ({slots.length} slot{slots.length === 1 ? '' : 's'} in range).
-          </div>
+          <WeekView
+            refDate={refDate}
+            slots={slots}
+            onSlotClick={handleChipClick}
+            onDayClick={handleMoreClick}
+          />
         )}
         {!isLoading && view === 'day' && (
-          // TODO(Task 5): DayView — `.cal-dayv` slot cards with capacity bar + quick actions.
-          <div className="dm-empty" style={{ padding: 50 }}>
-            <i className="ti ti-calendar-event" />
-            Day view coming in Task 5 ({dayCount} slot{dayCount === 1 ? '' : 's'} on this day).
-          </div>
+          <DayView slots={daySlots} onAction={handleSlotAction} />
         )}
 
         {/* TODO(Task 6): render <SlotModal> when `modal` is non-null and <SlotActionModal> when
