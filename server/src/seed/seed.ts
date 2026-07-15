@@ -32,6 +32,7 @@ const EMPLOYER_SEED = [
 async function run() {
   await connectDb(env.MONGODB_URI);
   const rng = makeRng(20260712);
+  const consentPick = () => { const r = rng(); return r < 0.85 ? 'Granted' : r < 0.95 ? 'Pending' : 'Revoked'; };
 
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
@@ -130,6 +131,8 @@ async function run() {
         gradYear: pick(rng, [2025, 2026, 2027]), cgpa: Math.round((6 + rng() * 4) * 10) / 10,
         source: pick(rng, SOURCES), profileCompleted: b.profile,
         evaluationStatus: b.evalStatus, stage: b.stage, createdAt: spread(),
+        email: `${pick(rng, FIRST)}.${pick(rng, LAST)}${intBetween(rng, 1, 999)}@${(inst.name as string).toLowerCase().replace(/[^a-z]+/g, '').slice(0, 10) || 'inst'}.edu`.toLowerCase(),
+        consent: consentPick(),
       });
     }
   }
