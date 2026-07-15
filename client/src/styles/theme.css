@@ -294,15 +294,18 @@
   .ftrack{height:30px;border-radius:8px;background:var(--indigo-050);overflow:hidden;display:flex;align-items:center}
   .ftrack > i{height:100%;border-radius:8px;display:block}
   .funnel .conv{font-size:11px;color:var(--faint);text-align:right;margin-top:2px}
+  /* Dashboard mini-calendar (ScheduleSection). Scoped under `.cal` so its `.cal-grid`/`.cal-cell`
+     rules can't bleed into the Slots month view's identically-named classes (see the
+     "Slot Calendar" section, scoped under `.cal-month`). */
   .cal{padding:6px 18px 16px}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
-  .cal-grid .dow{font-size:10.5px;text-align:center;color:var(--faint);font-weight:700;padding:2px 0}
-  .cal-cell{aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--ink-2);position:relative;font-family:"JetBrains Mono",monospace}
-  .cal-cell.mute{color:var(--faint)}
-  .cal-cell.wed{background:var(--indigo-050);color:var(--indigo);font-weight:700}
-  .cal-cell.next{background:var(--indigo);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(47,79,224,.35)}
-  .cal-cell.next::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:#fff}
-  .cal-cell.today{border:1.5px solid var(--indigo)}
+  .cal .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+  .cal .cal-grid .dow{font-size:10.5px;text-align:center;color:var(--faint);font-weight:700;padding:2px 0}
+  .cal .cal-cell{aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--ink-2);position:relative;font-family:"JetBrains Mono",monospace}
+  .cal .cal-cell.mute{color:var(--faint)}
+  .cal .cal-cell.wed{background:var(--indigo-050);color:var(--indigo);font-weight:700}
+  .cal .cal-cell.next{background:var(--indigo);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(47,79,224,.35)}
+  .cal .cal-cell.next::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:#fff}
+  .cal .cal-cell.today{border:1.5px solid var(--indigo)}
   .events{padding:0 18px 16px}
   .event{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
   .event .ed{width:44px;text-align:center;flex-shrink:0}
@@ -867,13 +870,15 @@
   .cal-month{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:var(--shadow-sm)}
   .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg);border-bottom:1px solid var(--line)}
   .cal-dow div{padding:10px;font-size:11px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.06em}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
-  .cal-cell{min-height:108px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;cursor:pointer}
-  .cal-cell:nth-child(7n){border-right:0}
-  .cal-cell.dim{background:#fafbfe}.cal-cell.dim .dnum{color:var(--faint)}
-  .cal-cell.event{background:#f5f8ff}
-  .cal-cell .dnum{font-size:12.5px;font-weight:600;color:var(--ink-2)}
-  .cal-cell.today .dnum{background:var(--indigo);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-grid;place-items:center}
+  /* Month-view grid/cells scoped under `.cal-month` — `.cal-grid`/`.cal-cell` are also used by the
+     dashboard mini-calendar (scoped under `.cal` above); unscoped, both rule sets applied at once. */
+  .cal-month .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal-month .cal-cell{min-height:108px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;cursor:pointer}
+  .cal-month .cal-cell:nth-child(7n){border-right:0}
+  .cal-month .cal-cell.dim{background:#fafbfe}.cal-month .cal-cell.dim .dnum{color:var(--faint)}
+  .cal-month .cal-cell.event{background:#f5f8ff}
+  .cal-month .cal-cell .dnum{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .cal-month .cal-cell.today .dnum{background:var(--indigo);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-grid;place-items:center}
   .cal-chip{display:block;margin-top:4px;font-size:10.5px;padding:3px 6px;border-radius:6px;background:var(--indigo-050);color:var(--indigo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--indigo)}
   .cal-chip.done{background:var(--success-bg);color:#0b6b3d;border-left-color:var(--success)}
   .cal-chip.cancel{background:#f0f1f5;color:var(--muted);border-left-color:var(--muted);text-decoration:line-through}

@@ -2,17 +2,14 @@ import type { SlotItem } from '../../types/slots.js';
 import { DOW, monthGridStart, slotDayKey, to12, ymd } from './calendarUtils.js';
 
 // Ported from matchday-admin-app_23.html lines 3584-3596 (renderCalMonth): `.cal-month` wrapping
-// `.cal-dow` (7 headers) + a `.cal-grid` of 42 `.cal-cell`s. Verified against theme.css: the
-// SLOTS-page rules for `.cal-grid`/`.cal-cell`/`.dnum`/`.cal-chip`/`.cal-more` (lines 867-880) are
-// bare, unscoped class selectors — NOT `.cal-month .cal-grid` compound selectors — so this markup
-// (a plain `.cal-cell` with `dim`/`event`/`today` modifier classes) is exactly the structure the
-// CSS expects. NOTE: the dashboard's mini-calendar (ScheduleSection.tsx) also uses bare
-// `.cal-grid`/`.cal-cell` (theme.css lines 298-305, with `mute`/`wed`/`next` modifiers instead).
-// Since CSS classes aren't scoped per-route, this is a genuine pre-existing naming collision
-// between the two calendar widgets in theme.css — see task-4-report.md for details. It doesn't
-// block this component (the two rule sets' properties mostly don't overlap and only one calendar
-// is mounted per route), but it means neither widget can safely add a new bare `.cal-cell` rule
-// without checking the other.
+// `.cal-dow` (7 headers) + a `.cal-grid` of 42 `.cal-cell`s, each with `dim`/`event`/`today`
+// modifier classes, a `.dnum`, up to MAX_CHIPS `.cal-chip`s (done/cancel) and a `.cal-more`.
+// NOTE on theme.css: `.cal-grid`/`.cal-cell` are also used by the dashboard's mini-calendar
+// (ScheduleSection.tsx). Both widgets' rules were originally bare selectors, so the cascade merged
+// the two (mostly disjoint) rule sets onto whichever calendar was mounted — e.g. the dashboard's
+// `display:flex; aspect-ratio:1/1` leaked into these month cells, rendering chips inline in
+// near-square cells. The rules are now scoped — this widget's under `.cal-month`, the dashboard's
+// under `.cal` — guarded by client/src/test/themeCalendarScoping.test.tsx.
 const MAX_CHIPS = 3;
 
 const chipClass = (status: SlotItem['status']): string =>
