@@ -75,4 +75,21 @@ describe('models', () => {
     expect(log.action).toBe('created');
     expect(log.at).toBeInstanceOf(Date);
   });
+
+  it('persists a jobseeker with email and consent, defaulting consent to Granted', async () => {
+    const inst = await Institute.create({ name: 'CBIT', city: 'Hyderabad', type: 'Engineering College' });
+    const withEmail = await Jobseeker.create({ name: 'A', instituteId: inst._id, branch: 'CSE', gradYear: 2026, cgpa: 8, source: 'Campus', email: 'a@cbit.edu' });
+    expect(withEmail.email).toBe('a@cbit.edu');
+    expect(withEmail.consent).toBe('Granted');
+    const noEmail = await Jobseeker.create({ name: 'B', instituteId: inst._id, branch: 'IT', gradYear: 2026, cgpa: 7, source: 'Campus' });
+    expect(noEmail.email).toBe('');
+    expect(noEmail.consent).toBe('Granted');
+  });
+
+  it('rejects an invalid consent value', async () => {
+    const inst = await Institute.create({ name: 'X', city: 'Y', type: 'Bootcamp' });
+    await expect(
+      Jobseeker.create({ name: 'C', instituteId: inst._id, branch: 'CSE', gradYear: 2026, cgpa: 8, source: 'Campus', consent: 'Maybe' as never }),
+    ).rejects.toThrow();
+  });
 });

@@ -16,6 +16,8 @@ const jobseekerSchema = new Schema({
   gradYear: { type: Number, required: true },
   cgpa: { type: Number, required: true },
   source: { type: String, required: true },
+  email: { type: String, default: '' },
+  consent: { type: String, enum: ['Granted', 'Pending', 'Revoked'], default: 'Granted' },
   profileCompleted: { type: Boolean, default: false },
   evaluationStatus: { type: String, enum: ['na', 'pending', 'completed'], default: 'na' },
   stage: { type: String, enum: JOBSEEKER_STAGES, default: 'Applied' },
