@@ -61,7 +61,7 @@ export function DayView({ slots, onAction }: DayViewProps) {
             </div>
             <div className="dacts">
               {s.link && s.status !== 'Cancelled' && (
-                <button type="button" onClick={() => window.open(s.link, '_blank')}>
+                <button type="button" onClick={() => window.open(s.link, '_blank', 'noopener,noreferrer')}>
                   <i className="ti ti-video" /> Join
                 </button>
               )}
