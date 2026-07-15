@@ -9,7 +9,7 @@ import { JobseekersToolbar } from './JobseekersToolbar.js';
 import { ViewPills, type JobseekerView } from './ViewPills.js';
 import { useJobseekerMutations } from './hooks/useJobseekerMutations.js';
 import { useJobseekers } from './hooks/useJobseekers.js';
-import { pagerWindow } from './pagerWindow.js';
+import { pagerWindow } from '../../utils/pagerWindow.js';
 import { UploadWizard } from './upload/UploadWizard.js';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 20, 50];

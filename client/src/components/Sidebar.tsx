@@ -19,7 +19,7 @@ const NAV: NavItem[] = [
   { label: 'Evaluations', icon: 'ti-clipboard-check', to: '/coming-soon/evaluations' },
   { label: 'Templates', icon: 'ti-template', to: '/coming-soon/templates' },
   { label: 'Streams', icon: 'ti-git-branch', to: '/coming-soon/streams' },
-  { label: 'Employers', icon: 'ti-briefcase', to: '/coming-soon/employers', count: 48, group: 'Demand' },
+  { label: 'Employers', icon: 'ti-briefcase', to: '/employers', count: 48, group: 'Demand' },
   { label: 'Recruiters', icon: 'ti-user-search', to: '/coming-soon/recruiters' },
   { label: 'Slots', icon: 'ti-calendar-time', to: '/coming-soon/slots' },
   { label: 'Reports', icon: 'ti-chart-bar', to: '/coming-soon/reports', group: 'Operate' },
