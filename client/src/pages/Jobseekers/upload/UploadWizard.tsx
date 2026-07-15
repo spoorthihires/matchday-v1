@@ -33,6 +33,13 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
   const [rows, setRows] = useState<RawRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Which `rows` array the in-flight/completed preview was requested for. Compared by REFERENCE —
+  // `rows` state is replaced wholesale on every change, so reference equality is a correct
+  // staleness check; null = no valid or in-flight preview. Guards a stale-preview race: apiFetch
+  // has no cancellation, so if rows change while a preview is in flight the old promise still
+  // settles — its completion must be ignored rather than advance the wizard, and `preview.data`
+  // alone can't be trusted (a stale mutation settling after preview.reset() re-populates it).
+  const previewForRef = useRef<RawRow[] | null>(null);
 
   const preview = useImportPreview();
   const commit = useImportCommit();
@@ -45,11 +52,13 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
   // computed duplicate/validation results no longer apply) — the next 0→1 advance re-runs it.
   function handleRowsChange(next: RawRow[]) {
     setRows(next);
+    previewForRef.current = null; // invalidate any in-flight or completed preview
     preview.reset();
     setError(null);
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (busy) return; // e.g. file dialog opened pre-preview, file picked while it's in flight
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -61,6 +70,7 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
   }
 
   function handleLoadSample() {
+    if (busy) return;
     handleRowsChange(SAMPLE_ROWS);
   }
 
@@ -74,9 +84,14 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
     setError(null);
     if (step === 0) {
       if (rows.length === 0) { setError('Add at least one row before continuing.'); return; }
-      if (preview.data) { goStep(1); return; }
-      preview.mutateAsync(rows).then(() => goStep(1)).catch((err: unknown) => {
-        setError(errMsg(err, 'Failed to preview the import.'));
+      // Reuse the preview only if it was requested for THIS rows reference — preview.data alone
+      // may be stale (see previewForRef above).
+      if (preview.data && previewForRef.current === rows) { goStep(1); return; }
+      previewForRef.current = rows;
+      preview.mutateAsync(rows).then(() => {
+        if (previewForRef.current === rows) goStep(1); // ignore stale completion (rows changed mid-flight)
+      }).catch((err: unknown) => {
+        if (previewForRef.current === rows) setError(errMsg(err, 'Failed to preview the import.'));
       });
       return;
     }
@@ -163,10 +178,10 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
             <div className="wstep active">
               Step 1 — CSV Upload
               <div style={{ marginTop: 12 }}>
-                <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} />
+                <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} disabled={busy} />
               </div>
               <div style={{ marginTop: 8 }}>
-                <button className="btn btn-ghost" onClick={handleLoadSample}>Use a sample dataset</button>
+                <button className="btn btn-ghost" onClick={handleLoadSample} disabled={busy}>Use a sample dataset</button>
               </div>
               {rows.length > 0 && <p className="fnote">{rows.length} row(s) loaded.</p>}
             </div>
