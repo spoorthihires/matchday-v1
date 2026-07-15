@@ -6,6 +6,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes.js';
 import { driveRoutes } from './modules/drives/drives.routes.js';
 import { instituteRoutes } from './modules/institutes/institutes.routes.js';
+import { jobseekerRoutes } from './modules/jobseekers/jobseekers.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -19,6 +20,7 @@ export function createApp(): Express {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/drives', driveRoutes);
   app.use('/api/institutes', instituteRoutes);
+  app.use('/api/jobseekers', jobseekerRoutes);
 
   app.use(errorHandler);
   return app;
