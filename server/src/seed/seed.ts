@@ -8,6 +8,7 @@ import { Employer } from '../models/Employer.js';
 import { Drive } from '../models/Drive.js';
 import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
+import { AuditLog } from '../models/AuditLog.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
 const NOW = new Date('2026-07-12T00:00:00.000Z');
@@ -34,7 +35,7 @@ async function run() {
 
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
-    Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}),
+    Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -46,11 +47,20 @@ async function run() {
   const spread = () => new Date(NOW.getTime() - intBetween(rng, 0, 60) * DAY);
 
   // 21 institutes (repeat the seed list, vary the names) — keep first 10 stable for the leaderboard.
+  const INST_TYPES = ['Engineering College', 'University', 'Autonomous Institute', 'Bootcamp'];
   const institutes = [];
   for (let i = 0; i < 21; i++) {
     const base = INSTITUTE_SEED[i % INSTITUTE_SEED.length];
     const name = i < INSTITUTE_SEED.length ? base[0] : `${base[0]} Campus ${Math.floor(i / INSTITUTE_SEED.length) + 1}`;
-    institutes.push(await Institute.create({ name, city: base[1], type: 'Engineering', status: 'Active', createdAt: spread() }));
+    const owner = `${pick(rng, FIRST)} ${pick(rng, LAST)}`;
+    const slug = name.toLowerCase().replace(/[^a-z]+/g, '').slice(0, 10) || 'inst';
+    const email = `spoc@${slug}.edu`;
+    const createdAt = spread();
+    const status = i < 18 ? 'Active' : i < 20 ? 'Pending' : 'Disabled';
+    institutes.push(await Institute.create({
+      name, city: base[1], type: pick(rng, INST_TYPES), status, owner, email, createdAt,
+      ownershipHistory: [{ owner, email, changedAt: createdAt, changedBy: 'Platform Admin' }],
+    }));
   }
 
   // 48 employers; offersExtended descending-ish so the leaderboard is meaningful.
@@ -138,6 +148,14 @@ async function run() {
     });
   }
   await Slot.insertMany(slotDocs);
+
+  // Audit logs for institutes
+  const auditDocs = [];
+  for (const inst of institutes) {
+    auditDocs.push({ entityType: 'institute', entityId: inst._id, action: 'created', actor: 'Platform Admin', detail: `Created ${inst.name}`, at: inst.createdAt });
+    if (inst.status === 'Active') auditDocs.push({ entityType: 'institute', entityId: inst._id, action: 'approved', actor: 'Platform Admin', detail: `Approved ${inst.name}`, at: new Date(inst.createdAt.getTime() + DAY) });
+  }
+  await AuditLog.insertMany(auditDocs);
 
   // eslint-disable-next-line no-console
   console.log('Seed complete.');
