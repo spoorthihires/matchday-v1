@@ -17,6 +17,9 @@ npm run dev         # server :4000 + client :5173
 
 Sign in with the admin credentials printed by the seed (`admin@matchday.dev` / `Password123!`).
 
+## Features
+- **Drives** — List with filters, sort, and pagination; bulk archive/unarchive; create/edit via 6-step wizard. Available at `/drives`.
+
 ## Tests
 ```bash
 npm test            # server (vitest+supertest) and client (vitest+RTL)
