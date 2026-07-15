@@ -4,13 +4,20 @@ import { apiFetch } from '../../../api/client.js';
 import { useAuth } from '../../../auth/AuthContext.js';
 import type { DriveInput } from '../../../types/drives.js';
 import { useDriveMutations } from '../hooks/useDriveMutations.js';
+import { StepBasics } from './StepBasics.js';
+import { StepEligibility } from './StepEligibility.js';
+import { StepEvaluation } from './StepEvaluation.js';
+import { StepReview } from './StepReview.js';
+import { StepSchedule } from './StepSchedule.js';
+import { StepVisibility } from './StepVisibility.js';
 import { validateStep } from './validation.js';
 
 // Ported from matchday-admin-app_23.html lines ~2046-2208 (#wizard overlay: .wiz-top, .wiz-body
 // with .wiz-rail/.wiz-main, .wiz-foot) plus the setStep/openWizard/validate/commit behavior around
-// lines 2655-2777. The 6 step bodies are placeholders — Task 7 drops in the real
-// StepBasics/StepSchedule/StepEligibility/StepEvaluation/StepVisibility/StepReview components at
-// the `renderStep` switch below; this task only needs the shell (nav/validation/submit) to work.
+// lines 2655-2777. The 6 step bodies (Task 7) are the real StepBasics/StepSchedule/
+// StepEligibility/StepEvaluation/StepVisibility/StepReview components, rendered by the
+// `renderStep` switch below; each per-field error is shown inline by the step component itself
+// (from the `errors` prop), so this shell no longer needs a generic top-of-step error banner.
 
 export interface DriveWizardProps {
   mode: 'create' | 'edit';
@@ -83,17 +90,28 @@ export function blankDriveModel(): DriveInput {
   };
 }
 
-// TODO(Task 7): render the real step component here (StepBasics, StepSchedule, StepEligibility,
-// StepEvaluation, StepVisibility, StepReview from client/src/pages/Drives/wizard/), passing
-// `model` + `onChange`. This placeholder only proves the shell's nav/validation/submit wiring.
-function renderStep(step: number, model: DriveInput, onChange: (patch: Partial<DriveInput>) => void) {
-  void model;
-  void onChange;
-  return (
-    <div className="wstep active">
-      Step {step + 1} — {STEP_TITLES[step]}
-    </div>
-  );
+function renderStep(
+  step: number,
+  model: DriveInput,
+  onChange: (patch: Partial<DriveInput>) => void,
+  errors: string[],
+) {
+  switch (step) {
+    case 0:
+      return <StepBasics model={model} onChange={onChange} errors={errors} />;
+    case 1:
+      return <StepSchedule model={model} onChange={onChange} errors={errors} />;
+    case 2:
+      return <StepEligibility model={model} onChange={onChange} errors={errors} />;
+    case 3:
+      return <StepEvaluation model={model} onChange={onChange} errors={errors} />;
+    case 4:
+      return <StepVisibility model={model} onChange={onChange} errors={errors} />;
+    case 5:
+      return <StepReview model={model} onChange={onChange} errors={errors} />;
+    default:
+      return null;
+  }
 }
 
 export function DriveWizard({ mode, driveId, onClose }: DriveWizardProps) {
@@ -223,13 +241,6 @@ export function DriveWizard({ mode, driveId, onClose }: DriveWizardProps) {
           {editLoading && <p className="fnote">Loading drive…</p>}
           {editError && <p style={{ color: 'var(--danger)' }}>Failed to load drive.</p>}
 
-          {errors.length > 0 && (
-            <div className="wfld full err">
-              <div className="emsg" style={{ display: 'flex' }}>
-                <i className="ti ti-alert-circle" /> {errors.join(' ')}
-              </div>
-            </div>
-          )}
           {submitError && (
             <div className="wfld full err">
               <div className="emsg" style={{ display: 'flex' }}>
@@ -238,7 +249,7 @@ export function DriveWizard({ mode, driveId, onClose }: DriveWizardProps) {
             </div>
           )}
 
-          {!editLoading && !editError && renderStep(step, model, onChange)}
+          {!editLoading && !editError && renderStep(step, model, onChange, errors)}
         </main>
       </div>
 
