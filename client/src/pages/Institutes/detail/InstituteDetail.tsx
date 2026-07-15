@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../../../components/AppShell.js';
 import { useInstitute } from '../hooks/useInstitute.js';
+import { TabAudit } from './TabAudit.js';
+import { TabCandidates } from './TabCandidates.js';
 import { TabDrivesComingSoon } from './TabDrivesComingSoon.js';
 import { TabFunnel } from './TabFunnel.js';
 import { TabOverview } from './TabOverview.js';
@@ -171,26 +173,12 @@ export function InstituteDetail() {
           {activeTab === 'overview' && (
             <TabOverview institute={institute} funnel={funnel} onOpenFunnel={() => setActiveTab('funnel')} />
           )}
-          {activeTab === 'candidates' && (
-            // TODO(Task 7): render TabCandidates bound to GET /api/institutes/:id/candidates
-            <div className="card">
-              <p style={{ padding: 20, color: 'var(--muted)' }}>
-                Candidates tab is coming in the next task.
-              </p>
-            </div>
-          )}
+          {activeTab === 'candidates' && <TabCandidates instituteId={institute._id} />}
           {activeTab === 'drives' && <TabDrivesComingSoon />}
           {activeTab === 'funnel' && <TabFunnel funnel={funnel} instituteName={institute.name} />}
           {activeTab === 'performance' && <TabPerformance performance={performance} />}
           {activeTab === 'ownership' && <TabOwnership ownershipHistory={institute.ownershipHistory} />}
-          {activeTab === 'audit' && (
-            // TODO(Task 7): render TabAudit bound to GET /api/institutes/:id/audit
-            <div className="card">
-              <p style={{ padding: 20, color: 'var(--muted)' }}>
-                Audit Logs tab is coming in the next task.
-              </p>
-            </div>
-          )}
+          {activeTab === 'audit' && <TabAudit instituteId={institute._id} />}
         </div>
       </div>
     </AppShell>
