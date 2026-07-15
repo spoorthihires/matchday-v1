@@ -63,7 +63,7 @@ export function JobseekersToolbar({
       <div className="dm-search">
         <i className="ti ti-search" />
         <input
-          placeholder="Search by name or ID…"
+          placeholder="Search by name…"
           aria-label="Search candidates"
           value={localQ}
           onChange={(e) => setLocalQ(e.target.value)}

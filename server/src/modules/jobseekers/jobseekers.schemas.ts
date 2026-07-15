@@ -1,8 +1,9 @@
+import { Types } from 'mongoose';
 import { z } from 'zod';
 
 export const createJobseekerSchema = z.object({
   name: z.string().trim().min(1),
-  instituteId: z.string().min(1),
+  instituteId: z.string().refine((v) => Types.ObjectId.isValid(v), { message: 'Invalid institute id' }),
   branch: z.string().min(1),
   gradYear: z.coerce.number().int().min(2020).max(2030),
   cgpa: z.coerce.number().min(0).max(10),

@@ -9,6 +9,7 @@ import { JobseekersToolbar } from './JobseekersToolbar.js';
 import { ViewPills, type JobseekerView } from './ViewPills.js';
 import { useJobseekerMutations } from './hooks/useJobseekerMutations.js';
 import { useJobseekers } from './hooks/useJobseekers.js';
+import { pagerWindow } from './pagerWindow.js';
 import { UploadWizard } from './upload/UploadWizard.js';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 20, 50];
@@ -200,11 +201,15 @@ export function JobseekersPage() {
               <button className="pbtn" disabled={effPage <= 1} onClick={() => setPage(effPage - 1)}>
                 <i className="ti ti-chevron-left" />
               </button>
-              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <button key={p} className={`pbtn${p === effPage ? ' on' : ''}`} disabled={p === effPage} onClick={() => setPage(p)}>
-                  {p}
-                </button>
-              ))}
+              {pagerWindow(effPage, pages).map((p, i) =>
+                p === '…' ? (
+                  <span key={`gap-${i}`} className="pbtn gap" aria-hidden="true">…</span>
+                ) : (
+                  <button key={p} className={`pbtn${p === effPage ? ' on' : ''}`} disabled={p === effPage} onClick={() => setPage(p)}>
+                    {p}
+                  </button>
+                ),
+              )}
               <button className="pbtn" disabled={effPage >= pages} onClick={() => setPage(effPage + 1)}>
                 <i className="ti ti-chevron-right" />
               </button>

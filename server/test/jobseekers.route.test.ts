@@ -46,4 +46,9 @@ describe('jobseekers routes', () => {
     const miss = await auth(request(createApp()).get('/api/jobseekers/64b000000000000000000000'));
     expect(miss.status).toBe(404);
   });
+  it('400s on a malformed instituteId', async () => {
+    const res = await auth(request(createApp()).post('/api/jobseekers').send({ name: 'X', instituteId: 'not-an-id', branch: 'CSE', gradYear: 2026, cgpa: 7 }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
 });
