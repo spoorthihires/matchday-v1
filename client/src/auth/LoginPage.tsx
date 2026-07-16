@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client.js';
 import { useAuth } from './AuthContext.js';
 import { useLogin } from '../hooks/useLogin.js';
+import { homePathFor } from './roles.js';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ export function LoginPage() {
     e.preventDefault();
     try {
       const signedIn = await login.mutateAsync({ email, password });
-      navigate(signedIn.role === 'jobseeker' ? '/portal' : '/', { replace: true });
+      navigate(homePathFor(signedIn.role), { replace: true });
     } catch { /* error surfaced below via login.error */ }
   }
 
@@ -24,7 +25,7 @@ export function LoginPage() {
 
   // Already authenticated: redirect without calling navigate() during render
   // (which would emit a React warning). See task-9 report for details.
-  if (token) return <Navigate to={user?.role === 'jobseeker' ? '/portal' : '/'} replace />;
+  if (token) return <Navigate to={homePathFor(user?.role)} replace />;
 
   return (
     <div id="auth-screen">
