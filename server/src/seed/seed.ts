@@ -10,6 +10,7 @@ import { Drive, type DriveDoc } from '../models/Drive.js';
 import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
 import { AuditLog } from '../models/AuditLog.js';
+import { DriveTemplate } from '../models/DriveTemplate.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
 const NOW = new Date('2026-07-12T00:00:00.000Z');
@@ -38,7 +39,7 @@ async function run() {
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
-    RegistrationRequest.deleteMany({}),
+    RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -298,6 +299,81 @@ async function run() {
     if (inst.status === 'Active') auditDocs.push({ entityType: 'institute', entityId: inst._id, action: 'approved', actor: 'Platform Admin', detail: `Approved ${inst.name}`, at: new Date(inst.createdAt.getTime() + DAY) });
   }
   await AuditLog.insertMany(auditDocs);
+
+  // ---- Drive templates (5, verbatim from the prototype's `templates` array) ----
+  // baseSections mirrors the prototype's baseSections(over): a shallow merge, so an override key
+  // replaces the whole sub-object (matches matchday-admin-app_23.html line 2781).
+  const baseSections = (over: Record<string, unknown> = {}) => ({
+    assessment: { mcq: true, coding: true, tara: true, assignments: false },
+    weightage: { MCQ: 20, Coding: 35, TARA: 30, Assignment: 15 },
+    matching: { Skills: 40, Experience: 25, 'Domain fit': 20, Location: 15, threshold: 70 },
+    kanban: ['Applied', 'Screened', 'MCQ', 'Coding', 'TARA', 'Shortlisted', 'Interview', 'Offer', 'Joined'],
+    notifications: [
+      { name: 'Shortlisted', ch: ['Email', 'WhatsApp'] },
+      { name: 'Interview scheduled', ch: ['Email', 'WhatsApp', 'Bell'] },
+      { name: 'Offer sent', ch: ['Email', 'WhatsApp'] },
+      { name: 'Rejected', ch: ['Email'] },
+    ],
+    privacy: {
+      'Mask contact until shortlist': true, 'Hide salary from institutes': true,
+      'Require GDPR consent': true, 'Watermark resumes': false,
+    },
+    ...over,
+  });
+  // Note: `daysAgo` is already declared above (same NOW/DAY-based formula the brief specifies)
+  // and is reused here as-is rather than redeclared, to avoid a duplicate block-scoped binding.
+  const D = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));   // m is 0-based
+  const templateDocs = [
+    {
+      name: 'Data Analyst', domain: 'Data / Analytics', status: 'Active', usedBy: 6,
+      sections: baseSections({ weightage: { MCQ: 30, Coding: 25, TARA: 30, Assignment: 15 } }),
+      version: '2.1', updatedAt: daysAgo(2), createdAt: D(2026, 4, 30),
+      versions: [
+        { v: '2.1', date: D(2026, 6, 10), by: 'Sharath P.', note: 'Raised MCQ weightage to 30%' },
+        { v: '2.0', date: D(2026, 5, 22), by: 'Asha N.', note: 'Added assignment stage' },
+        { v: '1.0', date: D(2026, 4, 30), by: 'Sharath P.', note: 'Initial template' },
+      ],
+    },
+    {
+      name: 'Data Engineer', domain: 'Data Engineering', status: 'Active', usedBy: 4,
+      sections: baseSections({ assessment: { mcq: true, coding: true, tara: true, assignments: true } }),
+      version: '1.4', updatedAt: daysAgo(5), createdAt: D(2026, 5, 1),
+      versions: [
+        { v: '1.4', date: D(2026, 6, 7), by: 'Sharath P.', note: 'Enabled take-home assignment' },
+        { v: '1.0', date: D(2026, 5, 1), by: 'Sharath P.', note: 'Initial template' },
+      ],
+    },
+    {
+      name: 'ML Engineer', domain: 'Machine Learning', status: 'Active', usedBy: 5,
+      sections: baseSections({ matching: { Skills: 45, Experience: 25, 'Domain fit': 20, Location: 10, threshold: 75 } }),
+      version: '1.8', updatedAt: daysAgo(1), createdAt: D(2026, 4, 18),
+      versions: [
+        { v: '1.8', date: D(2026, 6, 11), by: 'Asha N.', note: 'Tightened matching threshold to 75%' },
+        { v: '1.0', date: D(2026, 4, 18), by: 'Sharath P.', note: 'Initial template' },
+      ],
+    },
+    {
+      name: 'GenAI Engineer', domain: 'GenAI', status: 'Active', usedBy: 3,
+      sections: baseSections({ weightage: { MCQ: 15, Coding: 30, TARA: 40, Assignment: 15 } }),
+      version: '1.2', updatedAt: daysAgo(3), createdAt: D(2026, 5, 15),
+      versions: [
+        { v: '1.2', date: D(2026, 6, 9), by: 'Asha N.', note: 'Increased TARA weightage' },
+        { v: '1.0', date: D(2026, 5, 15), by: 'Asha N.', note: 'Initial template' },
+      ],
+    },
+    {
+      name: 'Business Analyst', domain: 'Business', status: 'Inactive', usedBy: 0,
+      sections: baseSections({
+        assessment: { mcq: true, coding: false, tara: true, assignments: true },
+        kanban: ['Applied', 'Screened', 'MCQ', 'TARA', 'Assignment', 'Shortlisted', 'Interview', 'Offer', 'Joined'],
+      }),
+      version: '1.0', updatedAt: daysAgo(14), createdAt: D(2026, 5, 28),
+      versions: [
+        { v: '1.0', date: D(2026, 5, 28), by: 'Sharath P.', note: 'Initial template' },
+      ],
+    },
+  ];
+  await DriveTemplate.insertMany(templateDocs);
 
   // eslint-disable-next-line no-console
   console.log('Seed complete.');
