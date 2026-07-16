@@ -11,7 +11,7 @@ const Switch = ({ on, onClick, label }: { on: boolean; onClick: () => void; labe
   <button type="button" role="switch" aria-checked={on} aria-label={label} className={`switch${on ? ' on' : ''}`} onClick={onClick} />
 );
 const Pick = ({ opts, value, onPick }: { opts: string[]; value: string; onPick: (v: string) => void }) => (
-  <div className="pick">{opts.map((o) => <span key={o} role="button" aria-pressed={value === o} className={`opt${value === o ? ' on' : ''}`} onClick={() => onPick(o)}>{o}</span>)}</div>
+  <div className="pick">{opts.map((o) => <button type="button" key={o} aria-pressed={value === o} aria-label={o} className={`opt${value === o ? ' on' : ''}`} onClick={() => onPick(o)}>{o}</button>)}</div>
 );
 
 export function StreamRulesPage() {
