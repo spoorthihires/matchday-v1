@@ -11,6 +11,7 @@ import { evalMonitorRoutes } from './modules/evalMonitor/routes.js';
 import { instituteRoutes } from './modules/institutes/institutes.routes.js';
 import { jobseekerRoutes } from './modules/jobseekers/jobseekers.routes.js';
 import { registrationRoutes } from './modules/registrations/registrations.routes.js';
+import { seekerPortalRoutes } from './modules/seekerPortal/seekerPortal.routes.js';
 import { slotRoutes } from './modules/slots/slots.routes.js';
 import { streamRoutes } from './modules/streams/routes.js';
 import { streamRulesRoutes } from './modules/streamRules/routes.js';
@@ -25,6 +26,7 @@ export function createApp(): Express {
 
   // Route modules mounted in later tasks:
   app.use('/api/auth', authRoutes);
+  app.use('/api/me', seekerPortalRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/drives', driveRoutes);
   app.use('/api/employers', employerRoutes);
