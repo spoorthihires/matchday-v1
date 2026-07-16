@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../middleware/asyncHandler.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
+import { requireRole } from '../../middleware/requireRole.js';
 import {
   listController, createController, getController, patchController,
   cloneController, restoreController, deleteController,
@@ -8,6 +9,7 @@ import {
 
 export const templateRoutes = Router();
 templateRoutes.use(requireAuth);
+templateRoutes.use(requireRole('admin'));
 templateRoutes.get('/', asyncHandler(listController));
 templateRoutes.post('/', asyncHandler(createController));
 templateRoutes.post('/:id/clone', asyncHandler(cloneController));

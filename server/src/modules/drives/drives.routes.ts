@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../middleware/asyncHandler.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
+import { requireRole } from '../../middleware/requireRole.js';
 import {
   listController, createController, getController, patchController, cloneController, bulkController,
 } from './drives.controller.js';
 
 export const driveRoutes = Router();
 driveRoutes.use(requireAuth);
+driveRoutes.use(requireRole('admin'));
 driveRoutes.get('/', asyncHandler(listController));
 driveRoutes.post('/', asyncHandler(createController));
 driveRoutes.post('/bulk', asyncHandler(bulkController));
