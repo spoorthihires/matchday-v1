@@ -10,6 +10,7 @@ import { instituteRoutes } from './modules/institutes/institutes.routes.js';
 import { jobseekerRoutes } from './modules/jobseekers/jobseekers.routes.js';
 import { registrationRoutes } from './modules/registrations/registrations.routes.js';
 import { slotRoutes } from './modules/slots/slots.routes.js';
+import { templateRoutes } from './modules/templates/templates.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp(): Express {
   app.use('/api/jobseekers', jobseekerRoutes);
   app.use('/api/registrations', registrationRoutes);
   app.use('/api/slots', slotRoutes);
+  app.use('/api/templates', templateRoutes);
 
   app.use(errorHandler);
   return app;
