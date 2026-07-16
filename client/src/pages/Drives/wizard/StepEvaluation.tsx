@@ -1,4 +1,5 @@
 import type { EvaluationStage } from '../../../types/drives.js';
+import { useTemplates } from '../../Templates/hooks/useTemplates.js';
 import type { WizardStepProps } from './types.js';
 
 // Ported from matchday-admin-app_23.html lines 2150-2181 (STEP 4: Evaluation). Titles,
@@ -57,6 +58,8 @@ const META: EvalMeta[] = [
 ];
 
 export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
+  const { data: tplData } = useTemplates({ status: 'Active' });
+  const templates = tplData?.items ?? [];
   const anyEnabled = model.evaluation.some((e) => e.enabled);
   const showErr = errors.length > 0 && !anyEnabled;
 
@@ -80,6 +83,30 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
         <div className="eyebrow">Step 4</div>
         <h2>Evaluation</h2>
         <p>Choose the screening stages candidates pass through before MatchDay.</p>
+      </div>
+      <div className="wfld full" style={{ marginBottom: 12 }}>
+        <label htmlFor="tplPick">Start from a template</label>
+        <select
+          id="tplPick"
+          className="select"
+          style={{ appearance: 'auto' }}
+          value={model.templateId ?? ''}
+          onChange={(e) => {
+            const id = e.target.value;
+            if (!id) { onChange({ templateId: '' }); return; }
+            const t = templates.find((x) => x.id === id);
+            if (!t) { onChange({ templateId: id }); return; }
+            const a = t.sections.assessment;
+            onChange({
+              templateId: id,
+              evaluation: model.evaluation.map((s) => ({ ...s, enabled: !!a[s.key as keyof typeof a] })),
+            });
+          }}
+        >
+          <option value="">No template</option>
+          {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        <span className="fnote" style={{ fontSize: 11.5, color: 'var(--faint)' }}>Applying a template pre-fills the evaluation stages below.</span>
       </div>
       <div id="w-eval">
         {META.map((meta) => {
