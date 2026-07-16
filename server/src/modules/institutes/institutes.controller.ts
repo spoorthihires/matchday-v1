@@ -1,7 +1,11 @@
 import type { Request, Response } from 'express';
-import { createInstituteSchema, updateInstituteSchema, listQuerySchema, bulkSchema, pageQuerySchema } from './institutes.schemas.js';
+import {
+  createInstituteSchema, updateInstituteSchema, listQuerySchema, bulkSchema, pageQuerySchema,
+  assignDrivesSchema, bulkAssignDrivesSchema,
+} from './institutes.schemas.js';
 import {
   listInstitutes, getInstitute, createInstitute, updateInstitute, bulkInstituteAction, listCandidates, listAudit,
+  listInstituteDrives, assignDrives, unassignDrive, bulkAssignDrives,
 } from './institutes.service.js';
 
 const ACTOR = 'Platform Admin';
@@ -29,4 +33,17 @@ export async function candidatesController(req: Request, res: Response) {
 export async function auditController(req: Request, res: Response) {
   const { page, limit } = pageQuerySchema.parse(req.query);
   res.json(await listAudit(req.params.id, page, limit));
+}
+export async function instituteDrivesController(req: Request, res: Response) {
+  res.json(await listInstituteDrives(req.params.id));
+}
+export async function assignDrivesController(req: Request, res: Response) {
+  res.json(await assignDrives(req.params.id, assignDrivesSchema.parse(req.body).driveIds));
+}
+export async function unassignDriveController(req: Request, res: Response) {
+  res.json(await unassignDrive(req.params.id, req.params.driveId));
+}
+export async function bulkAssignDrivesController(req: Request, res: Response) {
+  const { instituteIds, driveIds } = bulkAssignDrivesSchema.parse(req.body);
+  res.json(await bulkAssignDrives(instituteIds, driveIds));
 }
