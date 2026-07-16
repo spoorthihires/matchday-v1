@@ -3,6 +3,7 @@ import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Institute } from '../src/models/Institute.js';
 import { Jobseeker } from '../src/models/Jobseeker.js';
 import { deriveStage, getEvalMonitor } from '../src/modules/evalMonitor/eval-monitor.service.js';
+import { getOverview } from '../src/modules/dashboard/dashboard.service.js';
 
 beforeAll(setupTestDb);
 afterAll(teardownTestDb);
@@ -73,5 +74,33 @@ describe('eval-monitor.service — derivation', () => {
     // 'All time' applies no cap → returns everything
     const allTime = await getEvalMonitor({ date: 'All time' });
     expect(allTime.candidates.length).toBe(all.candidates.length);
+  });
+
+  // Cross-service reconciliation: the monitor's stage-9 count MUST equal the Command Center's
+  // matchReady KPI computed by the dashboard service over the same DB. If anyone later changes
+  // the CC's terminal-stage set, the two figures diverge and this test fails loudly.
+  it('stage-9 count reconciles with the Command Center matchReady KPI over the same DB', async () => {
+    await seedInst();
+    // In BOTH the monitor stage-9 set and the CC matchReady set:
+    await Jobseeker.create(js({ stage: 'MatchReady', evaluationStatus: 'completed', profileCompleted: true }));
+    await Jobseeker.create(js({ stage: 'Shortlisted', evaluationStatus: 'completed', profileCompleted: true }));
+    await Jobseeker.create(js({ stage: 'Offer', evaluationStatus: 'completed', profileCompleted: true }));
+    await Jobseeker.create(js({ stage: 'Joined', evaluationStatus: 'completed', profileCompleted: true }));
+    // Excluded from both:
+    await Jobseeker.create(js({ stage: 'DroppedOff' }));
+    // In neither (pre-terminal):
+    await Jobseeker.create(js({ stage: 'Applied' }));
+    await Jobseeker.create(js({ stage: 'Screened', evaluationStatus: 'pending', profileCompleted: true }));
+
+    const monitor = await getEvalMonitor({});
+    const stage9 = monitor.candidates.filter((c) => c.stage === 9).length;
+
+    const overview = await getOverview();
+    const matchReadyKpi = overview.kpis.find((k) => k.key === 'matchReady');
+    expect(matchReadyKpi).toBeDefined();
+
+    // Both must see exactly the 4 terminal-stage jobseekers.
+    expect(stage9).toBe(4);
+    expect(stage9).toBe(matchReadyKpi!.value);
   });
 });

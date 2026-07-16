@@ -28,6 +28,9 @@ export function deriveStage(
   return h % 2;                                                // 0..1
 }
 
+// minsAgo maxes at 2879 (h % 2880, see below) — below every non-'Today' cap (7d=10080, 30d=43200),
+// so reconciliation with the Command Center holds on the default 'Last 30 days' view: it never
+// drops a match-ready candidate. Only 'Today' (1440) can filter some out.
 const DATE_CAP: Record<string, number> = {
   'Today': 1440, 'Last 7 days': 10080, 'Last 30 days': 43200,
 };
