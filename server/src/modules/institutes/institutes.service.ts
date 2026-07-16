@@ -3,6 +3,8 @@ import { HttpError } from '../../middleware/errorHandler.js';
 import { Institute } from '../../models/Institute.js';
 import { AuditLog } from '../../models/AuditLog.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
+import { Drive } from '../../models/Drive.js';
+import { DriveAssignment } from '../../models/DriveAssignment.js';
 import type { CreateInstituteInput, ListQuery } from './institutes.schemas.js';
 
 export type ListParams = Partial<ListQuery>;
@@ -124,7 +126,8 @@ export async function getInstitute(id: string) {
   const performance = { matchReadyPct: funnel.matchReadyPct, joinedPct: funnel.joinedPct, avgMatchReadyPct: avgMrPct, rank: rank || null, ofActive: mrValues.length };
 
   const kpis = { uploaded: funnel.uploaded, matchReadyPct: funnel.matchReadyPct, shortlistPct: funnel.shortlistPct, joinedPct: funnel.joinedPct };
-  return { institute: inst, funnel, kpis, performance };
+  const assignedDrives = await DriveAssignment.countDocuments({ instituteId: new Types.ObjectId(id) });
+  return { institute: inst, funnel, kpis, performance, assignedDrives };
 }
 
 async function writeAudit(entityId: Types.ObjectId, action: string, actor: string, detail: string) {
@@ -191,4 +194,73 @@ export async function listAudit(id: string, page: number, limit: number) {
   ]);
   const items = docs.map((l) => ({ action: l.action as string, actor: l.actor as string, detail: (l.detail as string) ?? '', at: new Date(l.at as Date).toISOString() }));
   return { items, total, page, limit };
+}
+
+export interface AssignedDriveItem { id: string; name: string; domain: string; stream: string; status: string; month: string; }
+
+const A_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function driveMonth(dates: unknown): string {
+  const arr = Array.isArray(dates) ? (dates as Date[]) : [];
+  if (!arr.length) return '—';
+  const min = new Date(Math.min(...arr.map((d) => new Date(d).getTime())));
+  return `${A_MONTHS[min.getUTCMonth()]} ${min.getUTCFullYear()}`;
+}
+
+async function requireInstitute(id: string) {
+  assertId(id);
+  const inst = await Institute.findById(id).select('_id').lean();
+  if (!inst) throw new HttpError(404, 'Institute not found', 'not_found');
+  return inst;
+}
+
+export async function listInstituteDrives(id: string) {
+  await requireInstitute(id);
+  const rows = await DriveAssignment.find({ instituteId: new Types.ObjectId(id) }).sort({ createdAt: -1 }).lean();
+  const drives = await Drive.find({ _id: { $in: rows.map((r) => r.driveId) } }).lean();
+  const byId = new Map(drives.map((d) => [String(d._id), d]));
+  const items: AssignedDriveItem[] = rows.flatMap((r) => {
+    const d = byId.get(String(r.driveId));
+    if (!d) return [];   // drive was deleted — drop the orphaned assignment from the view
+    return [{ id: String(d._id), name: (d.name as string) || '(untitled)', domain: (d.domain as string) ?? '', stream: (d.stream as string) ?? '', status: (d.status as string) ?? 'Draft', month: driveMonth(d.eventDates) }];
+  });
+  return { items };
+}
+
+async function upsertPair(instituteId: string, driveId: string) {
+  await DriveAssignment.updateOne(
+    { instituteId: new Types.ObjectId(instituteId), driveId: new Types.ObjectId(driveId) },
+    { $setOnInsert: { instituteId: new Types.ObjectId(instituteId), driveId: new Types.ObjectId(driveId), createdAt: new Date() } },
+    { upsert: true },
+  );
+}
+
+export async function assignDrives(id: string, driveIds: string[]) {
+  await requireInstitute(id);
+  const valid = driveIds.filter((d) => Types.ObjectId.isValid(d));
+  const resolvable = (await Drive.find({ _id: { $in: valid } }).select('_id').lean()).map((d) => String(d._id));
+  for (const dId of resolvable) await upsertPair(id, dId);
+  return listInstituteDrives(id);
+}
+
+export async function unassignDrive(id: string, driveId: string) {
+  assertId(id);
+  if (Types.ObjectId.isValid(driveId)) {
+    await DriveAssignment.deleteOne({ instituteId: new Types.ObjectId(id), driveId: new Types.ObjectId(driveId) });
+  }
+  return { deleted: true as const };
+}
+
+export async function bulkAssignDrives(instituteIds: string[], driveIds: string[]) {
+  const insts = (await Institute.find({ _id: { $in: instituteIds.filter((i) => Types.ObjectId.isValid(i)) } }).select('_id').lean()).map((i) => String(i._id));
+  const drives = (await Drive.find({ _id: { $in: driveIds.filter((d) => Types.ObjectId.isValid(d)) } }).select('_id').lean()).map((d) => String(d._id));
+  let assigned = 0;
+  for (const iId of insts) for (const dId of drives) {
+    const res = await DriveAssignment.updateOne(
+      { instituteId: new Types.ObjectId(iId), driveId: new Types.ObjectId(dId) },
+      { $setOnInsert: { instituteId: new Types.ObjectId(iId), driveId: new Types.ObjectId(dId), createdAt: new Date() } },
+      { upsert: true },
+    );
+    if (res.upsertedCount) assigned += 1;
+  }
+  return { assigned };
 }

@@ -29,5 +29,8 @@ export const pageQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
+export const assignDrivesSchema = z.object({ driveIds: z.array(z.string()).default([]) });
+export const bulkAssignDrivesSchema = z.object({ instituteIds: z.array(z.string()).min(1), driveIds: z.array(z.string()).min(1) });
+
 export type CreateInstituteInput = z.infer<typeof createInstituteSchema>;
 export type ListQuery = z.infer<typeof listQuerySchema>;

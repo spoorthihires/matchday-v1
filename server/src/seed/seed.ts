@@ -14,6 +14,7 @@ import { DriveTemplate } from '../models/DriveTemplate.js';
 import { EvalConfig } from '../models/EvalConfig.js';
 import { Stream } from '../models/Stream.js';
 import { StreamRules } from '../models/StreamRules.js';
+import { DriveAssignment } from '../models/DriveAssignment.js';
 import { SR_DEFAULTS } from '../modules/streamRules/service.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
@@ -44,7 +45,7 @@ async function run() {
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
     RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}), EvalConfig.deleteMany({}),
-    Stream.deleteMany({}), StreamRules.deleteMany({}),
+    Stream.deleteMany({}), StreamRules.deleteMany({}), DriveAssignment.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -404,6 +405,16 @@ async function run() {
   ];
   await Stream.insertMany(streamDocs);
   await StreamRules.create({ ...SR_DEFAULTS });
+
+  // ---- Institute↔Drive assignments (each institute gets ~2–5 drives, deterministic) ----
+  const assignmentDocs = [];
+  for (const inst of institutes) {
+    const n = intBetween(rng, 2, 5);
+    const pickedIds = new Set<string>();
+    for (let k = 0; k < n; k++) pickedIds.add(String(pick(rng, drives)._id));
+    for (const dId of pickedIds) assignmentDocs.push({ instituteId: inst._id, driveId: dId, createdAt: spread() });
+  }
+  await DriveAssignment.insertMany(assignmentDocs);
 
   // eslint-disable-next-line no-console
   console.log('Seed complete.');
