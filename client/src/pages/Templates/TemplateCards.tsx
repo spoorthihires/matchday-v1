@@ -16,20 +16,22 @@ function Kebab({ t, onAction }: { t: TemplateItem; onAction: TemplateListProps['
     <>
       <button title="Edit" onClick={() => act('edit')}><i className="ti ti-edit" /></button>
       <button title="Clone" onClick={() => act('clone')}><i className="ti ti-copy" /></button>
-      <button title="More" onClick={() => setOpen((v) => !v)}><i className="ti ti-dots-vertical" /></button>
-      {open && (
-        <div className="kebab-menu show" style={{ top: '100%', right: 8 }}>
-          <button onClick={() => act('edit')}><i className="ti ti-edit" /> Edit template</button>
-          <button onClick={() => act('clone')}><i className="ti ti-copy" /> Clone template</button>
-          <button onClick={() => act('version')}><i className="ti ti-history" /> Version history</button>
-          <button onClick={() => act('toggle')}>
-            <i className={`ti ti-${t.status === 'Active' ? 'circle-off' : 'circle-check'}`} />
-            {' '}{t.status === 'Active' ? 'Deactivate' : 'Activate'}
-          </button>
-          <hr />
-          <button className="danger" onClick={() => act('delete')}><i className="ti ti-trash" /> Delete template</button>
-        </div>
-      )}
+      <div style={{ position: 'relative', display: 'inline-flex' }}>
+        <button title="More" onClick={() => setOpen((v) => !v)}><i className="ti ti-dots-vertical" /></button>
+        {open && (
+          <div className="kebab-menu show" style={{ top: '100%', right: 8 }}>
+            <button onClick={() => act('edit')}><i className="ti ti-edit" /> Edit template</button>
+            <button onClick={() => act('clone')}><i className="ti ti-copy" /> Clone template</button>
+            <button onClick={() => act('version')}><i className="ti ti-history" /> Version history</button>
+            <button onClick={() => act('toggle')}>
+              <i className={`ti ti-${t.status === 'Active' ? 'circle-off' : 'circle-check'}`} />
+              {' '}{t.status === 'Active' ? 'Deactivate' : 'Activate'}
+            </button>
+            <hr />
+            <button className="danger" onClick={() => act('delete')}><i className="ti ti-trash" /> Delete template</button>
+          </div>
+        )}
+      </div>
     </>
   );
 }

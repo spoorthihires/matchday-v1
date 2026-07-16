@@ -27,7 +27,8 @@ describe('TemplateCards / TemplateTable', () => {
 
   it('renders an inactive card dimmed and shows the Activate option in its kebab', async () => {
     const onAction = vi.fn();
-    render(<TemplateCards items={[item({ status: 'Inactive' })]} onAction={onAction} />);
+    const { container } = render(<TemplateCards items={[item({ status: 'Inactive' })]} onAction={onAction} />);
+    expect(container.querySelector('.tpl-card')).toHaveClass('inactive');
     const user = userEvent.setup();
     await user.click(screen.getByTitle('More'));
     expect(screen.getByText(/Activate/)).toBeInTheDocument();
