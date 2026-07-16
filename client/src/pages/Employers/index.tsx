@@ -70,6 +70,7 @@ export function EmployersPage() {
   }
 
   function handleRowAction(action: EmployerRowAction, id: string) {
+    if (action === 'view-drives') { navigate(`/slots?employerId=${id}`); return; }
     switch (action) {
       case 'edit': {
         const employer = data?.items.find((i) => i.id === id);

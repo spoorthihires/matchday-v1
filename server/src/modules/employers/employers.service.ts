@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Employer } from '../../models/Employer.js';
 import { AuditLog } from '../../models/AuditLog.js';
+import { Slot } from '../../models/Slot.js';
 import type { CreateEmployerInput, ListQuery } from './employers.schemas.js';
 
 export type ListParams = Partial<ListQuery>;
@@ -33,11 +34,16 @@ export async function listEmployers(params: ListParams) {
   if (params.industry) match.industry = params.industry;
   if (params.status) match.status = params.status;
   const docs = await Employer.find(match).lean();
+  const driveAgg = await Slot.aggregate([
+    { $match: { employerId: { $ne: null } } },
+    { $group: { _id: '$employerId', drives: { $addToSet: '$driveId' } } },
+  ]);
+  const driveCount = new Map<string, number>(driveAgg.map((r) => [String(r._id), (r.drives as unknown[]).length]));
   let items: EmployerListItem[] = docs.map((d) => ({
     id: String(d._id), name: d.name as string, industry: d.industry as string,
     size: (d.size as string) ?? '51–200', spoc: (d.spoc as string) ?? '', email: (d.email as string) ?? '',
     status: d.status as string,
-    activeDrives: (d.activeDrives as number) ?? 0, candidatesViewed: (d.candidatesViewed as number) ?? 0,
+    activeDrives: driveCount.get(String(d._id)) ?? 0, candidatesViewed: (d.candidatesViewed as number) ?? 0,
     shortlistRate: (d.shortlistRate as number) ?? 0, offerRate: (d.offerRate as number) ?? 0,
     respHours: (d.respHours as number) ?? 0,
   }));

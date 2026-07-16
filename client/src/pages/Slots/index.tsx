@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
 import { useEmployers } from '../Employers/hooks/useEmployers.js';
 import type { SlotItem } from '../../types/slots.js';
@@ -21,7 +22,8 @@ type ActionModalState = { kind: 'link' | 'resch' | 'noshow'; slot: SlotItem } | 
 export function SlotsPage() {
   const [view, setView] = useState<View>('month');
   const [refDate, setRefDate] = useState<Date>(() => new Date());
-  const [employerId, setEmployerId] = useState('');
+  const [searchParams] = useSearchParams();
+  const [employerId, setEmployerId] = useState(() => searchParams.get('employerId') ?? '');
   const [modal, setModal] = useState<ModalState>(null);
   // Set by Day view's quick-action buttons (Task 5) and consumed by <SlotActionModal> below.
   const [actionModal, setActionModal] = useState<ActionModalState>(null);

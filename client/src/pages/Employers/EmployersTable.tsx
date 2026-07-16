@@ -8,7 +8,7 @@ import type { EmployerListItem } from '../../types/employers.js';
 // pure, isolated-testable presentational component (see EmployersTable.test.tsx).
 
 export type EmployerSortKey = 'name' | 'industry' | 'drives' | 'viewed' | 'shortlist' | 'offer' | 'respHours';
-export type EmployerRowAction = 'edit' | 'approve' | 'disable';
+export type EmployerRowAction = 'edit' | 'approve' | 'disable' | 'view-drives';
 
 export interface EmployersTableProps {
   items: EmployerListItem[];
@@ -192,6 +192,7 @@ export function EmployersTable({
                   {openMenuId === x.id && (
                     <div className="kebab-menu show" style={{ top: '100%', right: 8 }}>
                       <button onClick={() => act('edit', x.id)}><i className="ti ti-edit" /> Edit employer</button>
+                      <button onClick={() => act('view-drives', x.id)}><i className="ti ti-calendar-event" /> View drives</button>
                       {x.status === 'Pending' && (
                         <button onClick={() => act('approve', x.id)}><i className="ti ti-circle-check" /> Approve employer</button>
                       )}
