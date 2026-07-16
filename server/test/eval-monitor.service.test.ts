@@ -58,5 +58,20 @@ describe('eval-monitor.service — derivation', () => {
     expect(filtered.candidates.length).toBeLessThanOrEqual(all.candidates.length);
     const byInst = await getEvalMonitor({ institute: 'VNR' });
     expect(byInst.candidates.every((x) => x.institute === 'VNR')).toBe(true);
+
+    // employer filter
+    const e0 = all.employers[0];
+    const byEmp = await getEvalMonitor({ employer: e0 });
+    expect(byEmp.candidates.every((x) => x.employer === e0)).toBe(true);
+
+    // date filter — 'Today' caps minsAgo at 1440; every returned candidate must be within the cap,
+    // and the result is a (non-strict) subset of the unfiltered set.
+    const byDate = await getEvalMonitor({ date: 'Today' });
+    expect(byDate.candidates.every((x) => x.minsAgo <= 1440)).toBe(true);
+    expect(byDate.candidates.length).toBeLessThanOrEqual(all.candidates.length);
+
+    // 'All time' applies no cap → returns everything
+    const allTime = await getEvalMonitor({ date: 'All time' });
+    expect(allTime.candidates.length).toBe(all.candidates.length);
   });
 });
