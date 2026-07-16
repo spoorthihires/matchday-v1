@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
 import type { InstituteListItem, InstituteListParams } from '../../types/institutes.js';
+import { BulkAssignDrivesModal } from './BulkAssignDrivesModal.js';
 import { BulkBar } from './BulkBar.js';
 import { InstituteModal } from './InstituteModal.js';
 import { InstitutesTable, type InstituteRowAction, type InstituteSortKey } from './InstitutesTable.js';
@@ -33,6 +34,7 @@ export function InstitutesPage() {
   const [limit, setLimit] = useState(8);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
 
   const params: InstituteListParams = { ...filters, sort, order, page, limit };
   const { data, isLoading, isError, error } = useInstitutes(params);
@@ -163,6 +165,7 @@ export function InstitutesPage() {
         <BulkBar
           selectedCount={selectedIds.length}
           onApprove={() => handleBulk('approve')}
+          onAssignDrives={() => setBulkAssignOpen(true)}
           onDisable={() => handleBulk('disable')}
           onClear={() => setSelectedIds([])}
         />
@@ -217,6 +220,13 @@ export function InstitutesPage() {
             mode={modal.mode}
             institute={modal.mode === 'edit' ? modal.institute : undefined}
             onClose={() => setModal(null)}
+          />
+        )}
+
+        {bulkAssignOpen && (
+          <BulkAssignDrivesModal
+            instituteIds={[...selectedIds]}
+            onClose={() => { setBulkAssignOpen(false); setSelectedIds([]); }}
           />
         )}
       </div>
