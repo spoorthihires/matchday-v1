@@ -5,6 +5,7 @@ import {
   codeFor, listEvalConfigs, createEvalConfig, getEvalConfig,
   updateEvalConfig, duplicateEvalConfig, deleteEvalConfig,
 } from '../src/modules/evalConfigs/service.js';
+import { updateEvalConfigSchema } from '../src/modules/evalConfigs/eval-configs.schemas.js';
 
 beforeAll(setupTestDb);
 afterAll(teardownTestDb);
@@ -65,5 +66,12 @@ describe('evalConfigs.service', () => {
 
   it('codeFor derives EVC-<3 upper hex>', () => {
     expect(codeFor('64b000000000000000000abc')).toBe('EVC-ABC');
+  });
+
+  it('updateEvalConfigSchema does not inject defaults for omitted keys (PATCH clobber guard)', () => {
+    const parsed = updateEvalConfigSchema.parse({ passing: 80 });
+    expect(parsed).toEqual({ passing: 80 });
+    expect('enabled' in parsed).toBe(false);
+    expect('type' in parsed).toBe(false);
   });
 });
