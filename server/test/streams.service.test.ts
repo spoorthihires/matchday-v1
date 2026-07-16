@@ -43,6 +43,15 @@ describe('streams.service', () => {
     expect(byCutoffDesc.items[0].code).toMatch(/^STR-[0-9A-F]{3}$/);
   });
 
+  it('sorts by name case-insensitively (collation, not raw ASCII)', async () => {
+    // A case-sensitive ASCII sort orders 'B' (66) before 'a' (97) -> [Beta, apex] (WRONG).
+    // The collation({locale:'en', strength:2}) must fold case -> [apex, Beta].
+    await createStream(input({ name: 'Beta Stream' }));
+    await createStream(input({ name: 'apex Stream' }));
+    const byName = await listStreams({ sort: 'name', order: 'asc' });
+    expect(byName.items.map((i) => i.name)).toEqual(['apex Stream', 'Beta Stream']);
+  });
+
   it('PATCH with a config field bumps + logs; status-only does NOT bump', async () => {
     const s = await createStream(input());
     const edited = await updateStream(String(s._id), { cutoff: 70 });
