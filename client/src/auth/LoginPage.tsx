@@ -5,18 +5,18 @@ import { useAuth } from './AuthContext.js';
 import { useLogin } from '../hooks/useLogin.js';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('admin@matchday.dev');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const login = useLogin();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      await login.mutateAsync({ email, password });
-      navigate('/', { replace: true });
+      const signedIn = await login.mutateAsync({ email, password });
+      navigate(signedIn.role === 'jobseeker' ? '/portal' : '/', { replace: true });
     } catch { /* error surfaced below via login.error */ }
   }
 
@@ -24,7 +24,7 @@ export function LoginPage() {
 
   // Already authenticated: redirect without calling navigate() during render
   // (which would emit a React warning). See task-9 report for details.
-  if (token) return <Navigate to="/" replace />;
+  if (token) return <Navigate to={user?.role === 'jobseeker' ? '/portal' : '/'} replace />;
 
   return (
     <div id="auth-screen">
@@ -51,9 +51,9 @@ export function LoginPage() {
         <main className="authwrap">
           <div className="card">
             <section className="view active" id="v-login" aria-labelledby="login-title">
-              <div className="kicker">Admin access</div>
+              <div className="kicker">Sign in</div>
               <h2 id="login-title">Sign in to MatchDay</h2>
-              <p className="sub">Use your Hiringhood admin credentials to continue.</p>
+              <p className="sub">Use your MatchDay credentials to continue.</p>
               <form onSubmit={onSubmit}>
                 <div className="inp">
                   <input
@@ -89,7 +89,7 @@ export function LoginPage() {
                   {login.isPending ? 'Signing in…' : 'Sign in'}
                 </button>
               </form>
-              <div className="cardfoot">Restricted to authorized administrators</div>
+              <div className="cardfoot">Admins and jobseekers sign in here</div>
             </section>
           </div>
         </main>
