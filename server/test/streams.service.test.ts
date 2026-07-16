@@ -75,6 +75,37 @@ describe('streams.service', () => {
     await expect(restoreStream(String(s._id), '9.9')).rejects.toMatchObject({ status: 400, code: 'validation' });
   });
 
+  it('combined status+config PATCH still bumps (real editor-save path)', async () => {
+    const s = await createStream(input());
+    // The editor sends status alongside all config fields; status in the patch must NOT
+    // suppress the bump when a config field is also present.
+    const edited = await updateStream(String(s._id), { status: 'Disabled', cutoff: 80 });
+    expect(edited.version).toBe('1.1');                          // bumped
+    expect(edited.status).toBe('Disabled');
+    expect(edited.cutoff).toBe(80);
+    expect(edited.versions).toHaveLength(2);
+    expect(edited.versions[0].note).toBe('Edited stream configuration');
+  });
+
+  it('partial PATCH does not clobber untouched stored fields (service-level guard)', async () => {
+    const s = await createStream(input({ skills: ['React', 'Vue'], cgpa: 7.2, label: 'Frontend Developer' }));
+    const edited = await updateStream(String(s._id), { cutoff: 90 });
+    expect(edited.cutoff).toBe(90);
+    expect(edited.skills).toEqual(['React', 'Vue']);            // untouched
+    expect(edited.cgpa).toBe(7.2);                             // untouched
+    expect(edited.label).toBe('Frontend Developer');           // untouched
+    expect(edited.good).toEqual(['Next.js']);                  // untouched
+  });
+
+  it('restore is ledger-only: stored config is NOT rolled back', async () => {
+    const s = await createStream(input({ cutoff: 65 }));
+    await updateStream(String(s._id), { cutoff: 90 });          // v1.1
+    const restored = await restoreStream(String(s._id), '1.0');
+    expect(restored.cutoff).toBe(90);                           // still 90, NOT rolled back to 65
+    expect(restored.version).toBe('1.2');
+    expect(restored.versions[0].note).toBe('Restored v1.0');
+  });
+
   it('404s on unknown/malformed ids', async () => {
     await expect(getStream('64b000000000000000000000')).rejects.toThrow();
     await expect(getStream('nope')).rejects.toThrow();
