@@ -173,10 +173,12 @@ export function TemplateEditorModal({ mode, template, onClose }: TemplateEditorM
                     <div className="stage-item" key={`${st}-${i}`}>
                       <span className="num">{i + 1}</span>
                       <span className="sn">{st}</span>
-                      <i
-                        className="ti ti-x rm" role="button" aria-label={`Remove ${st}`}
-                        onClick={() => setDraft((s) => ({ ...s, kanban: s.kanban.filter((_, idx) => idx !== i) }))}
-                      />
+                      {draft.kanban.length > 1 && (
+                        <i
+                          className="ti ti-x rm" role="button" aria-label={`Remove ${st}`}
+                          onClick={() => setDraft((s) => (s.kanban.length > 1 ? { ...s, kanban: s.kanban.filter((_, idx) => idx !== i) } : s))}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
