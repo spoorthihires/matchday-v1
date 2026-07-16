@@ -49,4 +49,32 @@ describe('AssignDrivesModal', () => {
     expect(JSON.parse((post![1] as RequestInit).body as string)).toEqual({ driveIds: ['d2'] });   // added
     expect(fm.mock.calls.some(([u, o]) => typeof u === 'string' && u.includes('/institutes/i1/drives/d1') && (o as RequestInit | undefined)?.method === 'DELETE')).toBe(true);  // removed
   });
+
+  it('gates the checkbox list and disables Save until the current-assignments baseline loads', async () => {
+    // Re-stub fetch so the current-assignments query (GET /institutes/i1/drives) NEVER resolves,
+    // while the all-drives catalog (GET /drives) resolves normally. This reproduces the cold-cache
+    // header-button path: without a load gate, an early click would seed `checked` from an empty
+    // baseline and Save would later fire a spurious DELETE. The gate must keep the list unrendered
+    // and Save disabled.
+    vi.stubGlobal('fetch', vi.fn((url: string, opts?: RequestInit) => {
+      const method = (opts?.method ?? 'GET').toUpperCase();
+      if (url.includes('/institutes/i1/drives') && method === 'GET') return new Promise(() => {}); // never resolves
+      if (url.includes('/drives') && method === 'GET') return Promise.resolve({ ok: true, status: 200, json: async () => ALL_DRIVES });
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+    }));
+
+    const onClose = vi.fn();
+    renderModal(onClose);
+
+    // Modal body shows the loading state; no drive checkboxes are rendered while the baseline is pending.
+    expect(await screen.findByText(/Loading…/i)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /FE Cohort/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /BE Cohort/i })).not.toBeInTheDocument();
+
+    // Save is disabled → cannot fire a diff against an unloaded baseline.
+    expect(screen.getByRole('button', { name: /Save/i })).toBeDisabled();
+    const fm = fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fm.mock.calls.some(([u, o]) => typeof u === 'string' && u.includes('/institutes/i1/drives/') && (o as RequestInit | undefined)?.method === 'DELETE')).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
