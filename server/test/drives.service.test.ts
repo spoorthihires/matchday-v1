@@ -129,4 +129,14 @@ describe('drives.service — templateId link', () => {
     const cleared = await updateDrive(String(d._id), { templateId: '' } as never);
     expect(cleared.templateId).toBeNull();
   });
+  it('preserves an existing templateId when the update patch omits the key', async () => {
+    const t = await tpl();
+    const d = await createDrive({ ...baseInput(), templateId: String(t._id) } as never, 'Admin');
+    expect(String(d.templateId)).toBe(String(t._id));
+    const renamed = await updateDrive(String(d._id), { name: 'Renamed X' } as never);
+    expect(renamed.name).toBe('Renamed X');
+    expect(String(renamed.templateId)).toBe(String(t._id));
+    const reloaded = await getDrive(String(d._id));
+    expect(String(reloaded.templateId)).toBe(String(t._id));
+  });
 });

@@ -27,7 +27,7 @@ function normTemplateId(v: unknown): Types.ObjectId | null {
 }
 
 export async function createDrive(input: DriveInput, createdBy: string) {
-  return Drive.create({ ...input, templateId: normTemplateId((input as { templateId?: unknown }).templateId), createdBy });
+  return Drive.create({ ...input, templateId: normTemplateId(input.templateId), createdBy });
 }
 
 export async function getDrive(id: string) {
