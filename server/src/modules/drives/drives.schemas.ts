@@ -28,6 +28,7 @@ export const createDriveSchema = z.object({
   evaluation: z.array(evalStage).refine((a) => a.some((s) => s.enabled), {
     message: 'Enable at least one evaluation stage',
   }),
+  templateId: z.string().optional(),
   visibility: z.object({
     employerReg: z.enum(['Open', 'Invite-only', 'Closed']),
     instituteVis: z.enum(['All institutes', 'Selected institutes', 'Private link']),

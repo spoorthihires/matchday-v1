@@ -30,6 +30,7 @@ const driveSchema = new Schema({
     expType: { type: String, default: 'Freshers only' },
   },
   evaluation: { type: [evaluationStageSchema], default: [] },
+  templateId: { type: Schema.Types.ObjectId, ref: 'DriveTemplate', default: null },
   visibility: {
     employerReg: { type: String, enum: ['Open', 'Invite-only', 'Closed'], default: 'Invite-only' },
     instituteVis: { type: String, enum: ['All institutes', 'Selected institutes', 'Private link'], default: 'Selected institutes' },
