@@ -11,6 +11,10 @@ import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { DriveTemplate } from '../models/DriveTemplate.js';
+import { EvalConfig } from '../models/EvalConfig.js';
+import { Stream } from '../models/Stream.js';
+import { StreamRules } from '../models/StreamRules.js';
+import { SR_DEFAULTS } from '../modules/streamRules/service.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
 const NOW = new Date('2026-07-12T00:00:00.000Z');
@@ -39,7 +43,8 @@ async function run() {
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
-    RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}),
+    RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}), EvalConfig.deleteMany({}),
+    Stream.deleteMany({}), StreamRules.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -374,6 +379,31 @@ async function run() {
     },
   ];
   await DriveTemplate.insertMany(templateDocs);
+
+  // ---- Evaluation configs (4, verbatim from the prototype's evConfigs array) ----
+  const evalConfigDocs = [
+    { name: 'Standard MCQ round', type: 'MCQ', enabled: true, passing: 60, attempts: 2, retake: 'After cooldown', cooldown: 2, validity: 90, autoQual: true, threshold: 70, contests: 8, updatedAt: daysAgo(2), createdAt: daysAgo(40) },
+    { name: 'Coding challenge', type: 'Coding', enabled: true, passing: 65, attempts: 1, retake: 'Admin approval', cooldown: 3, validity: 120, autoQual: true, threshold: 75, contests: 6, updatedAt: daysAgo(5), createdAt: daysAgo(45) },
+    { name: 'TARA AI interview', type: 'TARA', enabled: true, passing: 55, attempts: 1, retake: 'Not allowed', cooldown: 0, validity: 60, autoQual: false, threshold: 70, contests: 5, updatedAt: daysAgo(1), createdAt: daysAgo(30) },
+    { name: 'Take-home assignment', type: 'Assignments', enabled: false, passing: 50, attempts: 2, retake: 'Unlimited', cooldown: 1, validity: 45, autoQual: false, threshold: 70, contests: 0, updatedAt: daysAgo(14), createdAt: daysAgo(20) },
+  ];
+  await EvalConfig.insertMany(evalConfigDocs);
+
+  // ---- Streams (5, verbatim from the prototype's `streams` array) ----
+  const streamDocs = [
+    { name: 'Frontend Engineering', parent: 'Engineering', label: 'Frontend Developer', skills: ['React', 'TypeScript', 'CSS', 'HTML'], good: ['Next.js', 'Testing'], flow: ['MCQ', 'Coding', 'TARA'], cutoff: 65, cgpa: 6.5, backlogs: 1, grad: ['2025', '2026'], branches: ['CSE', 'IT'], sources: ['Institutes', 'Resume Vault'], status: 'Active', version: '1.3', updatedAt: daysAgo(2), createdAt: D(2026, 4, 30),
+      versions: [ { v: '1.3', date: D(2026, 6, 10), by: 'Sharath P.', note: 'Added TypeScript to required skills' }, { v: '1.0', date: D(2026, 4, 30), by: 'Sharath P.', note: 'Initial stream' } ] },
+    { name: 'Backend Engineering', parent: 'Engineering', label: 'Backend Developer', skills: ['Node.js', 'Databases', 'REST APIs'], good: ['Docker', 'Kubernetes'], flow: ['MCQ', 'Coding', 'TARA', 'Assignment'], cutoff: 70, cgpa: 6.5, backlogs: 1, grad: ['2025', '2026'], branches: ['CSE', 'IT'], sources: ['Institutes', 'Resume Vault', 'Referrals'], status: 'Active', version: '1.5', updatedAt: daysAgo(4), createdAt: D(2026, 5, 1),
+      versions: [ { v: '1.5', date: D(2026, 6, 8), by: 'Asha N.', note: 'Raised cutoff to 70%' }, { v: '1.0', date: D(2026, 5, 1), by: 'Sharath P.', note: 'Initial stream' } ] },
+    { name: 'Data / ML', parent: 'Data Science', label: 'ML Engineer', skills: ['Python', 'Machine Learning', 'Statistics'], good: ['PyTorch', 'MLOps'], flow: ['MCQ', 'Coding', 'TARA'], cutoff: 72, cgpa: 7.0, backlogs: 0, grad: ['2025', '2026'], branches: ['CSE', 'IT', 'ECE'], sources: ['Institutes'], status: 'Active', version: '2.0', updatedAt: daysAgo(1), createdAt: D(2026, 4, 18),
+      versions: [ { v: '2.0', date: D(2026, 6, 11), by: 'Asha N.', note: 'Zero-backlog eligibility' }, { v: '1.0', date: D(2026, 4, 18), by: 'Sharath P.', note: 'Initial stream' } ] },
+    { name: 'Full-stack', parent: 'Engineering', label: 'Full-stack Developer', skills: ['React', 'Node.js', 'Databases'], good: ['AWS', 'CI/CD'], flow: ['MCQ', 'Coding', 'TARA', 'Assignment'], cutoff: 68, cgpa: 6.5, backlogs: 1, grad: ['2025', '2026'], branches: ['CSE', 'IT'], sources: ['Institutes', 'Resume Vault'], status: 'Active', version: '1.1', updatedAt: daysAgo(6), createdAt: D(2026, 5, 10),
+      versions: [ { v: '1.1', date: D(2026, 6, 5), by: 'Sharath P.', note: 'Added assignment stage' }, { v: '1.0', date: D(2026, 5, 10), by: 'Sharath P.', note: 'Initial stream' } ] },
+    { name: 'Business Analytics', parent: 'Business', label: 'Business Analyst', skills: ['SQL', 'Excel', 'Storytelling'], good: ['Power BI', 'Python'], flow: ['MCQ', 'TARA', 'Assignment'], cutoff: 60, cgpa: 6.0, backlogs: 2, grad: ['2025', '2026'], branches: ['MBA', 'MCA'], sources: ['Institutes', 'Direct Apply'], status: 'Disabled', version: '1.0', updatedAt: daysAgo(14), createdAt: D(2026, 5, 28),
+      versions: [ { v: '1.0', date: D(2026, 5, 28), by: 'Asha N.', note: 'Initial stream' } ] },
+  ];
+  await Stream.insertMany(streamDocs);
+  await StreamRules.create({ ...SR_DEFAULTS });
 
   // eslint-disable-next-line no-console
   console.log('Seed complete.');
