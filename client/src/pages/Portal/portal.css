@@ -1,0 +1,32 @@
+.portal { min-height: 100vh; background: var(--bg); }
+.portal-top { display: flex; align-items: center; gap: 12px; padding: 14px 24px; background: var(--white); border-bottom: 1px solid var(--line); }
+.portal-top .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.portal-top .brand small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; }
+.portal-top .glyph { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: var(--r-sm); background: var(--ink); color: var(--white); }
+.portal-top .grow { flex: 1; }
+.portal-user { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; }
+.portal-body { max-width: 960px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
+.portal-hero h1 { margin: 0; font-size: 22px; }
+.portal-hero .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+.pipeline { display: flex; flex-wrap: wrap; gap: 8px; }
+.pip { flex: 1 1 90px; text-align: center; padding: 10px 8px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--bg); color: var(--muted); font-size: 12px; }
+.pip.done { background: var(--success-bg); color: var(--success); border-color: transparent; }
+.pip.current { background: var(--ink); color: var(--white); border-color: transparent; font-weight: 700; }
+.pip .n { display: block; font-size: 10px; opacity: .7; }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat { padding: 16px; }
+.stat .k { color: var(--muted); font-size: 12px; }
+.stat .v { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+.drive-list { display: grid; gap: 12px; }
+.drive { display: flex; align-items: center; gap: 14px; padding: 16px; }
+.drive .info { flex: 1; }
+.drive .info b { font-size: 15px; }
+.drive .meta { color: var(--muted); font-size: 12px; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
+.tag { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.selected { background: var(--success-bg); color: var(--success); }
+.tag.progress { background: var(--warn-bg); color: var(--warn); }
+.tag.closed { background: var(--danger-bg); color: var(--danger); }
+.portal-empty { text-align: center; color: var(--muted); padding: 30px; }

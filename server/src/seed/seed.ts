@@ -229,6 +229,7 @@ async function run() {
     { stage: 'Screened', count: 968 - 742, profile: true, evalStatus: 'pending' },
     { stage: 'Applied', count: 1284 - 968, profile: false, evalStatus: 'na' },
   ];
+  const seekerPasswordHash = await hashPassword('Seeker123!');
   const jobseekerDocs = [];
   for (const b of stageBuckets) {
     for (let i = 0; i < b.count; i++) {
@@ -241,9 +242,21 @@ async function run() {
         evaluationStatus: b.evalStatus, stage: b.stage, createdAt: spread(),
         email: `${pick(rng, FIRST)}.${pick(rng, LAST)}${intBetween(rng, 1, 999)}@${(inst.name as string).toLowerCase().replace(/[^a-z]+/g, '').slice(0, 10) || 'inst'}.edu`.toLowerCase(),
         consent: consentPick(),
+        passwordHash: seekerPasswordHash,
       });
     }
   }
+  const demoInst = institutes[0];
+  jobseekerDocs.push({
+    name: 'Selected Seeker', instituteId: demoInst._id, branch: 'CSE', gradYear: 2026, cgpa: 8.5,
+    source: 'Institutes', profileCompleted: true, evaluationStatus: 'completed', stage: 'Offer',
+    createdAt: spread(), email: 'seeker.selected@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
+  });
+  jobseekerDocs.push({
+    name: 'Applied Seeker', instituteId: demoInst._id, branch: 'CSE', gradYear: 2026, cgpa: 7.2,
+    source: 'Institutes', profileCompleted: false, evaluationStatus: 'na', stage: 'Applied',
+    createdAt: spread(), email: 'seeker.applied@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
+  });
   await Jobseeker.insertMany(jobseekerDocs);
 
   // Interview slot sessions across Jul 2026 (Wed & Sat). Option B sums: cap 360 / booked 288 / held 36.
@@ -420,6 +433,10 @@ async function run() {
   console.log('Seed complete.');
   // eslint-disable-next-line no-console
   console.log(`Admin login →  email: admin@matchday.dev   password: ${adminPassword}`);
+  // eslint-disable-next-line no-console
+  console.log(`Seeker login →  email: seeker.selected@matchday.dev   password: Seeker123!   (stage: Offer)`);
+  // eslint-disable-next-line no-console
+  console.log(`Seeker login →  email: seeker.applied@matchday.dev    password: Seeker123!   (stage: Applied)`);
   await disconnectDb();
   await mongoose.connection.close();
 }

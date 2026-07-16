@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { apiFetch, setUnauthorizedHandler } from '../api/client.js';
 
-interface User { id: string; name: string; email: string; role: string; }
+export interface User { id: string; name: string; email: string; role: string; }
 interface AuthValue {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setToken(res.token); setUser(res.user);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(res));
+    return res.user;
   }, []);
 
   const value = useMemo(() => ({ user, token, login, logout }), [user, token, login, logout]);
