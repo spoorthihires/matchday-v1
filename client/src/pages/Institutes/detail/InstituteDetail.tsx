@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../../../components/AppShell.js';
 import { useInstitute } from '../hooks/useInstitute.js';
+import { AssignDrivesModal } from './AssignDrivesModal.js';
 import { TabAudit } from './TabAudit.js';
 import { TabCandidates } from './TabCandidates.js';
-import { TabDrivesComingSoon } from './TabDrivesComingSoon.js';
+import { TabDrives } from './TabDrives.js';
 import { TabFunnel } from './TabFunnel.js';
 import { TabOverview } from './TabOverview.js';
 import { TabOwnership } from './TabOwnership.js';
@@ -56,6 +57,7 @@ export function InstituteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [assignOpen, setAssignOpen] = useState(false);
   const { data, isLoading, isError, error } = useInstitute(id);
 
   if (isLoading) {
@@ -82,7 +84,7 @@ export function InstituteDetail() {
     );
   }
 
-  const { institute, funnel, kpis, performance } = data;
+  const { institute, funnel, kpis, performance, assignedDrives } = data;
 
   return (
     <AppShell crumb="Supply · Institutes" title={institute.name}>
@@ -107,13 +109,11 @@ export function InstituteDetail() {
               <span><i className="ti ti-map-pin" /> {institute.city}</span>
               <span><i className="ti ti-user" /> {institute.owner}</span>
               <span><i className="ti ti-mail" /> {institute.email}</span>
-              {/* institute↔drive assignment isn't in this build (see TabDrivesComingSoon) — the
-                  detail payload has no assigned-drives count, so this always reads 0 for now. */}
-              <span><i className="ti ti-calendar-event" /> 0 drives</span>
+              <span><i className="ti ti-calendar-event" /> {assignedDrives} drive{assignedDrives === 1 ? '' : 's'}</span>
             </div>
           </div>
           <div className="idactions">
-            <button className="btn btn-ghost" disabled title="Coming soon">
+            <button className="btn btn-ghost" onClick={() => setAssignOpen(true)}>
               <i className="ti ti-calendar-plus" /> Assign Drives
             </button>
             <button className="btn btn-ghost" disabled title="Coming soon">
@@ -174,12 +174,14 @@ export function InstituteDetail() {
             <TabOverview institute={institute} funnel={funnel} onOpenFunnel={() => setActiveTab('funnel')} />
           )}
           {activeTab === 'candidates' && <TabCandidates instituteId={institute._id} />}
-          {activeTab === 'drives' && <TabDrivesComingSoon />}
+          {activeTab === 'drives' && <TabDrives instituteId={institute._id} />}
           {activeTab === 'funnel' && <TabFunnel funnel={funnel} instituteName={institute.name} />}
           {activeTab === 'performance' && <TabPerformance performance={performance} />}
           {activeTab === 'ownership' && <TabOwnership ownershipHistory={institute.ownershipHistory} />}
           {activeTab === 'audit' && <TabAudit instituteId={institute._id} />}
         </div>
+
+        {assignOpen && <AssignDrivesModal instituteId={institute._id} onClose={() => setAssignOpen(false)} />}
       </div>
     </AppShell>
   );

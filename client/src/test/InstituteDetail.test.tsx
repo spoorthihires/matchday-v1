@@ -64,7 +64,7 @@ describe('InstituteDetail', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the institute name and an Overview funnel percentage, and switches to the Drives coming-soon pane', async () => {
+  it('renders the institute name, an Overview funnel percentage, the real assigned-drives count, and switches to the real Drives tab', async () => {
     renderDetail();
 
     // The name renders twice (AppShell's Topbar <h1> title, plus the .idhead <h2>) — assert via
@@ -76,7 +76,14 @@ describe('InstituteDetail', () => {
     // funnel snapshot bound to `funnel` actually rendered.
     expect(screen.getByText('100%')).toBeInTheDocument();
 
+    // Header now shows the real assignedDrives count (3, from the DETAIL fixture) instead of the
+    // hardcoded "0 drives".
+    expect(screen.getByText('3 drives')).toBeInTheDocument();
+
+    // TabDrivesComingSoon has been replaced by the real TabDrives — this suite's blanket fetch
+    // mock resolves every URL (including GET /institutes/abc/drives) with the DETAIL fixture,
+    // which has no `items`, so TabDrives renders its empty state rather than a drive row.
     await userEvent.click(screen.getByRole('button', { name: 'Drives' }));
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no drives assigned yet/i)).toBeInTheDocument();
   });
 });
