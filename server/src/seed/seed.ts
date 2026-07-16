@@ -11,6 +11,7 @@ import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { DriveTemplate } from '../models/DriveTemplate.js';
+import { EvalConfig } from '../models/EvalConfig.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
 const NOW = new Date('2026-07-12T00:00:00.000Z');
@@ -39,7 +40,7 @@ async function run() {
   await Promise.all([
     User.deleteMany({}), Institute.deleteMany({}), Employer.deleteMany({}),
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
-    RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}),
+    RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}), EvalConfig.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -374,6 +375,15 @@ async function run() {
     },
   ];
   await DriveTemplate.insertMany(templateDocs);
+
+  // ---- Evaluation configs (4, verbatim from the prototype's evConfigs array) ----
+  const evalConfigDocs = [
+    { name: 'Standard MCQ round', type: 'MCQ', enabled: true, passing: 60, attempts: 2, retake: 'After cooldown', cooldown: 2, validity: 90, autoQual: true, threshold: 70, contests: 8, updatedAt: daysAgo(2), createdAt: daysAgo(40) },
+    { name: 'Coding challenge', type: 'Coding', enabled: true, passing: 65, attempts: 1, retake: 'Admin approval', cooldown: 3, validity: 120, autoQual: true, threshold: 75, contests: 6, updatedAt: daysAgo(5), createdAt: daysAgo(45) },
+    { name: 'TARA AI interview', type: 'TARA', enabled: true, passing: 55, attempts: 1, retake: 'Not allowed', cooldown: 0, validity: 60, autoQual: false, threshold: 70, contests: 5, updatedAt: daysAgo(1), createdAt: daysAgo(30) },
+    { name: 'Take-home assignment', type: 'Assignments', enabled: false, passing: 50, attempts: 2, retake: 'Unlimited', cooldown: 1, validity: 45, autoQual: false, threshold: 70, contests: 0, updatedAt: daysAgo(14), createdAt: daysAgo(20) },
+  ];
+  await EvalConfig.insertMany(evalConfigDocs);
 
   // eslint-disable-next-line no-console
   console.log('Seed complete.');
