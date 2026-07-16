@@ -7,6 +7,7 @@ import { dashboardRoutes } from './modules/dashboard/dashboard.routes.js';
 import { driveRoutes } from './modules/drives/drives.routes.js';
 import { employerRoutes } from './modules/employers/employers.routes.js';
 import { evalConfigRoutes } from './modules/evalConfigs/routes.js';
+import { evalMonitorRoutes } from './modules/evalMonitor/routes.js';
 import { instituteRoutes } from './modules/institutes/institutes.routes.js';
 import { jobseekerRoutes } from './modules/jobseekers/jobseekers.routes.js';
 import { registrationRoutes } from './modules/registrations/registrations.routes.js';
@@ -31,6 +32,7 @@ export function createApp(): Express {
   app.use('/api/slots', slotRoutes);
   app.use('/api/templates', templateRoutes);
   app.use('/api/eval-configs', evalConfigRoutes);
+  app.use('/api/eval-monitor', evalMonitorRoutes);
 
   app.use(errorHandler);
   return app;
