@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Drive } from '../src/models/Drive.js';
+import { DriveTemplate } from '../src/models/DriveTemplate.js';
 import {
   listDrives, createDrive, getDrive, updateDrive, cloneDrive, bulkAction,
 } from '../src/modules/drives/drives.service.js';
@@ -93,5 +94,49 @@ describe('drives.service', () => {
     const res = await bulkAction(ids, 'archive');
     expect(res.affected).toBe(3);
     expect(await Drive.countDocuments({ status: 'Archived' })).toBe(3);
+  });
+});
+
+describe('drives.service — templateId link', () => {
+  const baseInput = () => ({
+    name: 'FE Cohort', domain: 'Web', stream: 'B.Tech', status: 'Active' as const, candType: 'Freshers' as const,
+    mode: 'Hybrid' as const, frequency: 'One-time' as const, eventDay: 'Wednesday' as const,
+    eventDates: [new Date('2026-07-15T00:00:00.000Z')], candCap: 100, empCap: 5, slotCap: 20,
+    eligibility: { sources: ['Institutes'], branches: ['CSE'], gradYears: [2026], expType: 'Freshers only' },
+    evaluation: [{ key: 'mcq' as const, enabled: true, config: {} }],
+    visibility: { employerReg: 'Invite-only' as const, instituteVis: 'Selected institutes' as const, candidateAccess: 'Eligible only' as const },
+  });
+  async function tpl() {
+    return DriveTemplate.create({ name: 'Data Analyst', domain: 'Data / Analytics', status: 'Active', sections: { assessment: { mcq: true, coding: true, tara: true, assignments: false }, weightage: {}, matching: {}, kanban: ['Applied'], notifications: [], privacy: {} }, version: '1.0', versions: [] });
+  }
+
+  it('persists a templateId on create and returns it', async () => {
+    const t = await tpl();
+    const d = await createDrive({ ...baseInput(), templateId: String(t._id) } as never, 'Admin');
+    expect(String(d.templateId)).toBe(String(t._id));
+  });
+  it('normalizes empty/invalid templateId to null', async () => {
+    const d1 = await createDrive({ ...baseInput(), templateId: '' } as never, 'Admin');
+    expect(d1.templateId).toBeNull();
+    const d2 = await createDrive({ ...baseInput(), templateId: 'not-an-id' } as never, 'Admin');
+    expect(d2.templateId).toBeNull();
+  });
+  it('update sets and clears templateId', async () => {
+    const t = await tpl();
+    const d = await createDrive(baseInput() as never, 'Admin');
+    const set = await updateDrive(String(d._id), { templateId: String(t._id) } as never);
+    expect(String(set.templateId)).toBe(String(t._id));
+    const cleared = await updateDrive(String(d._id), { templateId: '' } as never);
+    expect(cleared.templateId).toBeNull();
+  });
+  it('preserves an existing templateId when the update patch omits the key', async () => {
+    const t = await tpl();
+    const d = await createDrive({ ...baseInput(), templateId: String(t._id) } as never, 'Admin');
+    expect(String(d.templateId)).toBe(String(t._id));
+    const renamed = await updateDrive(String(d._id), { name: 'Renamed X' } as never);
+    expect(renamed.name).toBe('Renamed X');
+    expect(String(renamed.templateId)).toBe(String(t._id));
+    const reloaded = await getDrive(String(d._id));
+    expect(String(reloaded.templateId)).toBe(String(t._id));
   });
 });

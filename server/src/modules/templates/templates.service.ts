@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { DriveTemplate, type DriveTemplateDoc } from '../../models/DriveTemplate.js';
+import { Drive } from '../../models/Drive.js';
 import type { CreateTemplateInput, UpdateTemplateInput } from './templates.schemas.js';
 
 const ACTOR = 'Platform Admin';
@@ -29,7 +30,7 @@ function assertId(id: string) {
 function toItem(d: DriveTemplateDoc & { _id: unknown }): TemplateItem {
   return {
     id: String(d._id), code: codeFor(d._id), name: d.name, domain: d.domain,
-    status: d.status ?? 'Active', usedBy: d.usedBy ?? 0,
+    status: d.status ?? 'Active', usedBy: 0,
     sections: d.sections,
     version: d.version ?? '1.0',
     versions: (d.versions ?? []).map((v) => ({
@@ -49,13 +50,20 @@ export async function listTemplates(params: { q?: string; domain?: string; statu
     match.$or = [{ name: rx }, { domain: rx }];
   }
   const rows = await DriveTemplate.find(match).sort({ updatedAt: -1 }).lean();
-  return { items: rows.map((r) => toItem(r as never)) };
+  const items = rows.map((r) => toItem(r as never));
+  const usedAgg = await Drive.aggregate([
+    { $match: { templateId: { $ne: null } } },
+    { $group: { _id: '$templateId', n: { $sum: 1 } } },
+  ]);
+  const usedBy = new Map<string, number>(usedAgg.map((r) => [String(r._id), r.n as number]));
+  for (const it of items) it.usedBy = usedBy.get(it.id) ?? 0;
+  return { items };
 }
 
 export async function createTemplate(input: CreateTemplateInput) {
   const now = new Date();
   return DriveTemplate.create({
-    name: input.name, domain: input.domain, status: input.status, usedBy: 0,
+    name: input.name, domain: input.domain, status: input.status,
     sections: input.sections, version: '1.0',
     versions: [{ v: '1.0', date: now, by: ACTOR, note: 'Initial template' }],
     createdAt: now, updatedAt: now,
@@ -90,7 +98,7 @@ export async function cloneTemplate(id: string) {
   const t = await getTemplate(id);
   const now = new Date();
   return DriveTemplate.create({
-    name: `${t.name} (Copy)`, domain: t.domain, status: 'Inactive', usedBy: 0,
+    name: `${t.name} (Copy)`, domain: t.domain, status: 'Inactive',
     sections: t.sections, version: '1.0',
     versions: [{ v: '1.0', date: now, by: ACTOR, note: `Cloned from ${t.name}` }],
     createdAt: now, updatedAt: now,

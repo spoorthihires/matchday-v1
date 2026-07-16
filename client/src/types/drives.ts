@@ -19,4 +19,5 @@ export interface DriveInput {
   eligibility: { sources: string[]; branches: string[]; gradYears: number[]; expType: string };
   evaluation: EvaluationStage[];
   visibility: { employerReg: string; instituteVis: string; candidateAccess: string };
+  templateId?: string;
 }
