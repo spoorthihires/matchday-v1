@@ -25,6 +25,7 @@ const DETAIL: InstituteDetailResponse = {
   funnel: { uploaded: 1000, signupPct: 80, completionPct: 70, matchReadyPct: 60, shortlistPct: 40, offerPct: 20, joinedPct: 10 },
   kpis: { uploaded: 1000, matchReadyPct: 60, shortlistPct: 40, joinedPct: 10 },
   performance: { matchReadyPct: 60, joinedPct: 10, avgMatchReadyPct: 55, rank: 3, ofActive: 20 },
+  assignedDrives: 3,
 };
 
 function renderDetail() {

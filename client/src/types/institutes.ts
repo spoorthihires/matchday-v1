@@ -20,7 +20,10 @@ export interface InstituteDetailResponse {
   funnel: Funnel;
   kpis: { uploaded: number; matchReadyPct: number; shortlistPct: number; joinedPct: number };
   performance: { matchReadyPct: number; joinedPct: number; avgMatchReadyPct: number; rank: number | null; ofActive: number };
+  assignedDrives: number;
 }
+export interface AssignedDriveItem { id: string; name: string; domain: string; stream: string; status: string; month: string; }
+export interface AssignedDrivesResponse { items: AssignedDriveItem[] }
 export interface CandidateRow { id: string; name: string; branch: string; gradYear: number; cgpa: number; source: string; stage: string; profileCompleted: boolean; }
 export interface AuditRow { action: string; actor: string; detail: string; at: string; }
 export interface Paged<T> { items: T[]; total: number; page: number; limit: number; }
