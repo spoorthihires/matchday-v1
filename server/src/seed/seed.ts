@@ -88,7 +88,6 @@ async function run() {
       size: pick(rng, EMPLOYER_SIZES),
       spoc: `${pick(rng, FIRST)} ${pick(rng, LAST)}`,
       email: `talent@${slug}.com`,
-      activeDrives: intBetween(rng, 0, 4),
       candidatesViewed: intBetween(rng, 40, 420),
       shortlistRate: intBetween(rng, 20, 60),
       offerRate: intBetween(rng, 8, 35),
