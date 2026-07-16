@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { DriveTemplate } from '../src/models/DriveTemplate.js';
+import { Drive } from '../src/models/Drive.js';
 import {
   bumpVersion, codeFor, listTemplates, createTemplate, getTemplate,
   updateTemplate, cloneTemplate, restoreTemplate, deleteTemplate,
@@ -69,14 +70,16 @@ describe('templates.service', () => {
 
   it('clones as "(Copy)", Inactive, v1.0, usedBy 0, with a clone entry', async () => {
     const t = await createTemplate(input({ name: 'ML Engineer', status: 'Active' }));
-    t.usedBy = 5; await t.save();
     const c = await cloneTemplate(String(t._id));
     expect(c.name).toBe('ML Engineer (Copy)');
     expect(c.status).toBe('Inactive');
     expect(c.version).toBe('1.0');
-    expect(c.usedBy).toBe(0);
     expect(c.versions[0].note).toBe('Cloned from ML Engineer');
     expect(await DriveTemplate.countDocuments({})).toBe(2);
+    // usedBy is derived-on-read (not stored on the doc) — verify via listTemplates
+    const { items } = await listTemplates({});
+    const clone = items.find((i) => i.name === 'ML Engineer (Copy)');
+    expect(clone?.usedBy).toBe(0);
   });
 
   it('restores an older version: bump + "Restored v{v}" entry, sections unchanged; unknown v → 400', async () => {
@@ -97,5 +100,20 @@ describe('templates.service', () => {
     expect(await deleteTemplate(String(t._id))).toEqual({ deleted: true });
     await expect(getTemplate(String(t._id))).rejects.toThrow();
     await expect(getTemplate('nope')).rejects.toThrow();
+  });
+});
+
+describe('templates.service — derived usedBy', () => {
+  async function drive(templateId?: unknown) {
+    return Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15')], evaluation: [{ key: 'mcq', enabled: true, config: {} }], ...(templateId ? { templateId } : {}) });
+  }
+  it('usedBy = count of drives referencing the template (0 when none)', async () => {
+    const a = await createTemplate(input({ name: 'Used' }));
+    const b = await createTemplate(input({ name: 'Unused' }));
+    await drive(a._id); await drive(a._id); await drive();   // 2 ref a, 1 refs nothing
+    const { items } = await listTemplates({});
+    const byName = Object.fromEntries(items.map((i) => [i.name, i.usedBy]));
+    expect(byName.Used).toBe(2);
+    expect(byName.Unused).toBe(0);
   });
 });

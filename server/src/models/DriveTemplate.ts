@@ -14,7 +14,6 @@ const templateSchema = new Schema({
   name: { type: String, required: true },
   domain: { type: String, required: true },
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
-  usedBy: { type: Number, default: 0 },
   // The prototype's section config uses keys with spaces ("Domain fit", "Mask contact until shortlist"),
   // so it is stored as Mixed; the exact shape is enforced by zod at the API layer.
   sections: { type: Schema.Types.Mixed, required: true },

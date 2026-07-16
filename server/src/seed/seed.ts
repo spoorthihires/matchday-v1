@@ -343,7 +343,7 @@ async function run() {
   const D = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));   // m is 0-based
   const templateDocs = [
     {
-      name: 'Data Analyst', domain: 'Data / Analytics', status: 'Active', usedBy: 6,
+      name: 'Data Analyst', domain: 'Data / Analytics', status: 'Active',
       sections: baseSections({ weightage: { MCQ: 30, Coding: 25, TARA: 30, Assignment: 15 } }),
       version: '2.1', updatedAt: daysAgo(2), createdAt: D(2026, 4, 30),
       versions: [
@@ -353,7 +353,7 @@ async function run() {
       ],
     },
     {
-      name: 'Data Engineer', domain: 'Data Engineering', status: 'Active', usedBy: 4,
+      name: 'Data Engineer', domain: 'Data Engineering', status: 'Active',
       sections: baseSections({ assessment: { mcq: true, coding: true, tara: true, assignments: true } }),
       version: '1.4', updatedAt: daysAgo(5), createdAt: D(2026, 5, 1),
       versions: [
@@ -362,7 +362,7 @@ async function run() {
       ],
     },
     {
-      name: 'ML Engineer', domain: 'Machine Learning', status: 'Active', usedBy: 5,
+      name: 'ML Engineer', domain: 'Machine Learning', status: 'Active',
       sections: baseSections({ matching: { Skills: 45, Experience: 25, 'Domain fit': 20, Location: 10, threshold: 75 } }),
       version: '1.8', updatedAt: daysAgo(1), createdAt: D(2026, 4, 18),
       versions: [
@@ -371,7 +371,7 @@ async function run() {
       ],
     },
     {
-      name: 'GenAI Engineer', domain: 'GenAI', status: 'Active', usedBy: 3,
+      name: 'GenAI Engineer', domain: 'GenAI', status: 'Active',
       sections: baseSections({ weightage: { MCQ: 15, Coding: 30, TARA: 40, Assignment: 15 } }),
       version: '1.2', updatedAt: daysAgo(3), createdAt: D(2026, 5, 15),
       versions: [
@@ -380,7 +380,7 @@ async function run() {
       ],
     },
     {
-      name: 'Business Analyst', domain: 'Business', status: 'Inactive', usedBy: 0,
+      name: 'Business Analyst', domain: 'Business', status: 'Inactive',
       sections: baseSections({
         assessment: { mcq: true, coding: false, tara: true, assignments: true },
         kanban: ['Applied', 'Screened', 'MCQ', 'TARA', 'Assignment', 'Shortlisted', 'Interview', 'Offer', 'Joined'],
@@ -391,7 +391,12 @@ async function run() {
       ],
     },
   ];
-  await DriveTemplate.insertMany(templateDocs);
+  const createdTemplates = await DriveTemplate.insertMany(templateDocs);
+
+  // assign each seeded drive a template (round-robin) so template usedBy derives to real counts
+  for (let i = 0; i < drives.length; i++) {
+    await Drive.updateOne({ _id: drives[i]._id }, { $set: { templateId: createdTemplates[i % createdTemplates.length]._id } });
+  }
 
   // ---- Evaluation configs (4, verbatim from the prototype's evConfigs array) ----
   const evalConfigDocs = [
