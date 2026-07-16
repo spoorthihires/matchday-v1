@@ -9,6 +9,7 @@ import { Dashboard } from './pages/Dashboard/index.js';
 import { DrivesPage } from './pages/Drives/index.js';
 import { ApprovalsPage } from './pages/Employers/approvals/ApprovalsPage.js';
 import { EmployersPage } from './pages/Employers/index.js';
+import { EvaluationsPage } from './pages/Evaluations/index.js';
 import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/employers/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
         <Route path="/slots" element={<ProtectedRoute><SlotsPage /></ProtectedRoute>} />
         <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
+        <Route path="/evaluations" element={<ProtectedRoute><EvaluationsPage /></ProtectedRoute>} />
         <Route path="/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
