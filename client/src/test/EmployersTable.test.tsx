@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { EmployersTable } from '../pages/Employers/EmployersTable.js';
 import type { EmployerListItem } from '../types/employers.js';
@@ -17,5 +18,14 @@ describe('EmployersTable', () => {
     expect(screen.getByText('Active')).toBeInTheDocument();
     expect(screen.getByText('44%')).toBeInTheDocument();
     expect(screen.getByText('9h')).toBeInTheDocument();
+  });
+
+  it('fires view-drives from the kebab', async () => {
+    const onRowAction = vi.fn();
+    render(<EmployersTable items={items} selectedIds={[]} onToggle={vi.fn()} onToggleAll={vi.fn()} onSort={vi.fn()} sort={undefined} order="asc" onRowAction={onRowAction} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByTitle('More'));
+    await user.click(screen.getByText(/View drives/i));
+    expect(onRowAction).toHaveBeenCalledWith('view-drives', '1');
   });
 });
