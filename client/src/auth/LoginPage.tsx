@@ -7,6 +7,7 @@ import { useLogin } from '../hooks/useLogin.js';
 export function LoginPage() {
   const [email, setEmail] = useState('admin@matchday.dev');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const login = useLogin();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -66,13 +67,22 @@ export function LoginPage() {
                 </div>
                 <div className="inp">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
                     aria-label="Password"
                     autoComplete="current-password"
                   />
+                  <button
+                    type="button"
+                    className="toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    <i className={showPassword ? 'ti ti-eye-off' : 'ti ti-eye'} />
+                  </button>
                 </div>
                 {errorMsg && <p className="auth-error" role="alert">{errorMsg}</p>}
                 <button className="btn btn-primary" type="submit" disabled={login.isPending}>
