@@ -15,6 +15,7 @@ import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
 import { SlotsPage } from './pages/Slots/index.js';
+import { StreamsPage } from './pages/Streams/index.js';
 import { TemplatesPage } from './pages/Templates/index.js';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/employers" element={<ProtectedRoute><EmployersPage /></ProtectedRoute>} />
         <Route path="/employers/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
         <Route path="/slots" element={<ProtectedRoute><SlotsPage /></ProtectedRoute>} />
+        <Route path="/streams" element={<ProtectedRoute><StreamsPage /></ProtectedRoute>} />
         <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
         <Route path="/evaluations" element={<ProtectedRoute><EvaluationsPage /></ProtectedRoute>} />
         <Route path="/evaluations/monitor" element={<ProtectedRoute><EvalMonitorPage /></ProtectedRoute>} />
