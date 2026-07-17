@@ -32,7 +32,12 @@ function trendClass(value: number, all: number[]): string {
   return value >= avg ? 'trend-up' : 'trend-dn';
 }
 
-export function LeaderboardsSection({ leaderboards }: { leaderboards: DashboardOverview['leaderboards'] }) {
+export interface LeaderboardsSectionProps {
+  leaderboards: DashboardOverview['leaderboards'];
+  onInstituteClick: (id: string) => void;
+}
+
+export function LeaderboardsSection({ leaderboards, onInstituteClick }: LeaderboardsSectionProps) {
   const instConversions = leaderboards.institutes.map((r) => r.conversionPct);
   const empFillRates = leaderboards.employers.map((r) => r.fillRatePct);
 
@@ -56,7 +61,18 @@ export function LeaderboardsSection({ leaderboards }: { leaderboards: DashboardO
                     <td>
                       <div className="org">
                         <span className="lo" style={{ background: avatarColor(r.rank) }}>{initials(r.name)}</span>
-                        <div><b>{r.name}</b><span>{r.city}</span></div>
+                        <div>
+                          <b
+                            className="lnk"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => onInstituteClick(r.id)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInstituteClick(r.id); } }}
+                          >
+                            {r.name}
+                          </b>
+                          <span>{r.city}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="r"><b className="mono">{r.ready}</b></td>

@@ -45,7 +45,10 @@ export function Dashboard() {
             <KpiSection kpis={data.kpis} />
             <FunnelsSection funnels={data.funnels} />
             <ScheduleSection schedule={data.schedule} slot={data.slotUtilization} />
-            <LeaderboardsSection leaderboards={data.leaderboards} />
+            <LeaderboardsSection
+              leaderboards={data.leaderboards}
+              onInstituteClick={(id) => navigate(`/institutes/${id}`)}
+            />
           </>
         )}
       </div>

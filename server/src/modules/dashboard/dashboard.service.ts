@@ -124,6 +124,7 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   const totalsMap = new Map(perInstituteTotals.map((x) => [String(x._id), x.n]));
   const institutesBoard = instLb.map((row, i) => ({
     rank: i + 1,
+    id: String(row._id),
     name: row.inst.name as string,
     city: row.inst.city as string,
     ready: row.ready as number,
