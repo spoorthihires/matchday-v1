@@ -20,4 +20,5 @@ export interface DriveInput {
   evaluation: EvaluationStage[];
   visibility: { employerReg: string; instituteVis: string; candidateAccess: string };
   templateId?: string;
+  streamId?: string;
 }

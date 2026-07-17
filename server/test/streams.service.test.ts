@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Stream } from '../src/models/Stream.js';
+import { Drive } from '../src/models/Drive.js';
 import {
   bumpVersion, codeFor, orderedFlow, listStreams, createStream,
   getStream, updateStream, restoreStream,
@@ -109,5 +110,25 @@ describe('streams.service', () => {
   it('404s on unknown/malformed ids', async () => {
     await expect(getStream('64b000000000000000000000')).rejects.toThrow();
     await expect(getStream('nope')).rejects.toThrow();
+  });
+});
+
+describe('streams.service — derived drives count', () => {
+  async function drive(streamId?: unknown) {
+    return Drive.create({
+      name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active',
+      eventDates: [new Date('2026-07-15')],
+      evaluation: [{ key: 'mcq', enabled: true, config: {} }],
+      ...(streamId ? { streamId } : {}),
+    });
+  }
+  it('drives = count of drives referencing the stream (0 when none)', async () => {
+    const a = await createStream(input({ name: 'Used' }));
+    const b = await createStream(input({ name: 'Unused' }));
+    await drive(a._id); await drive(a._id); await drive();   // 2 ref a, 1 refs nothing
+    const { items } = await listStreams({});
+    const byName = Object.fromEntries(items.map((i) => [i.name, i.drives]));
+    expect(byName.Used).toBe(2);
+    expect(byName.Unused).toBe(0);
   });
 });

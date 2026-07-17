@@ -49,11 +49,11 @@ export function StreamTable({ items, sort, order, onSort, onAction }: StreamTabl
                   {c.label} <i className={`ti ${sortIcon(sort === c.key, order)} sa`} />
                 </th>
               ))}
-              <th>Skills Required</th><th>Evaluation Flow</th><th>Branches</th><th>Employer Label</th><th>Version</th><th>Status</th><th className="r">Actions</th>
+              <th>Skills Required</th><th>Evaluation Flow</th><th>Branches</th><th>Employer Label</th><th>Version</th><th>Drives</th><th>Status</th><th className="r">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && <tr><td colSpan={10}><div className="dm-empty"><i className="ti ti-git-branch" /> No streams match these filters.</div></td></tr>}
+            {items.length === 0 && <tr><td colSpan={11}><div className="dm-empty"><i className="ti ti-git-branch" /> No streams match these filters.</div></td></tr>}
             {items.map((s) => (
               <tr key={s.id}>
                 <td><div className="dm-name"><b>{s.name}</b><span>{s.code}</span></div></td>
@@ -64,6 +64,7 @@ export function StreamTable({ items, sort, order, onSort, onAction }: StreamTabl
                 <td>{s.branches.join(', ')}</td>
                 <td>{s.label}</td>
                 <td><span className="vbadge">v{s.version}</span></td>
+                <td className="cap">{s.drives}</td>
                 <td><span className={`badge-st ${s.status === 'Active' ? 'st-active' : 'st-archived'}`}><i className="ti ti-circle-filled" /> {s.status}</span></td>
                 <td className="r"><RowKebab s={s} onAction={onAction} /></td>
               </tr>

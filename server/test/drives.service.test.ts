@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Drive } from '../src/models/Drive.js';
 import { DriveTemplate } from '../src/models/DriveTemplate.js';
+import { Stream } from '../src/models/Stream.js';
 import {
   listDrives, createDrive, getDrive, updateDrive, cloneDrive, bulkAction,
 } from '../src/modules/drives/drives.service.js';
@@ -138,5 +139,36 @@ describe('drives.service — templateId link', () => {
     expect(String(renamed.templateId)).toBe(String(t._id));
     const reloaded = await getDrive(String(d._id));
     expect(String(reloaded.templateId)).toBe(String(t._id));
+  });
+});
+
+describe('drives.service — streamId link', () => {
+  async function stream() {
+    return Stream.create({ name: 'Frontend', parent: 'Engineering', flow: ['MCQ', 'Coding'] });
+  }
+  it('createDrive persists a valid streamId', async () => {
+    const s = await stream();
+    const d = await createDrive({ ...baseInput(), streamId: String(s._id) } as never, 'Admin');
+    expect(String(d.streamId)).toBe(String(s._id));
+  });
+  it('normalizes empty/invalid streamId to null on create', async () => {
+    const d1 = await createDrive({ ...baseInput(), streamId: '' } as never, 'Admin');
+    expect(d1.streamId).toBeNull();
+    const d2 = await createDrive({ ...baseInput(), streamId: 'not-an-id' } as never, 'Admin');
+    expect(d2.streamId).toBeNull();
+  });
+  it('updateDrive sets and clears streamId', async () => {
+    const s = await stream();
+    const d = await createDrive({ ...baseInput() } as never, 'Admin');
+    const set = await updateDrive(String(d._id), { streamId: String(s._id) } as never);
+    expect(String(set.streamId)).toBe(String(s._id));
+    const cleared = await updateDrive(String(d._id), { streamId: '' } as never);
+    expect(cleared.streamId).toBeNull();
+  });
+  it('a patch omitting streamId preserves an existing link', async () => {
+    const s = await stream();
+    const d = await createDrive({ ...baseInput(), streamId: String(s._id) } as never, 'Admin');
+    const patched = await updateDrive(String(d._id), { name: 'Renamed' } as never);
+    expect(String(patched.streamId)).toBe(String(s._id));
   });
 });

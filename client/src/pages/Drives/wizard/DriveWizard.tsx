@@ -52,6 +52,7 @@ function mapDocToInput(doc: DriveDocResponse): DriveInput {
     eventDates: doc.eventDates, candCap: doc.candCap, empCap: doc.empCap, slotCap: doc.slotCap,
     eligibility: doc.eligibility, evaluation: doc.evaluation, visibility: doc.visibility,
     templateId: doc.templateId ? String(doc.templateId) : '',
+    streamId: doc.streamId ? String(doc.streamId) : '',
   };
 }
 
@@ -89,6 +90,7 @@ export function blankDriveModel(): DriveInput {
       candidateAccess: 'Eligible only',
     },
     templateId: '',
+    streamId: '',
   };
 }
 
