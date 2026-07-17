@@ -4,6 +4,7 @@ const evaluationStageSchema = new Schema({
   key: { type: String, enum: ['mcq', 'coding', 'tara', 'assignments'], required: true },
   enabled: { type: Boolean, default: false },
   config: { type: Schema.Types.Mixed, default: {} },
+  evalConfigId: { type: Schema.Types.ObjectId, ref: 'EvalConfig', default: null },
 }, { _id: false });
 
 const driveSchema = new Schema({

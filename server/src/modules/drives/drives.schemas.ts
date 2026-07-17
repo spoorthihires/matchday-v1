@@ -4,6 +4,7 @@ export const evalStage = z.object({
   key: z.enum(['mcq', 'coding', 'tara', 'assignments']),
   enabled: z.boolean(),
   config: z.record(z.number()).default({}),
+  evalConfigId: z.string().optional(),
 });
 
 export const createDriveSchema = z.object({
