@@ -178,7 +178,7 @@ describe('drives.service — stage evalConfigId link', () => {
   async function cfg(type = 'MCQ') { return EvalConfig.create({ name: 'C', type }); }
   function evalWith(evalConfigId?: string) {
     return [
-      { key: 'mcq', enabled: true, config: {}, ...(evalConfigId ? { evalConfigId } : {}) },
+      { key: 'mcq', enabled: true, config: {}, ...(evalConfigId !== undefined ? { evalConfigId } : {}) },
       { key: 'coding', enabled: false, config: {} },
       { key: 'tara', enabled: false, config: {} },
       { key: 'assignments', enabled: false, config: {} },
