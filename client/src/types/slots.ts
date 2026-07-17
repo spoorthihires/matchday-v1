@@ -30,8 +30,6 @@ export interface SlotInput {
   start: string;
   end: string;
   capacity: number;
-  booked: number;
-  held?: number;
   status: SlotStatus;
   employerId?: string | null;
   driveId: string;
@@ -48,4 +46,35 @@ export interface SlotListParams {
 
 export interface SlotListResponse {
   items: SlotItem[];
+}
+
+// Booking/roster types (Task 2's /slots/:id/bookings, /eligible-candidates endpoints). `booked`/
+// `held` on SlotItem above are now derived server-side from these bookings' `status`.
+export type BookingStatus = 'Booked' | 'Held';
+
+export interface RosterEntry {
+  bookingId: string;
+  jobseekerId: string;
+  name: string;
+  institute: string;
+  branch: string;
+  stage: string;
+  status: BookingStatus;
+}
+
+export interface SlotRoster {
+  booked: RosterEntry[];
+  held: RosterEntry[];
+}
+
+export interface CandidateOption {
+  id: string;
+  name: string;
+  institute: string;
+  branch: string;
+  stage: string;
+}
+
+export interface EligibleResponse {
+  items: CandidateOption[];
 }

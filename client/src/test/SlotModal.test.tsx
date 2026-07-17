@@ -6,6 +6,7 @@ import { AuthProvider } from '../auth/AuthContext.js';
 import { SlotModal } from '../pages/Slots/SlotModal.js';
 import type { DriveListResponse } from '../types/drives.js';
 import type { EmployerListResponse } from '../types/employers.js';
+import type { SlotItem } from '../types/slots.js';
 
 const EMPLOYERS_RESPONSE: EmployerListResponse = {
   items: [
@@ -30,12 +31,31 @@ const DRIVES_RESPONSE: DriveListResponse = {
   total: 1, page: 1, limit: 100,
 };
 
+const SLOT: SlotItem = {
+  id: 'slot-1', driveId: 'drive-1', driveName: 'Backend · July Cohort',
+  employerId: null, employerName: '(Unallocated)',
+  date: '2026-07-15T00:00:00.000Z', start: '10:00', end: '12:00',
+  capacity: 10, booked: 6, held: 1, status: 'Scheduled', link: '',
+  attended: 0, noShow: 0,
+};
+
 function renderModal(onClose: () => void) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
       <AuthProvider>
         <SlotModal mode="create" date="2026-07-15" onClose={onClose} />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+}
+
+function renderEditModal(onClose: () => void) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <AuthProvider>
+        <SlotModal mode="edit" slot={SLOT} onClose={onClose} />
       </AuthProvider>
     </QueryClientProvider>,
   );
@@ -70,36 +90,22 @@ describe('SlotModal', () => {
     vi.unstubAllGlobals();
   });
 
-  it('blocks Save when booked exceeds capacity, then saves once fixed', async () => {
+  it('create payload does not include booked (derived server-side, no longer a form input)', async () => {
     const onClose = vi.fn();
     renderModal(onClose);
-    const user = userEvent.setup();
 
     // Wait for the drive select to auto-populate from useDrives — confirms both list queries
     // resolved (SlotModal defaults create mode to the first non-Archived drive, mirroring the
-    // prototype's openSlotCreate `drives[0]?.name || ''`).
+    // prototype's openSlotCreate `drives[0]?.name || ''`). All other required fields (date/start/
+    // end) already carry defaults, so the form is submittable as soon as driveId is set.
     await screen.findByRole('option', { name: 'Backend · July Cohort' });
 
-    const bookedInput = screen.getByLabelText(/booked/i) as HTMLInputElement;
-    await user.clear(bookedInput);
-    await user.type(bookedInput, '99');
-
-    await user.click(screen.getByRole('button', { name: /save slot/i }));
-    expect(await screen.findByText(/booked cannot exceed capacity/i)).toBeInTheDocument();
-
-    // No POST should have fired for the blocked attempt.
-    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(
-      fetchMock.mock.calls.some(([u, o]) => typeof u === 'string' && u.includes('/slots') && (o as RequestInit | undefined)?.method === 'POST'),
-    ).toBe(false);
-
-    await user.clear(bookedInput);
-    await user.type(bookedInput, '5');
+    const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /save slot/i }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(screen.queryByText(/booked cannot exceed capacity/i)).not.toBeInTheDocument();
 
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     const postCall = fetchMock.mock.calls.find(
       ([u, o]) => typeof u === 'string' && u.includes('/slots') && (o as RequestInit | undefined)?.method === 'POST',
     );
@@ -107,17 +113,31 @@ describe('SlotModal', () => {
     const [postUrl, postOpts] = postCall!;
     expect(postUrl).toContain('/slots');
     const body = JSON.parse((postOpts as RequestInit).body as string);
+    expect(body).not.toHaveProperty('booked');
+    expect(body).not.toHaveProperty('held');
     expect(body).toEqual(expect.objectContaining({
       date: '2026-07-15',
       start: '10:00',
       end: '12:00',
       capacity: 10,
-      booked: 5,
       status: 'Scheduled',
       employerId: null,
       driveId: 'drive-1',
       attended: 0,
       noShow: 0,
     }));
+  });
+
+  it('shows booked as a read-only derived "booked / capacity" display in edit mode', async () => {
+    renderEditModal(vi.fn());
+
+    await screen.findByRole('option', { name: 'Backend · July Cohort' });
+
+    // The "Booked" <label> here isn't wired to the input via htmlFor/id (it's a plain read-only
+    // derived display, not an editable field), so look it up by its rendered value instead of
+    // getByLabelText.
+    const bookedDisplay = screen.getByDisplayValue('6 / 10') as HTMLInputElement;
+    expect(bookedDisplay).toHaveAttribute('readonly');
+    expect(bookedDisplay).toBeDisabled();
   });
 });
