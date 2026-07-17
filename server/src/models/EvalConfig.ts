@@ -11,7 +11,6 @@ const evalConfigSchema = new Schema({
   validity: { type: Number, default: 90 },
   autoQual: { type: Boolean, default: false },
   threshold: { type: Number, default: 70 },
-  contests: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

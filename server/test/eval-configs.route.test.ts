@@ -18,7 +18,6 @@ describe('eval-configs routes', () => {
   it('creates (201), lists+filters, duplicates, patches, deletes; 400 bad type; 404 unknown', async () => {
     const c = await auth(request(createApp()).post('/api/eval-configs').send(body));
     expect(c.status).toBe(201);
-    expect(c.body.contests).toBe(0);
     const id = c.body._id;
     const list = await auth(request(createApp()).get('/api/eval-configs?type=MCQ'));
     expect(list.body.items).toHaveLength(1);

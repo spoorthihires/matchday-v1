@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { EvalConfig, type EvalConfigDoc } from '../../models/EvalConfig.js';
+import { Drive } from '../../models/Drive.js';
 import type { CreateEvalConfigInput, UpdateEvalConfigInput } from './eval-configs.schemas.js';
 
 export interface EvalConfigItem {
@@ -21,7 +22,7 @@ function toItem(d: EvalConfigDoc & { _id: unknown }): EvalConfigItem {
     id: String(d._id), code: codeFor(d._id), name: d.name, type: d.type ?? 'MCQ',
     enabled: d.enabled ?? true, passing: d.passing ?? 0, attempts: d.attempts ?? 1,
     retake: d.retake ?? 'After cooldown', cooldown: d.cooldown ?? 0, validity: d.validity ?? 0,
-    autoQual: d.autoQual ?? false, threshold: d.threshold ?? 0, contests: d.contests ?? 0,
+    autoQual: d.autoQual ?? false, threshold: d.threshold ?? 0, contests: 0,
     createdAt: new Date(d.createdAt as Date).toISOString(),
     updatedAt: new Date(d.updatedAt as Date).toISOString(),
   };
@@ -37,12 +38,21 @@ export async function listEvalConfigs(params: { q?: string; type?: string; statu
     match.$or = [{ name: rx }, { type: rx }];
   }
   const rows = await EvalConfig.find(match).sort({ updatedAt: -1 }).lean();
-  return { items: rows.map((r) => toItem(r as never)) };
+  const items = rows.map((r) => toItem(r as never));
+  const agg = await Drive.aggregate([
+    { $unwind: '$evaluation' },
+    { $match: { 'evaluation.evalConfigId': { $ne: null } } },
+    { $group: { _id: '$evaluation.evalConfigId', drives: { $addToSet: '$_id' } } },
+    { $project: { n: { $size: '$drives' } } },
+  ]);
+  const contests = new Map<string, number>(agg.map((r) => [String(r._id), r.n as number]));
+  for (const it of items) it.contests = contests.get(it.id) ?? 0;
+  return { items };
 }
 
 export async function createEvalConfig(input: CreateEvalConfigInput) {
   const now = new Date();
-  return EvalConfig.create({ ...input, contests: 0, createdAt: now, updatedAt: now });
+  return EvalConfig.create({ ...input, createdAt: now, updatedAt: now });
 }
 export async function getEvalConfig(id: string) {
   assertId(id);
@@ -63,7 +73,7 @@ export async function duplicateEvalConfig(id: string) {
   return EvalConfig.create({
     name: `${c.name} (Copy)`, type: c.type, enabled: false,
     passing: c.passing, attempts: c.attempts, retake: c.retake, cooldown: c.cooldown,
-    validity: c.validity, autoQual: c.autoQual, threshold: c.threshold, contests: 0,
+    validity: c.validity, autoQual: c.autoQual, threshold: c.threshold,
     createdAt: now, updatedAt: now,
   });
 }
