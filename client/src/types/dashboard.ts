@@ -47,7 +47,7 @@ export interface DashboardOverview {
     utilizedPct: number;
   };
   leaderboards: {
-    institutes: { rank: number; name: string; city: string; ready: number; conversionPct: number }[];
+    institutes: { rank: number; id: string; name: string; city: string; ready: number; conversionPct: number }[];
     employers: { rank: number; name: string; industry: string; offers: number; fillRatePct: number }[];
   };
 }
