@@ -92,4 +92,14 @@ describe('slots.service', () => {
     await deleteSlot(String(s._id));
     expect(await SlotBooking.countDocuments({ slotId: s._id })).toBe(0);
   });
+
+  it('updateSlot rejects lowering capacity below current bookings', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 3 });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Held' });
+    await expect(updateSlot(String(s._id), { capacity: 1 })).rejects.toMatchObject({ status: 400, code: 'validation' });
+    // and a capacity change that still fits is allowed:
+    await expect(updateSlot(String(s._id), { capacity: 5 })).resolves.toBeTruthy();
+  });
 });

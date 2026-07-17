@@ -88,6 +88,8 @@ export async function updateSlot(id: string, patch: UpdateSlotInput) {
   Object.assign(s, rest);
   const derivedBooked = await SlotBooking.countDocuments({ slotId: s._id, status: 'Booked' });
   if (s.attended > derivedBooked) throw new HttpError(400, 'attended must not exceed booked', 'validation');
+  const seats = await SlotBooking.countDocuments({ slotId: s._id });
+  if (seats > s.capacity) throw new HttpError(400, 'capacity must not be lower than existing bookings', 'validation');
   await s.save();
   return s;
 }
