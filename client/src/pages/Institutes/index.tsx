@@ -38,7 +38,7 @@ export function InstitutesPage() {
 
   const params: InstituteListParams = { ...filters, sort, order, page, limit };
   const { data, isLoading, isError, error } = useInstitutes(params);
-  const { update, bulk } = useInstituteMutations();
+  const { bulk, setStatus } = useInstituteMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
@@ -81,10 +81,10 @@ export function InstitutesPage() {
         break;
       }
       case 'approve':
-        update.mutate({ id, body: { status: 'Active' } });
+        setStatus.mutate({ id, status: 'Active' });
         break;
       case 'disable':
-        if (window.confirm('Disable this institute?')) update.mutate({ id, body: { status: 'Disabled' } });
+        if (window.confirm('Disable this institute?')) setStatus.mutate({ id, status: 'Disabled' });
         break;
     }
   }

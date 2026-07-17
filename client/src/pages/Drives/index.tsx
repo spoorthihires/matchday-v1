@@ -50,7 +50,7 @@ export function DrivesPage() {
 
   const params: DriveListParams = { ...filters, sort, order, page, limit };
   const { data, isLoading, isError, error } = useDrives(params);
-  const { update, clone, bulk } = useDriveMutations();
+  const { clone, bulk, setStatus } = useDriveMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
@@ -91,10 +91,10 @@ export function DrivesPage() {
         clone.mutate(id);
         break;
       case 'publish':
-        update.mutate({ id, body: { status: 'Published' } });
+        setStatus.mutate({ id, status: 'Published' });
         break;
       case 'archive':
-        if (window.confirm('Archive this drive?')) update.mutate({ id, body: { status: 'Archived' } });
+        if (window.confirm('Archive this drive?')) setStatus.mutate({ id, status: 'Archived' });
         break;
     }
   }

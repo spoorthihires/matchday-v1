@@ -37,7 +37,7 @@ export function EmployersPage() {
 
   const params: EmployerListParams = { ...filters, sort, order, page, limit };
   const { data, isLoading, isError, error } = useEmployers(params);
-  const { update, bulk } = useEmployerMutations();
+  const { bulk, setStatus } = useEmployerMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
@@ -78,10 +78,10 @@ export function EmployersPage() {
         break;
       }
       case 'approve':
-        update.mutate({ id, body: { status: 'Active' } });
+        setStatus.mutate({ id, status: 'Active' });
         break;
       case 'disable':
-        if (window.confirm('Disable this employer?')) update.mutate({ id, body: { status: 'Disabled' } });
+        if (window.confirm('Disable this employer?')) setStatus.mutate({ id, status: 'Disabled' });
         break;
     }
   }
