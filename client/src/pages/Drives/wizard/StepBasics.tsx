@@ -1,4 +1,5 @@
 import type { DriveInput } from '../../../types/drives.js';
+import { useStreams } from '../../Streams/hooks/useStreams.js';
 import type { WizardStepProps } from './types.js';
 
 // Ported from matchday-admin-app_23.html lines 2073-2086 (STEP 1: Basic Info).
@@ -17,6 +18,9 @@ const MODES: { v: DriveInput['mode']; icon: string; label: string }[] = [
 
 export function StepBasics({ model, onChange, errors }: WizardStepProps) {
   const nameErr = errors.length > 0 && !model.name.trim();
+  const { data: streamData } = useStreams({ status: 'Active' });
+  const streams = streamData?.items ?? [];
+  const picked = streams.find((s) => s.id === model.streamId);
 
   return (
     <section className="wstep active" data-panel="0">
@@ -60,6 +64,22 @@ export function StepBasics({ model, onChange, errors }: WizardStepProps) {
             <option>MBA</option>
           </select>
         </div>
+      </div>
+      <div className="wfld full">
+        <label htmlFor="wStreamProfile">Stream profile</label>
+        <select
+          id="wStreamProfile"
+          className="select"
+          style={{ appearance: 'auto' }}
+          value={model.streamId ?? ''}
+          onChange={(e) => onChange({ streamId: e.target.value })}
+        >
+          <option value="">No stream profile</option>
+          {streams.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <span className="fnote" style={{ fontSize: 11.5, color: 'var(--faint)' }}>
+          {picked ? `Evaluation flow: ${picked.flow.join(' → ')}` : 'Classifies the drive under a reusable stream profile.'}
+        </span>
       </div>
       <div className="wfld full">
         <label>Candidate type</label>

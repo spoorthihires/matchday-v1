@@ -8,7 +8,7 @@ export interface StreamItem {
   id: string; code: string; name: string; parent: string; label: string;
   skills: string[]; good: string[]; flow: string[]; cutoff: number; cgpa: number; backlogs: number;
   grad: string[]; branches: string[]; sources: string[]; status: 'Active' | 'Disabled';
-  version: string; versions: StreamVersion[]; createdAt: string; updatedAt: string;
+  version: string; versions: StreamVersion[]; drives: number; createdAt: string; updatedAt: string;
 }
 export interface StreamInput {
   name: string; parent: string; label: string; skills: string[]; good: string[]; flow: string[];
