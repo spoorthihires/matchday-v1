@@ -15,7 +15,11 @@ import { EvalConfig } from '../models/EvalConfig.js';
 import { Stream } from '../models/Stream.js';
 import { StreamRules } from '../models/StreamRules.js';
 import { DriveAssignment } from '../models/DriveAssignment.js';
+import { SlotBooking } from '../models/SlotBooking.js';
 import { SR_DEFAULTS } from '../modules/streamRules/service.js';
+import { isEligible } from '../modules/seekerPortal/seekerPortal.service.js';
+import { MATCH_READY_STAGES } from '../modules/slotBookings/slotBookings.service.js';
+import { planSlotBookings, type SlotBookingSpec } from './slotBookings.seed.js';
 import { intBetween, makeRng, pick } from './rng.js';
 
 const NOW = new Date('2026-07-12T00:00:00.000Z');
@@ -46,6 +50,7 @@ async function run() {
     Drive.deleteMany({}), Jobseeker.deleteMany({}), Slot.deleteMany({}), AuditLog.deleteMany({}),
     RegistrationRequest.deleteMany({}), DriveTemplate.deleteMany({}), EvalConfig.deleteMany({}),
     Stream.deleteMany({}), StreamRules.deleteMany({}), DriveAssignment.deleteMany({}),
+    SlotBooking.deleteMany({}),
   ]);
 
   const adminPassword = 'Password123!';
@@ -113,7 +118,15 @@ async function run() {
       eventDates: upcoming ? [upcomingDates[i]] : [new Date(NOW.getTime() + intBetween(rng, 30, 90) * DAY)],
       candCap: intBetween(rng, 150, 500), empCap: intBetween(rng, 5, 9), slotCap: intBetween(rng, 180, 360),
       eligibility: {
-        sources: ['Institutes'], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
+        // sources: [] (no constraint) — NOT ['Institutes']: the bulk jobseeker `source` field
+        // below is drawn from SOURCES (Campus/Referral/Portal/Walk-in), which never contains
+        // 'Institutes'. A non-empty sources filter here would make isEligible() reject nearly
+        // every Match-Ready+ seeker (verified: only 1 of 532 has source 'Institutes'), so
+        // Task 4's per-slot eligible pools would be far too small and planSlotBookings would
+        // throw "pool too small" for almost every slot. Leaving sources unconstrained matches
+        // how every isEligible() test fixture in this codebase already models an open drive,
+        // and doesn't consume the rng (no change to any other tuned seed number).
+        sources: [], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
       },
       evaluation: [
         { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 } },
@@ -256,7 +269,7 @@ async function run() {
     source: 'Institutes', profileCompleted: false, evaluationStatus: 'na', stage: 'Applied',
     createdAt: spread(), email: 'seeker.applied@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
   });
-  await Jobseeker.insertMany(jobseekerDocs);
+  const createdSeekers = await Jobseeker.insertMany(jobseekerDocs);
 
   // Interview slot sessions across Jul 2026 (Wed & Sat). Option B sums: cap 360 / booked 288 / held 36.
   const SLOT_DAYS = [1, 4, 8, 11, 15, 18, 22, 25, 29];
@@ -308,7 +321,28 @@ async function run() {
       createdAt: spread(),
     };
   });
-  await Slot.insertMany(slotDocs);
+  const createdSlots = await Slot.insertMany(slotDocs);
+
+  // Real candidate↔slot bookings reproducing the per-slot booked/held targets computed above.
+  // `sessions[i]` is index-aligned to `slotDocs[i]`/`createdSlots[i]`.
+  const driveById = new Map(drives.map((d) => [String(d._id), d]));
+  const readySeekers = createdSeekers.filter((j) => MATCH_READY_STAGES.has(j.stage as string));
+  const poolByDrive = new Map<string, string[]>();
+  for (const [driveIdStr, d] of driveById) {
+    const pool = readySeekers
+      .filter((j) => isEligible(d.eligibility as never,
+        { branch: j.branch as string, gradYear: j.gradYear as number, source: j.source as string }))
+      .map((j) => String(j._id));
+    poolByDrive.set(driveIdStr, pool);
+  }
+  const bookingSpecs: SlotBookingSpec[] = createdSlots.map((slot, i) => ({
+    slotId: String(slot._id),
+    booked: sessions[i].booked,
+    held: sessions[i].held,
+    pool: poolByDrive.get(String(slot.driveId)) ?? [],
+  }));
+  const plannedBookings = planSlotBookings(bookingSpecs, rng);
+  await SlotBooking.insertMany(plannedBookings.map((p) => ({ slotId: p.slotId, jobseekerId: p.jobseekerId, status: p.status })));
 
   // Audit logs for institutes
   const auditDocs = [];
