@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Slot } from '../../models/Slot.js';
 import { Drive } from '../../models/Drive.js';
+import { SlotBooking } from '../../models/SlotBooking.js';
 import type { CreateSlotInput, UpdateSlotInput } from './slots.schemas.js';
 
 export interface SlotItem {
@@ -36,12 +37,26 @@ export async function listSlots(params: { from?: Date; to?: Date; employerId?: s
     { $unwind: { path: '$drv', preserveNullAndEmptyArrays: true } },
     { $sort: { date: 1, start: 1 } },
   ]);
+  const ids = rows.map((r: Record<string, any>) => r._id);
+  const bk = await SlotBooking.aggregate([
+    { $match: { slotId: { $in: ids } } },
+    { $group: { _id: { slotId: '$slotId', status: '$status' }, n: { $sum: 1 } } },
+  ]);
+  const counts = new Map<string, { booked: number; held: number }>();
+  for (const r of bk) {
+    const k = String(r._id.slotId);
+    const e = counts.get(k) ?? { booked: 0, held: 0 };
+    if (r._id.status === 'Booked') e.booked = r.n; else e.held = r.n;
+    counts.set(k, e);
+  }
   const items: SlotItem[] = rows.map((r: Record<string, any>) => ({
     id: String(r._id), driveId: String(r.driveId), driveName: r.drv?.name ?? '—',
     employerId: r.employerId ? String(r.employerId) : null,
     employerName: r.emp?.name ?? '(Unallocated)',
     date: new Date(r.date).toISOString(), start: r.start, end: r.end,
-    capacity: r.capacity ?? 0, booked: r.booked ?? 0, held: r.held ?? 0,
+    capacity: r.capacity ?? 0,
+    booked: counts.get(String(r._id))?.booked ?? 0,
+    held: counts.get(String(r._id))?.held ?? 0,
     status: r.status, link: r.link ?? '', attended: r.attended ?? 0, noShow: r.noShow ?? 0,
   }));
   return { items };
@@ -56,6 +71,7 @@ async function resolveDrive(driveId: string) {
 
 export async function createSlot(input: CreateSlotInput) {
   await resolveDrive(input.driveId);
+  if ((input.attended ?? 0) > 0) throw new HttpError(400, 'attended must not exceed booked', 'validation');
   return Slot.create({ ...input, employerId: normEmployer(input.employerId), driveId: new Types.ObjectId(input.driveId) });
 }
 export async function getSlot(id: string) {
@@ -70,13 +86,16 @@ export async function updateSlot(id: string, patch: UpdateSlotInput) {
   if (patch.employerId !== undefined) s.employerId = normEmployer(patch.employerId);
   const { driveId: _d, employerId: _e, ...rest } = patch;
   Object.assign(s, rest);
-  if (s.booked + s.held > s.capacity) throw new HttpError(400, 'booked + held must not exceed capacity', 'validation');
-  if (s.attended > s.booked) throw new HttpError(400, 'attended must not exceed booked', 'validation');
+  const derivedBooked = await SlotBooking.countDocuments({ slotId: s._id, status: 'Booked' });
+  if (s.attended > derivedBooked) throw new HttpError(400, 'attended must not exceed booked', 'validation');
+  const seats = await SlotBooking.countDocuments({ slotId: s._id });
+  if (seats > s.capacity) throw new HttpError(400, 'capacity must not be lower than existing bookings', 'validation');
   await s.save();
   return s;
 }
 export async function deleteSlot(id: string) {
   const s = await getSlot(id);
+  await SlotBooking.deleteMany({ slotId: s._id });
   await s.deleteOne();
   return { deleted: true };
 }

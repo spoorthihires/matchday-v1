@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { Types } from 'mongoose';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Drive } from '../src/models/Drive.js';
 import { Employer } from '../src/models/Employer.js';
 import { Slot } from '../src/models/Slot.js';
+import { SlotBooking } from '../src/models/SlotBooking.js';
 import { listSlots, createSlot, getSlot, updateSlot, deleteSlot } from '../src/modules/slots/slots.service.js';
 
 beforeAll(setupTestDb);
@@ -15,7 +17,7 @@ async function seedRefs() {
   const e = await Employer.create({ name: 'Nexatech', industry: 'Product · SaaS', status: 'Active' });
   driveId = String(d._id); empId = String(e._id);
 }
-const input = (over = {}) => ({ date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 10, booked: 7, held: 1, status: 'Scheduled' as const, employerId: empId, driveId, link: '', attended: 0, noShow: 0, ...over });
+const input = (over = {}) => ({ date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 10, status: 'Scheduled' as const, employerId: empId, driveId, link: '', attended: 0, noShow: 0, ...over });
 
 describe('slots.service', () => {
   it('creates and lists within a date range with joined names, sorted by date+start', async () => {
@@ -41,23 +43,24 @@ describe('slots.service', () => {
     expect(filtered.items).toHaveLength(1);
   });
 
-  it('rejects create when booked+held exceed capacity (zod) and when the drive is missing (404)', async () => {
+  it('rejects create when attended>0 on a fresh (bookingless) slot, and when the drive is missing (404)', async () => {
     await seedRefs();
-    const { createSlotSchema } = await import('../src/modules/slots/slots.schemas.js');
-    expect(() => createSlotSchema.parse({ ...input(), booked: 9, held: 2 })).toThrow();
+    await expect(createSlot(input({ attended: 3 }))).rejects.toThrow(/booked/i);
     await expect(createSlot(input({ driveId: '64b000000000000000000000' }))).rejects.toThrow(/drive/i);
   });
 
-  it('updates with merged-doc validation: reschedule + no-shows OK, over-capacity rejected', async () => {
+  it('updates with merged-doc validation: reschedule + no-shows OK, attended-vs-derived-booked enforced', async () => {
     await seedRefs();
     const s = await createSlot(input());
+    for (let i = 0; i < 7; i++) {
+      await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    }
     const moved = await updateSlot(String(s._id), { date: new Date('2026-07-22T00:00:00.000Z'), start: '16:30', end: '18:00' });
     expect(moved.start).toBe('16:30');
     const done = await updateSlot(String(s._id), { attended: 5, noShow: 2, status: 'Completed' });
     expect(done.status).toBe('Completed');
     expect(done.noShow).toBe(2);
-    await expect(updateSlot(String(s._id), { booked: 12 })).rejects.toThrow(/capacity/i);       // 12 > cap 10
-    await expect(updateSlot(String(s._id), { attended: 9 })).rejects.toThrow(/booked/i);        // 9 > booked 7
+    await expect(updateSlot(String(s._id), { attended: 9 })).rejects.toThrow(/booked/i);        // 9 > derived booked 7
   });
 
   it('deletes and 404s on unknown/malformed ids', async () => {
@@ -67,5 +70,36 @@ describe('slots.service', () => {
     expect(await Slot.countDocuments({})).toBe(0);
     await expect(getSlot(String(s._id))).rejects.toThrow();
     await expect(getSlot('nope')).rejects.toThrow();
+  });
+
+  it('listSlots derives booked/held from SlotBooking (0 when none)', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 10 });
+    const js1 = new Types.ObjectId(); const js2 = new Types.ObjectId(); const js3 = new Types.ObjectId();
+    await SlotBooking.create({ slotId: s._id, jobseekerId: js1, status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: js2, status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: js3, status: 'Held' });
+    const { items } = await listSlots({});
+    const row = items.find((x) => x.id === String(s._id))!;
+    expect(row.booked).toBe(2);
+    expect(row.held).toBe(1);
+  });
+
+  it('deleteSlot cascades its bookings', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 10 });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    await deleteSlot(String(s._id));
+    expect(await SlotBooking.countDocuments({ slotId: s._id })).toBe(0);
+  });
+
+  it('updateSlot rejects lowering capacity below current bookings', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 3 });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Held' });
+    await expect(updateSlot(String(s._id), { capacity: 1 })).rejects.toMatchObject({ status: 400, code: 'validation' });
+    // and a capacity change that still fits is allowed:
+    await expect(updateSlot(String(s._id), { capacity: 5 })).resolves.toBeTruthy();
   });
 });

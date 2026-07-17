@@ -8,12 +8,11 @@ import { useSlotMutations } from './hooks/useSlotMutations.js';
 // Ported from matchday-admin-app_23.html lines 1986-2004 (#slotModal .modal-scrim/.modal) and the
 // openSlotCreate()/openSlot()/slmSave/slmDelete handlers around lines 3644-3674.
 //
-// `held` isn't exposed here — there's no UI for it in the prototype either — but the server's
-// createSlotSchema/updateSlotSchema still enforce `booked + held <= capacity` on the *merged* doc
-// (slots.service.ts's updateSlot re-checks this after Object.assign). So editing a slot whose
-// existing `held` reservation pushes that merged total over capacity can 400 even though this
-// form's own client-side check (`booked <= capacity`) passed — that server rejection surfaces
-// inline via the ApiError catch in handleSave, same as any other server-side validation failure.
+// `booked`/`held` are no longer hand-typed inputs here: Slot.booked/held are now derived
+// server-side from actual bookings (Task 2's /slots/:id/bookings, confirmed vs. held status) —
+// slots.service.ts computes them off the Booking collection rather than trusting a client-sent
+// count. This form only shows a read-only `booked / capacity` display in edit mode (Task 6's
+// SlotRosterModal is where booking/holding actually happens); `held` still isn't exposed here.
 const STATUS_OPTIONS: SlotStatus[] = ['Scheduled', 'Completed', 'Cancelled'];
 
 export interface SlotModalProps {
@@ -21,10 +20,13 @@ export interface SlotModalProps {
   date?: string;
   slot?: SlotItem;
   onClose: () => void;
+  // Task 6's entry point into SlotRosterModal — opened from the edit-mode footer's "Roster"
+  // button below (index.tsx swaps this modal for SlotRosterModal on click).
+  onManageRoster?: (slot: SlotItem) => void;
 }
 
 interface FormState {
-  date: string; start: string; end: string; capacity: string; booked: string;
+  date: string; start: string; end: string; capacity: string;
   status: SlotStatus; employerId: string; driveId: string; link: string;
   attended: string; noShow: string;
 }
@@ -35,7 +37,6 @@ function blankForm(date?: string, slot?: SlotItem): FormState {
     start: slot?.start ?? '10:00',
     end: slot?.end ?? '12:00',
     capacity: String(slot?.capacity ?? 10),
-    booked: String(slot?.booked ?? 0),
     status: slot?.status ?? 'Scheduled',
     employerId: slot?.employerId ?? '',
     driveId: slot?.driveId ?? '',
@@ -47,7 +48,7 @@ function blankForm(date?: string, slot?: SlotItem): FormState {
 
 type RequiredField = 'date' | 'start' | 'end' | 'driveId';
 
-export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
+export function SlotModal({ mode, date, slot, onClose, onManageRoster }: SlotModalProps) {
   const { create, update, remove } = useSlotMutations();
   const [form, setForm] = useState<FormState>(() => blankForm(date, slot));
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<RequiredField, boolean>>>({});
@@ -78,8 +79,9 @@ export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
   }
 
   // Mirrors the server's slotFields/createSlotSchema (slots.schemas.ts): date/start/end/driveId
-  // required, end > start, booked <= capacity, attended <= booked. See the module note above for
-  // why `held` isn't part of this check.
+  // required, end > start. `booked` is now derived server-side from bookings (Task 2) and is no
+  // longer part of this form's input or validation — the server enforces attended <= derived
+  // booked on its own.
   function validate(): SlotInput | null {
     const errors: Partial<Record<RequiredField, boolean>> = {
       date: !form.date,
@@ -97,20 +99,11 @@ export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
       return null;
     }
     const capacity = Number(form.capacity);
-    const booked = Number(form.booked);
     const attended = Number(form.attended);
     const noShow = Number(form.noShow);
-    if (booked > capacity) {
-      setError('Booked cannot exceed capacity.');
-      return null;
-    }
-    if (attended > booked) {
-      setError('Attended cannot exceed booked.');
-      return null;
-    }
     setError(null);
     return {
-      date: form.date, start: form.start, end: form.end, capacity, booked,
+      date: form.date, start: form.start, end: form.end, capacity,
       status: form.status, employerId: form.employerId || null, driveId: form.driveId,
       link: form.link.trim(), attended, noShow,
     };
@@ -197,16 +190,12 @@ export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
               onChange={(e) => set('capacity', e.target.value)}
             />
           </div>
-          <div className="fld">
-            <label htmlFor="slmBooked">Booked</label>
-            <input
-              id="slmBooked"
-              type="number"
-              min={0}
-              value={form.booked}
-              onChange={(e) => set('booked', e.target.value)}
-            />
-          </div>
+          {mode === 'edit' && slot && (
+            <div className="fld">
+              <label>Booked</label>
+              <input value={`${slot.booked} / ${slot.capacity}`} readOnly disabled />
+            </div>
+          )}
           <div className="fld">
             <label htmlFor="slmStatus">Status</label>
             <select id="slmStatus" value={form.status} onChange={(e) => set('status', e.target.value as SlotStatus)}>
@@ -280,6 +269,11 @@ export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
             </button>
           )}
           {mode === 'create' && <div className="grow" />}
+          {mode === 'edit' && slot && onManageRoster && (
+            <button className="btn btn-ghost btn-lg" type="button" onClick={() => onManageRoster(slot)}>
+              <i className="ti ti-users" /> Roster
+            </button>
+          )}
           <button className="btn btn-ghost btn-lg" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-lg" disabled={pending} onClick={handleSave}>
             <i className="ti ti-device-floppy" /> {pending ? 'Saving…' : 'Save slot'}

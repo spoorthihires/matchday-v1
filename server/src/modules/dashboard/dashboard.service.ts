@@ -5,6 +5,7 @@ import { Employer } from '../../models/Employer.js';
 import { Institute } from '../../models/Institute.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Slot } from '../../models/Slot.js';
+import { SlotBooking } from '../../models/SlotBooking.js';
 import type { DashboardOverview, FunnelStep } from '../../types/dashboard.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -86,12 +87,12 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   ]);
 
   // ---- Slots ----
-  const slotAgg = await Slot.aggregate<{ _id: null; booked: number; held: number; capacity: number }>([
-    { $group: { _id: null, booked: { $sum: '$booked' }, held: { $sum: '$held' }, capacity: { $sum: '$capacity' } } },
+  const capAgg = await Slot.aggregate<{ _id: null; capacity: number }>([
+    { $group: { _id: null, capacity: { $sum: '$capacity' } } },
   ]);
-  const booked = slotAgg[0]?.booked ?? 0;
-  const held = slotAgg[0]?.held ?? 0;
-  const totalSlots = slotAgg[0]?.capacity ?? 0;
+  const booked = await SlotBooking.countDocuments({ status: 'Booked' });
+  const held = await SlotBooking.countDocuments({ status: 'Held' });
+  const totalSlots = capAgg[0]?.capacity ?? 0;
   const available = Math.max(0, totalSlots - booked - held);
 
   // ---- 30-day deltas (count metrics) ----
@@ -191,12 +192,13 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
   ]);
   const events = await Promise.all(eventDrives.map(async (d: Record<string, unknown>) => {
     const nearest = new Date(d.nearest as Date);
-    const driveAgg = await Slot.aggregate<{ _id: null; cap: number; booked: number }>([
+    const capOnly = await Slot.aggregate<{ _id: null; cap: number }>([
       { $match: { driveId: d._id } },
-      { $group: { _id: null, cap: { $sum: '$capacity' }, booked: { $sum: '$booked' } } },
+      { $group: { _id: null, cap: { $sum: '$capacity' } } },
     ]);
-    const driveCap = driveAgg[0]?.cap ?? 0;
-    const driveBooked = driveAgg[0]?.booked ?? 0;
+    const driveCap = capOnly[0]?.cap ?? 0;
+    const driveSlotIds = await Slot.find({ driveId: d._id }).distinct('_id');
+    const driveBooked = await SlotBooking.countDocuments({ slotId: { $in: driveSlotIds }, status: 'Booked' });
     const candCount = await Jobseeker.countDocuments({});
     const sameUtcDay =
       nearest.getUTCFullYear() === nextMd.getUTCFullYear() &&

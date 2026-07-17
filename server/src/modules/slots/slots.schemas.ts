@@ -9,8 +9,6 @@ export const slotFields = z.object({
   start: z.string().regex(TIME_RE),
   end: z.string().regex(TIME_RE),
   capacity: z.coerce.number().int().min(1).max(50).default(10),
-  booked: z.coerce.number().int().min(0).default(0),
-  held: z.coerce.number().int().min(0).default(0),
   status: z.enum(['Scheduled', 'Completed', 'Cancelled']).default('Scheduled'),
   employerId: objectId.or(z.literal('')).nullish(),
   driveId: objectId,
@@ -18,9 +16,7 @@ export const slotFields = z.object({
   attended: z.coerce.number().int().min(0).default(0),
   noShow: z.coerce.number().int().min(0).default(0),
 });
-export const createSlotSchema = slotFields
-  .refine((d) => d.booked + d.held <= d.capacity, { message: 'booked + held must not exceed capacity' })
-  .refine((d) => d.attended <= d.booked, { message: 'attended must not exceed booked' });
+export const createSlotSchema = slotFields;
 export const updateSlotSchema = slotFields.partial();  // cross-field rules re-checked in the service on the merged doc
 
 export const listQuerySchema = z.object({

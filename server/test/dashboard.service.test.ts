@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { Types } from 'mongoose';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Institute } from '../src/models/Institute.js';
 import { Employer } from '../src/models/Employer.js';
 import { Drive } from '../src/models/Drive.js';
 import { Jobseeker } from '../src/models/Jobseeker.js';
 import { Slot } from '../src/models/Slot.js';
+import { SlotBooking } from '../src/models/SlotBooking.js';
 import { getOverview } from '../src/modules/dashboard/dashboard.service.js';
 
 const NOW = new Date('2026-07-12T10:00:00.000Z'); // a Sunday; next Wed is Jul 15
@@ -47,13 +49,18 @@ async function seedFixture() {
 
   const drive = await Drive.findOne({ name: 'Frontend Cohort' });
   const emp = await Employer.findOne({ name: 'Nexatech' });
-  // slots for next matchday (Jul 15): two sessions of capacity 5 (3 booked, 1 held each) => total 10, booked 6, held 2, available 2, util 60%
+  // slots for next matchday (Jul 15): two sessions of capacity 5 each => total 10.
+  // booked/held are derived from SlotBooking: 3 Booked + 1 Held per slot => booked 6, held 2, available 2, util 60%.
   for (let i = 0; i < 2; i++) {
-    await Slot.create({
+    const s = await Slot.create({
       driveId: drive!._id, employerId: emp!._id, date: new Date('2026-07-15T00:00:00.000Z'),
       start: i === 0 ? '10:00' : '14:00', end: i === 0 ? '12:00' : '16:00',
-      capacity: 5, booked: 3, held: 1, status: 'Scheduled',
+      capacity: 5, status: 'Scheduled',
     });
+    for (let k = 0; k < 3; k++) {
+      await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    }
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Held' });
   }
 }
 
@@ -79,6 +86,16 @@ describe('getOverview', () => {
     await seedFixture();
     const o = await getOverview(NOW);
     expect(o.slotUtilization).toMatchObject({ booked: 6, held: 2, available: 2, total: 10, utilizedPct: 60 });
+  });
+
+  it('slot utilization derives booked/held from SlotBooking', async () => {
+    const d = await Drive.create({ name: 'D', domain: 'Web', stream: 'B.Tech', status: 'Active', eventDates: [new Date('2026-07-15T00:00:00.000Z')] });
+    const s = await Slot.create({ driveId: d._id, date: new Date('2026-07-15T00:00:00.000Z'), start: '10:00', end: '12:00', capacity: 10 });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Booked' });
+    await SlotBooking.create({ slotId: s._id, jobseekerId: new Types.ObjectId(), status: 'Held' });
+    const o = await getOverview(new Date('2026-07-14T00:00:00.000Z'));
+    expect(o.slotUtilization).toMatchObject({ booked: 2, held: 1, total: 10 });
   });
 
   it('computes readiness score and pillars', async () => {
