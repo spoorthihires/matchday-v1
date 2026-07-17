@@ -21,5 +21,6 @@ export function useImportCommit() {
     mutationFn: (rows: RawRow[]) =>
       apiFetch<ImportCommitResponse>('/jobseekers/import/commit', { method: 'POST', body: { rows }, token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['jobseekers'] }),
+    meta: { silentError: true },
   });
 }

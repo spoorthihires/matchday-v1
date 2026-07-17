@@ -24,5 +24,6 @@ export function useImportPreview() {
   return useMutation({
     mutationFn: (rows: RawRow[]) =>
       apiFetch<ImportPreviewResponse>('/jobseekers/import/preview', { method: 'POST', body: { rows }, token }),
+    meta: { silentError: true },
   });
 }

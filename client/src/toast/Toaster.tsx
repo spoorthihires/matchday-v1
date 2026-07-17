@@ -6,11 +6,10 @@ const DEFAULT_TITLE: Record<ToastVariant, string> = { error: 'Something went wro
 
 export function Toaster() {
   const toasts = useSyncExternalStore(subscribe, getToasts, getToasts);
-  if (toasts.length === 0) return null;
   return (
-    <div className="toast-wrap" role="status" aria-live="polite">
+    <div className="toast-wrap" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className={`toast show toast-${t.variant}`}>
+        <div key={t.id} className={`toast show toast-${t.variant}`} role={t.variant === 'error' ? 'alert' : 'status'}>
           <i className={`ti ${ICON[t.variant]}`} />
           <div style={{ flex: 1 }}>
             <div className="t-title">{t.title ?? DEFAULT_TITLE[t.variant]}</div>
