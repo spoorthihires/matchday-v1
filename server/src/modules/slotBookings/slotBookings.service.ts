@@ -3,7 +3,6 @@ import { HttpError } from '../../middleware/errorHandler.js';
 import { Slot } from '../../models/Slot.js';
 import { Drive } from '../../models/Drive.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
-import { Institute } from '../../models/Institute.js';
 import { SlotBooking } from '../../models/SlotBooking.js';
 import { isEligible } from '../seekerPortal/seekerPortal.service.js';
 

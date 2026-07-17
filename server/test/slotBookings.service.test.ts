@@ -103,4 +103,21 @@ describe('slotBookings.service', () => {
     const none = await listEligibleCandidates(String(s._id), 'zzz');
     expect(none.items).toHaveLength(0);
   });
+
+  it('confirm/release are scoped to the slot (404 across slots)', async () => {
+    const i = await institute(); const d = await drive();
+    const sA = await slot(d._id); const sB = await slot(d._id);
+    const js = await seeker(i._id);
+    const b = await createBooking(String(sA._id), String(js._id), 'Held');
+    await expect(confirmBooking(String(sB._id), b.id)).rejects.toMatchObject({ status: 404, code: 'not_found' });
+    await expect(releaseBooking(String(sB._id), b.id)).rejects.toMatchObject({ status: 404, code: 'not_found' });
+  });
+
+  it('confirm is idempotent when already Booked', async () => {
+    const i = await institute(); const d = await drive(); const s = await slot(d._id);
+    const js = await seeker(i._id);
+    const b = await createBooking(String(s._id), String(js._id), 'Booked');
+    const again = await confirmBooking(String(s._id), b.id);
+    expect(again.status).toBe('Booked');
+  });
 });
