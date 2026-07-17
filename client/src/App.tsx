@@ -19,10 +19,12 @@ import { SlotsPage } from './pages/Slots/index.js';
 import { StreamRulesPage } from './pages/Streams/rules/StreamRulesPage.js';
 import { StreamsPage } from './pages/Streams/index.js';
 import { TemplatesPage } from './pages/Templates/index.js';
+import { Toaster } from './toast/Toaster.js';
 
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/mfa" element={<MfaStub />} />
