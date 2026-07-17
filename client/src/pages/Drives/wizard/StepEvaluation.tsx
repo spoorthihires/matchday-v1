@@ -1,4 +1,5 @@
 import type { EvaluationStage } from '../../../types/drives.js';
+import { useEvalConfigs } from '../../Evaluations/hooks/useEvalConfigs.js';
 import { useTemplates } from '../../Templates/hooks/useTemplates.js';
 import type { WizardStepProps } from './types.js';
 
@@ -14,6 +15,7 @@ interface EvalMeta {
   icon: string;
   colorClass: string;
   fields: { key: string; label: string }[];
+  cfgLabel: string;
 }
 
 const META: EvalMeta[] = [
@@ -27,6 +29,7 @@ const META: EvalMeta[] = [
       { key: 'questions', label: 'Questions' },
       { key: 'durationMin', label: 'Duration (min)' },
     ],
+    cfgLabel: 'MCQ configuration',
   },
   {
     key: 'coding',
@@ -38,6 +41,7 @@ const META: EvalMeta[] = [
       { key: 'problems', label: 'Problems' },
       { key: 'durationMin', label: 'Duration (min)' },
     ],
+    cfgLabel: 'Coding configuration',
   },
   {
     key: 'tara',
@@ -46,6 +50,7 @@ const META: EvalMeta[] = [
     icon: 'ti-robot',
     colorClass: 'i-violet',
     fields: [{ key: 'durationMin', label: 'Duration (min)' }],
+    cfgLabel: 'TARA configuration',
   },
   {
     key: 'assignments',
@@ -54,12 +59,19 @@ const META: EvalMeta[] = [
     icon: 'ti-file-text',
     colorClass: 'i-amber',
     fields: [{ key: 'deadlineDays', label: 'Deadline (days)' }],
+    cfgLabel: 'Assignments configuration',
   },
 ];
+
+const KEY_TO_TYPE: Record<EvaluationStage['key'], string> = {
+  mcq: 'MCQ', coding: 'Coding', tara: 'TARA', assignments: 'Assignments',
+};
 
 export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
   const { data: tplData } = useTemplates({ status: 'Active' });
   const templates = tplData?.items ?? [];
+  const { data: cfgData } = useEvalConfigs({ status: 'Active' });
+  const evalConfigs = cfgData?.items ?? [];
   const anyEnabled = model.evaluation.some((e) => e.enabled);
   const showErr = errors.length > 0 && !anyEnabled;
 
@@ -74,6 +86,12 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
       evaluation: model.evaluation.map((e) =>
         e.key === key ? { ...e, config: { ...e.config, [field]: value } } : e,
       ),
+    });
+  }
+
+  function setStageEvalConfig(key: EvaluationStage['key'], evalConfigId: string) {
+    onChange({
+      evaluation: model.evaluation.map((e) => (e.key === key ? { ...e, evalConfigId } : e)),
     });
   }
 
@@ -132,6 +150,21 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
                       />
                     </div>
                   ))}
+                  <div className="mini-fld">
+                    <label htmlFor={`evcfg-${meta.key}`}>{meta.cfgLabel}</label>
+                    <select
+                      id={`evcfg-${meta.key}`}
+                      className="select"
+                      style={{ appearance: 'auto' }}
+                      value={stage?.evalConfigId ?? ''}
+                      onChange={(e) => setStageEvalConfig(meta.key, e.target.value)}
+                    >
+                      <option value="">No configuration</option>
+                      {evalConfigs.filter((c) => c.type === KEY_TO_TYPE[meta.key]).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className={`switch${enabled ? ' on' : ''}`} data-switch onClick={() => toggleEnabled(meta.key)} />

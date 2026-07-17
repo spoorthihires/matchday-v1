@@ -13,6 +13,12 @@ const TEMPLATE = {
   version: '1.0', versions: [], createdAt: '2026-06-01T00:00:00.000Z', updatedAt: '2026-07-01T00:00:00.000Z',
 };
 
+const MCQ_CFG = {
+  id: 'cfg-1', code: 'EVC-1', name: 'Standard MCQ', type: 'MCQ', enabled: true,
+  passing: 60, attempts: 2, retake: 'After cooldown', cooldown: 2, validity: 90, autoQual: true,
+  threshold: 70, contests: 0, createdAt: '2026-06-01T00:00:00.000Z', updatedAt: '2026-07-01T00:00:00.000Z',
+};
+
 function renderStep(onChange: (p: Partial<DriveInput>) => void) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -28,6 +34,7 @@ describe('StepEvaluation — template picker', () => {
     localStorage.setItem('matchday.auth', JSON.stringify({ token: 't', user: { id: 'u1', name: 'Admin', email: 'a@b.io', role: 'admin' } }));
     vi.stubGlobal('fetch', vi.fn((url: string) => {
       if (url.includes('/templates')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ items: [TEMPLATE] }) });
+      if (url.includes('/eval-configs')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ items: [MCQ_CFG] }) });
       return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
     }));
   });
@@ -48,5 +55,16 @@ describe('StepEvaluation — template picker', () => {
     const evalPatch = call![0].evaluation as { key: string; enabled: boolean }[];
     const byKey = Object.fromEntries(evalPatch.map((e) => [e.key, e.enabled]));
     expect(byKey).toEqual({ mcq: true, coding: false, tara: true, assignments: true });
+  });
+
+  it('selecting a stage EvalConfig sets that stage.evalConfigId', async () => {
+    const onChange = vi.fn();
+    renderStep(onChange);
+    const select = await screen.findByLabelText(/MCQ configuration/i);
+    await screen.findByRole('option', { name: 'Standard MCQ' }); // wait for async eval-configs fetch
+    await userEvent.selectOptions(select, 'cfg-1');
+    const call = onChange.mock.calls.find((c) => Array.isArray(c[0].evaluation)
+      && c[0].evaluation.find((s: { key: string; evalConfigId?: string }) => s.key === 'mcq')?.evalConfigId === 'cfg-1');
+    expect(call).toBeTruthy();
   });
 });

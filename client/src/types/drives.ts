@@ -10,7 +10,7 @@ export interface DriveListParams {
   q?: string; status?: string; month?: string; stream?: string; domain?: string;
   sort?: string; order?: 'asc' | 'desc'; page?: number; limit?: number;
 }
-export interface EvaluationStage { key: 'mcq' | 'coding' | 'tara' | 'assignments'; enabled: boolean; config: Record<string, number>; }
+export interface EvaluationStage { key: 'mcq' | 'coding' | 'tara' | 'assignments'; enabled: boolean; config: Record<string, number>; evalConfigId?: string; }
 export interface DriveInput {
   name: string; domain: string; stream: string; status?: string;
   candType: 'Freshers' | 'Experienced' | 'Both'; mode: 'Online' | 'Onsite' | 'Hybrid';

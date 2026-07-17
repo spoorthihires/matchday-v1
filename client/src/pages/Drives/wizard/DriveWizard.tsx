@@ -50,7 +50,9 @@ function mapDocToInput(doc: DriveDocResponse): DriveInput {
     name: doc.name, domain: doc.domain, stream: doc.stream, status: doc.status,
     candType: doc.candType, mode: doc.mode, frequency: doc.frequency, eventDay: doc.eventDay,
     eventDates: doc.eventDates, candCap: doc.candCap, empCap: doc.empCap, slotCap: doc.slotCap,
-    eligibility: doc.eligibility, evaluation: doc.evaluation, visibility: doc.visibility,
+    eligibility: doc.eligibility,
+    evaluation: doc.evaluation.map((s) => ({ ...s, evalConfigId: s.evalConfigId ? String(s.evalConfigId) : '' })),
+    visibility: doc.visibility,
     templateId: doc.templateId ? String(doc.templateId) : '',
     streamId: doc.streamId ? String(doc.streamId) : '',
   };
@@ -79,10 +81,10 @@ export function blankDriveModel(): DriveInput {
       expType: 'Freshers only',
     },
     evaluation: [
-      { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 } },
-      { key: 'coding', enabled: true, config: { problems: 3, durationMin: 60 } },
-      { key: 'tara', enabled: true, config: { durationMin: 20 } },
-      { key: 'assignments', enabled: false, config: { deadlineDays: 3 } },
+      { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 }, evalConfigId: '' },
+      { key: 'coding', enabled: true, config: { problems: 3, durationMin: 60 }, evalConfigId: '' },
+      { key: 'tara', enabled: true, config: { durationMin: 20 }, evalConfigId: '' },
+      { key: 'assignments', enabled: false, config: { deadlineDays: 3 }, evalConfigId: '' },
     ],
     visibility: {
       employerReg: 'Invite-only',
