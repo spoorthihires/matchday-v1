@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Stream, type StreamDoc } from '../../models/Stream.js';
+import { Drive } from '../../models/Drive.js';
 import { ALL_FLOW, type CreateStreamInput, type UpdateStreamInput } from './streams.schemas.js';
 
 const ACTOR = 'Platform Admin';
@@ -8,7 +9,7 @@ const ACTOR = 'Platform Admin';
 export interface StreamItem {
   id: string; code: string; name: string; parent: string; label: string;
   skills: string[]; good: string[]; flow: string[]; cutoff: number; cgpa: number; backlogs: number;
-  grad: string[]; branches: string[]; sources: string[]; status: string;
+  grad: string[]; branches: string[]; sources: string[]; status: string; drives: number;
   version: string; versions: { v: string; date: string; by: string; note: string }[];
   createdAt: string; updatedAt: string;
 }
@@ -27,6 +28,7 @@ function toItem(d: StreamDoc & { _id: unknown }): StreamItem {
     id: String(d._id), code: codeFor(d._id), name: d.name, parent: d.parent ?? 'Engineering', label: d.label ?? '',
     skills: d.skills ?? [], good: d.good ?? [], flow: d.flow ?? [], cutoff: d.cutoff ?? 0, cgpa: d.cgpa ?? 0, backlogs: d.backlogs ?? 0,
     grad: d.grad ?? [], branches: d.branches ?? [], sources: d.sources ?? [], status: d.status ?? 'Active',
+    drives: 0,
     version: d.version ?? '1.0',
     versions: (d.versions ?? []).map((v) => ({ v: v.v, date: new Date(v.date).toISOString(), by: v.by, note: v.note ?? '' })),
     createdAt: new Date(d.createdAt as Date).toISOString(), updatedAt: new Date(d.updatedAt as Date).toISOString(),
@@ -44,7 +46,14 @@ export async function listStreams(params: { q?: string; parent?: string; status?
   const key = (params.sort === 'parent' || params.sort === 'cutoff') ? params.sort : 'name';
   const dir = params.order === 'desc' ? -1 : 1;
   const rows = await Stream.find(match).collation({ locale: 'en', strength: 2 }).sort({ [key]: dir }).lean();
-  return { items: rows.map((r) => toItem(r as never)) };
+  const items = rows.map((r) => toItem(r as never));
+  const usedAgg = await Drive.aggregate([
+    { $match: { streamId: { $ne: null } } },
+    { $group: { _id: '$streamId', n: { $sum: 1 } } },
+  ]);
+  const usedBy = new Map<string, number>(usedAgg.map((r) => [String(r._id), r.n as number]));
+  for (const it of items) it.drives = usedBy.get(it.id) ?? 0;
+  return { items };
 }
 
 export async function createStream(input: CreateStreamInput) {

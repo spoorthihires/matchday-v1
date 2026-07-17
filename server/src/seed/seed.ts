@@ -457,7 +457,13 @@ async function run() {
     { name: 'Business Analytics', parent: 'Business', label: 'Business Analyst', skills: ['SQL', 'Excel', 'Storytelling'], good: ['Power BI', 'Python'], flow: ['MCQ', 'TARA', 'Assignment'], cutoff: 60, cgpa: 6.0, backlogs: 2, grad: ['2025', '2026'], branches: ['MBA', 'MCA'], sources: ['Institutes', 'Direct Apply'], status: 'Disabled', version: '1.0', updatedAt: daysAgo(14), createdAt: D(2026, 5, 28),
       versions: [ { v: '1.0', date: D(2026, 5, 28), by: 'Asha N.', note: 'Initial stream' } ] },
   ];
-  await Stream.insertMany(streamDocs);
+  const createdStreams = await Stream.insertMany(streamDocs);
+
+  // assign each seeded drive a stream profile (round-robin) so stream `drives` derives to real counts
+  for (let i = 0; i < drives.length; i++) {
+    await Drive.updateOne({ _id: drives[i]._id }, { $set: { streamId: createdStreams[i % createdStreams.length]._id } });
+  }
+
   await StreamRules.create({ ...SR_DEFAULTS });
 
   // ---- Institute↔Drive assignments (each institute gets ~2–5 drives, deterministic) ----
