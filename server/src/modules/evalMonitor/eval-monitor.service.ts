@@ -1,9 +1,9 @@
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Institute } from '../../models/Institute.js';
+import { MATCH_READY_STAGE_SET } from '../../constants/stages.js';
 
 export const EM_CONTESTS = ['Frontend · Jul cohort', 'Backend · Jul cohort', 'Data/ML Specialists', 'Full-stack · Aug'];
 export const EM_EMPLOYERS = ['Nexatech Labs', 'Aetherverse AI', 'Quantbridge', 'Helioserv'];
-const MATCH_READY = new Set(['MatchReady', 'Shortlisted', 'Offer', 'Joined']);
 
 export interface MonitorCandidate {
   id: string; code: string; name: string; institute: string;
@@ -21,7 +21,7 @@ export function deriveStage(
   js: { stage: string; evaluationStatus?: string; profileCompleted?: boolean },
   h: number,
 ): number {
-  if (MATCH_READY.has(js.stage)) return 9;
+  if (MATCH_READY_STAGE_SET.has(js.stage)) return 9;
   if (js.evaluationStatus === 'completed') return 8;
   if (js.evaluationStatus === 'pending') return 3 + (h % 5);   // 3..7
   if (js.profileCompleted) return 2;

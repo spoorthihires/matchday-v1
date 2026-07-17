@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { MATCH_READY_STAGES } from '../../constants/stages.js';
 import { dashboardConfig, verdictFor } from '../../config/dashboard.config.js';
 import { Drive } from '../../models/Drive.js';
 import { Employer } from '../../models/Employer.js';
@@ -57,7 +58,7 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
     Jobseeker.countDocuments({ profileCompleted: true }),
     Jobseeker.countDocuments({ evaluationStatus: 'completed' }),
     Jobseeker.countDocuments({ evaluationStatus: 'pending' }),
-    Jobseeker.countDocuments({ stage: { $in: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'] } }),
+    Jobseeker.countDocuments({ stage: { $in: [...MATCH_READY_STAGES] } }),
     Jobseeker.countDocuments({ stage: { $in: ['Shortlisted', 'Offer', 'Joined'] } }),
     Jobseeker.countDocuments({ stage: { $in: ['Offer', 'Joined'] } }),
     Jobseeker.countDocuments({ stage: 'Joined' }),
@@ -109,7 +110,7 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
 
   // ---- Leaderboards ----
   const instLb = await Jobseeker.aggregate([
-    { $match: { stage: { $in: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'] } } },
+    { $match: { stage: { $in: [...MATCH_READY_STAGES] } } },
     { $group: { _id: '$instituteId', ready: { $sum: 1 }, total: { $sum: 1 } } },
     { $lookup: { from: 'institutes', localField: '_id', foreignField: '_id', as: 'inst' } },
     { $unwind: '$inst' },

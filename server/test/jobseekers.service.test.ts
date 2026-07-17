@@ -66,6 +66,18 @@ describe('jobseekers.service', () => {
     expect(res.items[0].name).toBe('Ananya');   // Joined = 100
   });
 
+  it('sorts by name case-insensitively (collation)', async () => {
+    const inst = await Institute.create({ name: 'CBIT', city: 'Hyderabad', type: 'Engineering College', status: 'Active' });
+    const mk = (over: Record<string, unknown>) => Jobseeker.create({
+      instituteId: inst._id, branch: 'CSE', gradYear: 2026, cgpa: 8, source: 'Campus',
+      profileCompleted: true, evaluationStatus: 'completed', ...over,
+    });
+    await mk({ name: 'Zebra', email: 'zebra@x.edu' });
+    await mk({ name: 'apple', email: 'apple@x.edu' });
+    const res = await listJobseekers({ sort: 'name', order: 'asc' });
+    expect(res.items.map((x) => x.name)).toEqual(['apple', 'Zebra']);
+  });
+
   it('adds a jobseeker with Applied defaults', async () => {
     await seed();
     const js = await addJobseeker({ name: 'New', instituteId: instId, branch: 'IT', gradYear: 2026, cgpa: 7 });
