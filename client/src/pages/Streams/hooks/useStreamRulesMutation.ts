@@ -9,5 +9,6 @@ export function useStreamRulesMutation() {
   return useMutation({
     mutationFn: (body: StreamRules) => apiFetch('/stream-rules', { method: 'PUT', body, token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stream-rules'] }),
+    meta: { successMessage: 'Selection rules saved' },
   });
 }

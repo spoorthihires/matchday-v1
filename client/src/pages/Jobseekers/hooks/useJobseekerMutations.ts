@@ -10,8 +10,8 @@ export function useJobseekerMutations() {
   const { token } = useAuth();
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ['jobseekers'] });
-  const add = useMutation({ mutationFn: (b: JobseekerInput) => apiFetch('/jobseekers', { method: 'POST', body: b, token }), onSuccess: invalidate });
-  const update = useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<JobseekerInput> }) => apiFetch(`/jobseekers/${id}`, { method: 'PATCH', body, token }), onSuccess: invalidate });
-  const block = useMutation({ mutationFn: (b: { ids: string[]; action: 'block' }) => apiFetch('/jobseekers/bulk', { method: 'POST', body: b, token }), onSuccess: invalidate });
+  const add = useMutation({ mutationFn: (b: JobseekerInput) => apiFetch('/jobseekers', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Jobseeker added' } });
+  const update = useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<JobseekerInput> }) => apiFetch(`/jobseekers/${id}`, { method: 'PATCH', body, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Jobseeker saved' } });
+  const block = useMutation({ mutationFn: (b: { ids: string[]; action: 'block' }) => apiFetch('/jobseekers/bulk', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { successMessage: 'Jobseekers blocked' } });
   return { add, update, block };
 }

@@ -13,6 +13,7 @@ export function useDriveAssignmentMutations(instituteId?: string) {
   const assign = useMutation({
     mutationFn: (driveIds: string[]) => apiFetch(`/institutes/${instituteId}/drives`, { method: 'POST', body: { driveIds }, token }),
     onSuccess: invalidate,
+    meta: { successMessage: 'Drives assigned' },
   });
   const unassign = useMutation({
     mutationFn: (driveId: string) => apiFetch(`/institutes/${instituteId}/drives/${driveId}`, { method: 'DELETE', token }),
@@ -21,6 +22,7 @@ export function useDriveAssignmentMutations(instituteId?: string) {
   const bulkAssign = useMutation({
     mutationFn: (body: { instituteIds: string[]; driveIds: string[] }) => apiFetch('/institutes/assign-drives', { method: 'POST', body, token }),
     onSuccess: invalidate,
+    meta: { successMessage: 'Drives assigned' },
   });
   return { assign, unassign, bulkAssign };
 }
