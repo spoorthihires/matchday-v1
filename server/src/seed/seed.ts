@@ -118,15 +118,18 @@ async function run() {
       eventDates: upcoming ? [upcomingDates[i]] : [new Date(NOW.getTime() + intBetween(rng, 30, 90) * DAY)],
       candCap: intBetween(rng, 150, 500), empCap: intBetween(rng, 5, 9), slotCap: intBetween(rng, 180, 360),
       eligibility: {
-        // sources: [] (no constraint) — NOT ['Institutes']: the bulk jobseeker `source` field
-        // below is drawn from SOURCES (Campus/Referral/Portal/Walk-in), which never contains
-        // 'Institutes'. A non-empty sources filter here would make isEligible() reject nearly
-        // every Match-Ready+ seeker (verified: only 1 of 532 has source 'Institutes'), so
-        // Task 4's per-slot eligible pools would be far too small and planSlotBookings would
-        // throw "pool too small" for almost every slot. Leaving sources unconstrained matches
-        // how every isEligible() test fixture in this codebase already models an open drive,
-        // and doesn't consume the rng (no change to any other tuned seed number).
-        sources: [], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
+        // sources: superset of every seeded jobseeker `source` value — NOT ['Institutes']: the
+        // bulk jobseeker `source` field below is drawn from SOURCES (Campus/Referral/Portal/
+        // Walk-in), which never contains 'Institutes'. A sources filter of just ['Institutes']
+        // would make isEligible() reject nearly every Match-Ready+ seeker (verified: only 1 of
+        // 532 has source 'Institutes'), so Task 4's per-slot eligible pools would be far too
+        // small and planSlotBookings would throw "pool too small" for almost every slot. Schema
+        // requires sources.min(1) (drives.schemas.ts), so this must be non-empty; listing every
+        // source value keeps the eligibility check functionally unconstrained (matches how every
+        // isEligible() test fixture in this codebase already models an open drive) while
+        // satisfying validation, and doesn't consume the rng (no change to any other tuned seed
+        // number).
+        sources: ['Institutes', 'Campus', 'Referral', 'Portal', 'Walk-in'], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
       },
       evaluation: [
         { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 } },
