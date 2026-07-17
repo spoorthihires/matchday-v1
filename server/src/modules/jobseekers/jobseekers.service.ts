@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
+import { MATCH_READY_STAGES } from '../../constants/stages.js';
 import type { CreateJobseekerInput, ListQuery } from './jobseekers.schemas.js';
 
 export type ListParams = Partial<ListQuery>;
@@ -34,7 +35,7 @@ const OFFER_TO_STAGE: Record<string, string[]> = {
   None: ['Applied', 'Screened', 'Evaluated', 'MatchReady'],
 };
 const BUCKET_TO_STAGE: Record<string, string[]> = {
-  high: ['MatchReady', 'Shortlisted', 'Offer', 'Joined'], mid: ['Screened', 'Evaluated'], low: ['Applied', 'DroppedOff'],
+  high: [...MATCH_READY_STAGES], mid: ['Screened', 'Evaluated'], low: ['Applied', 'DroppedOff'],
 };
 
 export async function listJobseekers(params: ListParams) {

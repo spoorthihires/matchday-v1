@@ -5,6 +5,7 @@ import { AuditLog } from '../../models/AuditLog.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Drive } from '../../models/Drive.js';
 import { DriveAssignment } from '../../models/DriveAssignment.js';
+import { MATCH_READY_STAGES } from '../../constants/stages.js';
 import type { CreateInstituteInput, ListQuery } from './institutes.schemas.js';
 
 export type ListParams = Partial<ListQuery>;
@@ -17,7 +18,6 @@ export interface InstituteListItem extends Funnel {
 }
 export interface Overview { total: number; pending: number; uploaded: number; avgMatchReadyPct: number; }
 
-const MATCH_READY = ['MatchReady', 'Shortlisted', 'Offer', 'Joined'];
 const SHORTLIST = ['Shortlisted', 'Offer', 'Joined'];
 const OFFER = ['Offer', 'Joined'];
 
@@ -36,7 +36,7 @@ async function funnelCounts(): Promise<Map<string, { uploaded: number; pastAppli
       uploaded: { $sum: 1 },
       pastApplied: { $sum: { $cond: [{ $ne: ['$stage', 'Applied'] }, 1, 0] } },
       profiles: { $sum: { $cond: ['$profileCompleted', 1, 0] } },
-      mr: { $sum: { $cond: [{ $in: ['$stage', MATCH_READY] }, 1, 0] } },
+      mr: { $sum: { $cond: [{ $in: ['$stage', [...MATCH_READY_STAGES]] }, 1, 0] } },
       sl: { $sum: { $cond: [{ $in: ['$stage', SHORTLIST] }, 1, 0] } },
       of: { $sum: { $cond: [{ $in: ['$stage', OFFER] }, 1, 0] } },
       jn: { $sum: { $cond: [{ $eq: ['$stage', 'Joined'] }, 1, 0] } },

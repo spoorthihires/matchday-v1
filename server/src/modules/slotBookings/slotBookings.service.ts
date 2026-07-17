@@ -5,8 +5,9 @@ import { Drive } from '../../models/Drive.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { SlotBooking } from '../../models/SlotBooking.js';
 import { isEligible } from '../seekerPortal/seekerPortal.service.js';
+import { MATCH_READY_STAGE_SET } from '../../constants/stages.js';
 
-export const MATCH_READY_STAGES = new Set(['MatchReady', 'Shortlisted', 'Offer', 'Joined']);
+export const MATCH_READY_STAGES = MATCH_READY_STAGE_SET;
 
 export interface RosterEntry {
   bookingId: string; jobseekerId: string; name: string;
