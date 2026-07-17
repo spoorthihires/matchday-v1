@@ -26,8 +26,12 @@ function normTemplateId(v: unknown): Types.ObjectId | null {
   return typeof v === 'string' && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null;
 }
 
+function normStreamId(v: unknown): Types.ObjectId | null {
+  return typeof v === 'string' && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null;
+}
+
 export async function createDrive(input: DriveInput, createdBy: string) {
-  return Drive.create({ ...input, templateId: normTemplateId(input.templateId), createdBy });
+  return Drive.create({ ...input, templateId: normTemplateId(input.templateId), streamId: normStreamId(input.streamId), createdBy });
 }
 
 export async function getDrive(id: string) {
@@ -41,6 +45,7 @@ export async function updateDrive(id: string, patch: Partial<DriveInput> & { sta
   assertObjectId(id);
   const p: Record<string, unknown> = { ...patch };
   if ('templateId' in p) p.templateId = normTemplateId(p.templateId);
+  if ('streamId' in p) p.streamId = normStreamId(p.streamId);
   const d = await Drive.findByIdAndUpdate(id, p, { new: true, runValidators: true });
   if (!d) throw new HttpError(404, 'Drive not found', 'not_found');
   return d;
