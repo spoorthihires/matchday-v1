@@ -20,6 +20,6 @@ export function useRegistrationAction() {
         qc.invalidateQueries({ queryKey: ['employers'] });
       }
     },
-    meta: { silentError: true },
+    meta: { silentError: true, successMessage: 'Registration updated' },
   });
 }
