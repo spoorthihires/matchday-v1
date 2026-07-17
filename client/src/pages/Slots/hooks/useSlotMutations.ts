@@ -16,15 +16,18 @@ export function useSlotMutations() {
   const create = useMutation({
     mutationFn: (body: SlotInput) => apiFetch('/slots', { method: 'POST', body, token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Slot created' },
   });
   const update = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Partial<SlotInput> }) =>
       apiFetch(`/slots/${id}`, { method: 'PATCH', body, token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Slot updated' },
   });
   const remove = useMutation({
     mutationFn: (id: string) => apiFetch(`/slots/${id}`, { method: 'DELETE', token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Slot deleted' },
   });
   return { create, update, remove };
 }

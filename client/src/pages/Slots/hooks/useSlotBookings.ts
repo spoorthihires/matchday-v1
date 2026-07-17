@@ -38,16 +38,19 @@ export function useBookingMutations(slotId: string) {
     mutationFn: ({ jobseekerId, status }: { jobseekerId: string; status: BookingStatus }) =>
       apiFetch(`/slots/${slotId}/bookings`, { method: 'POST', body: { jobseekerId, status }, token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Candidate booked' },
   });
   const confirm = useMutation({
     mutationFn: (bookingId: string) =>
       apiFetch(`/slots/${slotId}/bookings/${bookingId}`, { method: 'PATCH', body: { status: 'Booked' }, token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Booking confirmed' },
   });
   const release = useMutation({
     mutationFn: (bookingId: string) =>
       apiFetch(`/slots/${slotId}/bookings/${bookingId}`, { method: 'DELETE', token }),
     onSuccess: invalidate,
+    meta: { silentError: true, successMessage: 'Booking released' },
   });
   return { book, confirm, release };
 }

@@ -7,8 +7,8 @@ export function useEmployerMutations() {
   const { token } = useAuth();
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ['employers'] });
-  const create = useMutation({ mutationFn: (b: EmployerInput) => apiFetch('/employers', { method: 'POST', body: b, token }), onSuccess: invalidate });
-  const update = useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<EmployerInput> }) => apiFetch(`/employers/${id}`, { method: 'PATCH', body, token }), onSuccess: invalidate });
-  const bulk = useMutation({ mutationFn: (b: { ids: string[]; action: 'approve' | 'disable' }) => apiFetch('/employers/bulk', { method: 'POST', body: b, token }), onSuccess: invalidate });
+  const create = useMutation({ mutationFn: (b: EmployerInput) => apiFetch('/employers', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Employer saved' } });
+  const update = useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<EmployerInput> }) => apiFetch(`/employers/${id}`, { method: 'PATCH', body, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Employer saved' } });
+  const bulk = useMutation({ mutationFn: (b: { ids: string[]; action: 'approve' | 'disable' }) => apiFetch('/employers/bulk', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { successMessage: 'Employers updated' } });
   return { create, update, bulk };
 }

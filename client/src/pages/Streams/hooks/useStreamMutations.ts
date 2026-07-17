@@ -10,16 +10,19 @@ export function useStreamMutations() {
   const create = useMutation({
     mutationFn: (body: StreamInput) => apiFetch('/streams', { method: 'POST', body, token }),
     onSuccess: invalidate,
+    meta: { successMessage: 'Stream created' },
   });
   const update = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Partial<StreamInput> }) =>
       apiFetch(`/streams/${id}`, { method: 'PATCH', body, token }),
     onSuccess: invalidate,
+    meta: { successMessage: 'Stream saved' },
   });
   const restore = useMutation({
     mutationFn: ({ id, v }: { id: string; v: string }) =>
       apiFetch(`/streams/${id}/restore`, { method: 'POST', body: { v }, token }),
     onSuccess: invalidate,
+    meta: { successMessage: 'Version restored' },
   });
   return { create, update, restore };
 }
