@@ -10,6 +10,7 @@ import { DayView, type SlotActionKind } from './DayView.js';
 import { useSlots } from './hooks/useSlots.js';
 import { SlotModal } from './SlotModal.js';
 import { SlotActionModal } from './SlotActionModal.js';
+import { SlotRosterModal } from './SlotRosterModal.js';
 
 type View = 'month' | 'week' | 'day';
 
@@ -27,6 +28,8 @@ export function SlotsPage() {
   const [modal, setModal] = useState<ModalState>(null);
   // Set by Day view's quick-action buttons (Task 5) and consumed by <SlotActionModal> below.
   const [actionModal, setActionModal] = useState<ActionModalState>(null);
+  // Set by SlotModal's edit-mode "Roster" button (Task 6) and consumed by <SlotRosterModal> below.
+  const [rosterModal, setRosterModal] = useState<{ slot: SlotItem } | null>(null);
 
   const { from, to } = visibleRange(view, refDate);
   const { data, isLoading, isError, error } = useSlots({ from, to, employerId });
@@ -156,6 +159,7 @@ export function SlotsPage() {
             date={modal.mode === 'create' ? modal.date : undefined}
             slot={modal.mode === 'edit' ? modal.slot : undefined}
             onClose={() => setModal(null)}
+            onManageRoster={(slot) => { setModal(null); setRosterModal({ slot }); }}
           />
         )}
         {actionModal && (
@@ -164,6 +168,9 @@ export function SlotsPage() {
             slot={actionModal.slot}
             onClose={() => setActionModal(null)}
           />
+        )}
+        {rosterModal && (
+          <SlotRosterModal slot={rosterModal.slot} onClose={() => setRosterModal(null)} />
         )}
       </div>
     </AppShell>

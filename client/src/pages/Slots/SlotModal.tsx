@@ -20,6 +20,9 @@ export interface SlotModalProps {
   date?: string;
   slot?: SlotItem;
   onClose: () => void;
+  // Task 6's entry point into SlotRosterModal — opened from the edit-mode footer's "Roster"
+  // button below (index.tsx swaps this modal for SlotRosterModal on click).
+  onManageRoster?: (slot: SlotItem) => void;
 }
 
 interface FormState {
@@ -45,7 +48,7 @@ function blankForm(date?: string, slot?: SlotItem): FormState {
 
 type RequiredField = 'date' | 'start' | 'end' | 'driveId';
 
-export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
+export function SlotModal({ mode, date, slot, onClose, onManageRoster }: SlotModalProps) {
   const { create, update, remove } = useSlotMutations();
   const [form, setForm] = useState<FormState>(() => blankForm(date, slot));
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<RequiredField, boolean>>>({});
@@ -266,6 +269,11 @@ export function SlotModal({ mode, date, slot, onClose }: SlotModalProps) {
             </button>
           )}
           {mode === 'create' && <div className="grow" />}
+          {mode === 'edit' && slot && onManageRoster && (
+            <button className="btn btn-ghost btn-lg" type="button" onClick={() => onManageRoster(slot)}>
+              <i className="ti ti-users" /> Roster
+            </button>
+          )}
           <button className="btn btn-ghost btn-lg" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-lg" disabled={pending} onClick={handleSave}>
             <i className="ti ti-device-floppy" /> {pending ? 'Saving…' : 'Save slot'}
