@@ -7,8 +7,6 @@ const slotSchema = new Schema({
   start: { type: String, required: true },
   end: { type: String, required: true },
   capacity: { type: Number, default: 10 },
-  booked: { type: Number, default: 0 },
-  held: { type: Number, default: 0 },
   status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
   link: { type: String, default: '' },
   attended: { type: Number, default: 0 },

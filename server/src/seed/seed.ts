@@ -301,7 +301,7 @@ async function run() {
       driveId: (s.day === 15 ? drives[0] : drives[idx % 3])._id,
       employerId: employers[idx % 9]._id,
       date: new Date(Date.UTC(2026, 6, s.day)),
-      start: s.start, end: s.end, capacity: s.capacity, booked: s.booked, held: s.held,
+      start: s.start, end: s.end, capacity: s.capacity,
       status: cancelled ? 'Cancelled' : past ? 'Completed' : 'Scheduled',
       link: past ? '' : `https://meet.hiringhood.com/${Math.floor(rng() * 2176782336).toString(36)}`,
       attended, noShow: past && !cancelled ? s.booked - attended : 0,
