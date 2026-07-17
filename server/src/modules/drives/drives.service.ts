@@ -30,8 +30,23 @@ function normStreamId(v: unknown): Types.ObjectId | null {
   return typeof v === 'string' && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null;
 }
 
+function normEvalConfigId(v: unknown): Types.ObjectId | null {
+  return typeof v === 'string' && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null;
+}
+
+function normEvaluation<T>(stages: T): T {
+  if (!Array.isArray(stages)) return stages;
+  return stages.map((s) => ({ ...s, evalConfigId: normEvalConfigId((s as { evalConfigId?: unknown }).evalConfigId) })) as unknown as T;
+}
+
 export async function createDrive(input: DriveInput, createdBy: string) {
-  return Drive.create({ ...input, templateId: normTemplateId(input.templateId), streamId: normStreamId(input.streamId), createdBy });
+  return Drive.create({
+    ...input,
+    templateId: normTemplateId(input.templateId),
+    streamId: normStreamId(input.streamId),
+    evaluation: normEvaluation(input.evaluation),
+    createdBy,
+  });
 }
 
 export async function getDrive(id: string) {
@@ -46,6 +61,7 @@ export async function updateDrive(id: string, patch: Partial<DriveInput> & { sta
   const p: Record<string, unknown> = { ...patch };
   if ('templateId' in p) p.templateId = normTemplateId(p.templateId);
   if ('streamId' in p) p.streamId = normStreamId(p.streamId);
+  if ('evaluation' in p) p.evaluation = normEvaluation(p.evaluation);
   const d = await Drive.findByIdAndUpdate(id, p, { new: true, runValidators: true });
   if (!d) throw new HttpError(404, 'Drive not found', 'not_found');
   return d;

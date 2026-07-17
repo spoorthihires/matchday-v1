@@ -3,6 +3,7 @@ import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 import { Drive } from '../src/models/Drive.js';
 import { DriveTemplate } from '../src/models/DriveTemplate.js';
 import { Stream } from '../src/models/Stream.js';
+import { EvalConfig } from '../src/models/EvalConfig.js';
 import {
   listDrives, createDrive, getDrive, updateDrive, cloneDrive, bulkAction,
 } from '../src/modules/drives/drives.service.js';
@@ -170,5 +171,43 @@ describe('drives.service — streamId link', () => {
     const d = await createDrive({ ...baseInput(), streamId: String(s._id) } as never, 'Admin');
     const patched = await updateDrive(String(d._id), { name: 'Renamed' } as never);
     expect(String(patched.streamId)).toBe(String(s._id));
+  });
+});
+
+describe('drives.service — stage evalConfigId link', () => {
+  async function cfg(type = 'MCQ') { return EvalConfig.create({ name: 'C', type }); }
+  function evalWith(evalConfigId?: string) {
+    return [
+      { key: 'mcq', enabled: true, config: {}, ...(evalConfigId !== undefined ? { evalConfigId } : {}) },
+      { key: 'coding', enabled: false, config: {} },
+      { key: 'tara', enabled: false, config: {} },
+      { key: 'assignments', enabled: false, config: {} },
+    ];
+  }
+  it('createDrive persists a stage evalConfigId', async () => {
+    const c = await cfg();
+    const d = await createDrive({ ...baseInput(), evaluation: evalWith(String(c._id)) } as never, 'Admin');
+    const mcq = d.evaluation.find((s) => s.key === 'mcq');
+    expect(String(mcq!.evalConfigId)).toBe(String(c._id));
+  });
+  it('normalizes empty/invalid stage evalConfigId to null', async () => {
+    const d1 = await createDrive({ ...baseInput(), evaluation: evalWith('') } as never, 'Admin');
+    expect(d1.evaluation.find((s) => s.key === 'mcq')!.evalConfigId).toBeNull();
+    const d2 = await createDrive({ ...baseInput(), evaluation: evalWith('not-an-id') } as never, 'Admin');
+    expect(d2.evaluation.find((s) => s.key === 'mcq')!.evalConfigId).toBeNull();
+  });
+  it('updateDrive sets and clears a stage evalConfigId via the evaluation array', async () => {
+    const c = await cfg();
+    const d = await createDrive({ ...baseInput(), evaluation: evalWith() } as never, 'Admin');
+    const set = await updateDrive(String(d._id), { evaluation: evalWith(String(c._id)) } as never);
+    expect(String(set.evaluation.find((s) => s.key === 'mcq')!.evalConfigId)).toBe(String(c._id));
+    const cleared = await updateDrive(String(d._id), { evaluation: evalWith('') } as never);
+    expect(cleared.evaluation.find((s) => s.key === 'mcq')!.evalConfigId).toBeNull();
+  });
+  it('a patch omitting evaluation preserves existing stage links', async () => {
+    const c = await cfg();
+    const d = await createDrive({ ...baseInput(), evaluation: evalWith(String(c._id)) } as never, 'Admin');
+    const patched = await updateDrive(String(d._id), { name: 'Renamed' } as never);
+    expect(String(patched.evaluation.find((s) => s.key === 'mcq')!.evalConfigId)).toBe(String(c._id));
   });
 });
