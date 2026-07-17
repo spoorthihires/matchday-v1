@@ -43,7 +43,15 @@ export async function createBooking(slotId: string, jobseekerId: string, status:
   }
   const seats = await SlotBooking.countDocuments({ slotId: s._id }); // booked + held both consume a seat
   if (seats >= (s.capacity ?? 0)) throw new HttpError(400, 'Slot is at capacity', 'slot_full');
-  const created = await SlotBooking.create({ slotId: s._id, jobseekerId: js._id, status });
+  let created;
+  try {
+    created = await SlotBooking.create({ slotId: s._id, jobseekerId: js._id, status });
+  } catch (err) {
+    if ((err as { code?: number }).code === 11000) {
+      throw new HttpError(400, 'Candidate already booked in this slot', 'already_booked');
+    }
+    throw err;
+  }
   return { id: String(created._id), slotId: String(s._id), jobseekerId: String(js._id), status: created.status };
 }
 
