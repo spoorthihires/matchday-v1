@@ -66,6 +66,13 @@ describe('drives.service', () => {
     expect(res.items.map((d) => d.name)).toEqual(['Alpha Frontend', 'Beta Backend', 'Gamma Data']);
   });
 
+  it('sorts by name case-insensitively (collation)', async () => {
+    await createDrive({ ...baseInput(), name: 'Zebra Cohort' }, 'Admin');
+    await createDrive({ ...baseInput(), name: 'apple cohort' }, 'Admin');
+    const res = await listDrives({ sort: 'name', order: 'asc' }, NOW);
+    expect(res.items.map((d) => d.name)).toEqual(['apple cohort', 'Zebra Cohort']);
+  });
+
   it('returns a month display label derived from the primary event date', async () => {
     await createDrive(baseInput(), 'Admin');
     const res = await listDrives({}, NOW);

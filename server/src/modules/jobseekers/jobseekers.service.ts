@@ -78,7 +78,7 @@ export async function listJobseekers(params: ListParams) {
     { $unwind: { path: '$inst', preserveNullAndEmptyArrays: true } },
     { $sort: { [sortField]: sortDir, _id: 1 } },
     { $facet: { items: [{ $skip: (page - 1) * limit }, { $limit: limit }], total: [{ $count: 'n' }] } },
-  ]);
+  ]).collation({ locale: 'en', strength: 2 });
   const rows = facet[0]?.items ?? [];
   const total = facet[0]?.total?.[0]?.n ?? 0;
   const items: JobseekerListItem[] = rows.map((d: Record<string, any>) => ({

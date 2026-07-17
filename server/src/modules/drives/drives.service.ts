@@ -123,7 +123,7 @@ export async function listDrives(params: ListParams, now: Date = new Date()) {
       items: [{ $skip: (page - 1) * limit }, { $limit: limit }],
       total: [{ $count: 'n' }],
     } },
-  ]);
+  ]).collation({ locale: 'en', strength: 2 });
 
   const rows = facet[0]?.items ?? [];
   const total = facet[0]?.total?.[0]?.n ?? 0;
