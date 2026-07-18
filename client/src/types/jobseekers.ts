@@ -23,5 +23,5 @@ export interface JobseekerDetail {
   _id: string; name: string; instituteId: string; branch: string;
   gradYear: number; cgpa: number; source: string; email: string;
   consent: 'Granted' | 'Pending' | 'Revoked'; profileCompleted: boolean;
-  evaluationStatus: 'na' | 'pending' | 'completed'; stage: string; createdAt: string;
+  evaluationStatus: 'na' | 'pending' | 'completed' | 'failed'; stage: string; createdAt: string;
 }

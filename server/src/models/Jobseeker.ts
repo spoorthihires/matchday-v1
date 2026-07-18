@@ -20,7 +20,7 @@ const jobseekerSchema = new Schema({
   passwordHash: { type: String, default: undefined },
   consent: { type: String, enum: ['Granted', 'Pending', 'Revoked'], default: 'Granted' },
   profileCompleted: { type: Boolean, default: false },
-  evaluationStatus: { type: String, enum: ['na', 'pending', 'completed'], default: 'na' },
+  evaluationStatus: { type: String, enum: ['na', 'pending', 'completed', 'failed'], default: 'na' },
   stage: { type: String, enum: JOBSEEKER_STAGES, default: 'Applied' },
   createdAt: { type: Date, default: Date.now },
 });
