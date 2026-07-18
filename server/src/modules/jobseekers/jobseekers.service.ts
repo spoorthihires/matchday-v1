@@ -15,7 +15,8 @@ export function offerStatus(stage: string): string {
     : stage === 'Joined' ? 'Joined' : stage === 'DroppedOff' ? 'Rejected' : 'None';
 }
 export function evaluationLabel(s: string): string {
-  return s === 'completed' ? 'Completed' : s === 'pending' ? 'In progress' : 'Not started';
+  return s === 'completed' ? 'Completed' : s === 'pending' ? 'In progress'
+    : s === 'failed' ? 'Failed' : 'Not started';
 }
 export function codeFor(id: unknown): string { return `C-${String(id).slice(-6).toUpperCase()}`; }
 

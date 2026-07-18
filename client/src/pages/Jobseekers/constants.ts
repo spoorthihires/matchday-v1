@@ -11,13 +11,16 @@ export const STREAM_OPTIONS = ['CSE', 'IT', 'ECE', 'EEE', 'MECH'];
 // modal-only design update.
 export const MODAL_STREAM_OPTIONS = ['Frontend Engineering', 'Backend Engineering', 'Data / ML', 'Full-stack', 'Business Analytics'];
 
-export const EVAL_OPTIONS: { label: string; value: 'na' | 'pending' | 'completed' }[] = [
+
+export const EVAL_OPTIONS: { label: string; value: 'na' | 'pending' | 'completed' | 'failed' }[] = [
+
   { label: 'Not started', value: 'na' },
   { label: 'In progress', value: 'pending' },
   { label: 'Completed', value: 'completed' },
+  { label: 'Failed', value: 'failed' },
 ];
-export const EVAL_LABEL_TO_VALUE: Record<string, 'na' | 'pending' | 'completed'> = {
-  'Not started': 'na', 'In progress': 'pending', Completed: 'completed',
+export const EVAL_LABEL_TO_VALUE: Record<string, 'na' | 'pending' | 'completed' | 'failed'> = {
+  'Not started': 'na', 'In progress': 'pending', Completed: 'completed', Failed: 'failed',
 };
 
 export const MATCH_BUCKET_OPTIONS: { label: string; value: 'high' | 'mid' | 'low' }[] = [

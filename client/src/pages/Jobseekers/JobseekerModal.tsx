@@ -34,7 +34,7 @@ export interface JobseekerModalProps {
 }
 
 interface FormState {
-  name: string; instituteId: string; branch: string; evaluationStatus: 'na' | 'pending' | 'completed';
+  name: string; instituteId: string; branch: string; evaluationStatus: 'na' | 'pending' | 'completed' | 'failed';
   offer: string; consent: 'Granted' | 'Pending' | 'Revoked'; email: string; gradYear: string; cgpa: string;
 }
 
