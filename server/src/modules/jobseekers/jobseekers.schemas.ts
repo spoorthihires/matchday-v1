@@ -29,7 +29,7 @@ export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
-export const bulkSchema = z.object({ ids: z.array(z.string()).min(1), action: z.enum(['block']) });
+export const bulkSchema = z.object({ ids: z.array(z.string()).min(1), action: z.enum(['block', 'unblock']) });
 
 export type CreateJobseekerInput = z.infer<typeof createJobseekerSchema>;
 export type ListQuery = z.infer<typeof listQuerySchema>;

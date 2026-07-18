@@ -56,7 +56,7 @@ export function JobseekersPage() {
     ...(view === 'consent' && viewFilterValue ? { consent: viewFilterValue } : {}),
   };
   const { data, isLoading, isError, error } = useJobseekers(params);
-  const { block } = useJobseekerMutations();
+  const { block, blockOne, unblockOne } = useJobseekerMutations();
 
   function handleViewChange(next: JobseekerView) {
     setView(next);
@@ -107,7 +107,14 @@ export function JobseekersPage() {
         break;
       }
       case 'block':
-        if (window.confirm('Block this candidate?')) block.mutate({ ids: [id], action: 'block' });
+        if (window.confirm('Block this candidate?')) blockOne.mutate(id);
+        break;
+      case 'unblock':
+        if (window.confirm('Unblock this candidate?')) unblockOne.mutate(id);
+        break;
+      case 'change-stream':
+      case 'reset-evaluation':
+        // Placeholder menu entries — no server action wired yet (see JobseekersTable.tsx).
         break;
     }
   }

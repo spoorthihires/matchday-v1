@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { JobseekerListItem } from '../../types/jobseekers.js';
 
 // Ported from matchday-admin-app_23.html lines 1666-1683 (table.dm inside .dm-table-wrap/.dm-scroll)
@@ -6,13 +7,13 @@ import type { JobseekerListItem } from '../../types/jobseekers.js';
 // outer `.dm-table-wrap` and `.dm-pager` are owned by index.tsx — so this stays a pure,
 // isolated-testable presentational component (see JobseekersTable.test.tsx).
 //
-// The prototype's row actions are a direct "Edit" button plus a "More" kebab (Edit/Change
-// stream/Reset evaluation/Block). This task only has two candidate actions in scope (Edit, Block —
-// Change Stream/Reset Evaluation are deferred), so both render as direct icon buttons in `.rowact`
-// rather than porting an near-empty kebab menu for a single extra entry.
+// The prototype's row actions are a direct "Edit" button plus a "More" kebab with Edit/Change
+// stream/Reset evaluation/Block-or-Unblock (openJsKebab, lines 4029-4042) — mirrored here the same
+// way EmployersTable.tsx ports its kebab. Change Stream and Reset Evaluation are placeholder menu
+// entries only (no server action wired yet); Block/Unblock is fully wired.
 
 export type JobseekerSortKey = 'name' | 'institute' | 'matchReady';
-export type JobseekerRowAction = 'edit' | 'block';
+export type JobseekerRowAction = 'edit' | 'block' | 'unblock' | 'change-stream' | 'reset-evaluation';
 
 export interface JobseekersTableProps {
   items: JobseekerListItem[];
@@ -64,6 +65,10 @@ export function JobseekersTable({
   items, selectedIds, onToggle, onToggleAll, onSort, sort, order, onRowAction, isLoading,
 }: JobseekersTableProps) {
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id));
+  // Local, presentation-only UI state (which row's overflow menu is open) — mirrors
+  // EmployersTable's per-row openMenuId so this stays a pure component driven by explicit props.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const act = (action: JobseekerRowAction, id: string) => { setOpenMenuId(null); onRowAction(action, id); };
 
   return (
     <div className="dm-scroll">
@@ -155,17 +160,26 @@ export function JobseekersTable({
                 <td><span className={`badge-st ${OFFER_CLASS[x.offerStatus] ?? 'st-draft'}`}><i className="ti ti-circle-filled" /> {x.offerStatus}</span></td>
                 <td><span className={`badge-st ${DUP_CLASS[x.dupRisk]}`}><i className="ti ti-circle-filled" /> {x.dupRisk}</span></td>
                 <td><span className={`badge-st ${CONSENT_CLASS[x.consent]}`}><i className="ti ti-circle-filled" /> {x.consent}</span></td>
-                <td className="r">
+                <td className="r" style={{ position: 'relative' }}>
                   <div className="rowact">
-                    <button title="Edit" onClick={() => onRowAction('edit', x.id)}><i className="ti ti-edit" /></button>
-                    <button
-                      title={blocked ? 'Already blocked' : 'Block'}
-                      disabled={blocked}
-                      onClick={() => onRowAction('block', x.id)}
-                    >
-                      <i className="ti ti-ban" />
+                    <button title="Edit" onClick={() => act('edit', x.id)}><i className="ti ti-edit" /></button>
+                    <button title="More" onClick={() => setOpenMenuId(openMenuId === x.id ? null : x.id)}>
+                      <i className="ti ti-dots-vertical" />
                     </button>
                   </div>
+                  {openMenuId === x.id && (
+                    <div className="kebab-menu show" style={{ top: '100%', right: 8 }}>
+                      <button onClick={() => act('edit', x.id)}><i className="ti ti-edit" /> Edit</button>
+                      <button onClick={() => act('change-stream', x.id)}><i className="ti ti-git-branch" /> Change stream</button>
+                      <button onClick={() => act('reset-evaluation', x.id)}><i className="ti ti-refresh" /> Reset evaluation</button>
+                      <hr />
+                      {blocked ? (
+                        <button className="danger" onClick={() => act('unblock', x.id)}><i className="ti ti-ban" /> Unblock candidate</button>
+                      ) : (
+                        <button className="danger" onClick={() => act('block', x.id)}><i className="ti ti-ban" /> Block candidate</button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             );
