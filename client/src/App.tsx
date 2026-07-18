@@ -13,6 +13,7 @@ import { EvaluationsPage } from './pages/Evaluations/index.js';
 import { EvalMonitorPage } from './pages/Evaluations/monitor/EvalMonitorPage.js';
 import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
+import { OwnershipManagementPage } from './pages/Institutes/ownership/OwnershipManagementPage.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
 import { Portal } from './pages/Portal/index.js';
 import { SlotsPage } from './pages/Slots/index.js';
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/coming-soon/:slug" element={<RoleRoute role="admin"><ComingSoon /></RoleRoute>} />
         <Route path="/drives" element={<RoleRoute role="admin"><DrivesPage /></RoleRoute>} />
         <Route path="/institutes" element={<RoleRoute role="admin"><InstitutesPage /></RoleRoute>} />
+        <Route path="/institutes/ownership" element={<RoleRoute role="admin"><OwnershipManagementPage /></RoleRoute>} />
         <Route path="/institutes/:id" element={<RoleRoute role="admin"><InstituteDetail /></RoleRoute>} />
         <Route path="/jobseekers" element={<RoleRoute role="admin"><JobseekersPage /></RoleRoute>} />
         <Route path="/employers" element={<RoleRoute role="admin"><EmployersPage /></RoleRoute>} />
