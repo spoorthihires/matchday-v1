@@ -119,3 +119,8 @@ export async function blockJobseekers(ids: string[]) {
   const res = await Jobseeker.updateMany({ _id: { $in: valid } }, { $set: { consent: 'Revoked' } });
   return { affected: res.modifiedCount };
 }
+export async function unblockJobseekers(ids: string[]) {
+  const valid = ids.filter((id) => Types.ObjectId.isValid(id));
+  const res = await Jobseeker.updateMany({ _id: { $in: valid } }, { $set: { consent: 'Granted' } });
+  return { affected: res.modifiedCount };
+}

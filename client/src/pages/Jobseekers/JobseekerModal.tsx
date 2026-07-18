@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch, ApiError } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.js';
 import type { JobseekerDetail, JobseekerInput, JobseekerListItem } from '../../types/jobseekers.js';
-import { CONSENT_OPTIONS, EVAL_LABEL_TO_VALUE, EVAL_OPTIONS, MR_ORDINAL, OFFER_OPTIONS, OFFER_TO_STAGE, STREAM_OPTIONS } from './constants.js';
+import { CONSENT_OPTIONS, EVAL_LABEL_TO_VALUE, EVAL_OPTIONS, MODAL_STREAM_OPTIONS, MR_ORDINAL, OFFER_OPTIONS, OFFER_TO_STAGE } from './constants.js';
 import { useJobseekerMutations } from './hooks/useJobseekerMutations.js';
 
 // Ported from matchday-admin-app_23.html lines 1694-1708 (#jsModal .modal-scrim/.modal) and the
@@ -42,7 +42,7 @@ function blankForm(jobseeker: JobseekerListItem | undefined, instituteOptions: {
   return {
     name: jobseeker?.name ?? '',
     instituteId: jobseeker?.instituteId ?? instituteOptions[0]?.id ?? '',
-    branch: jobseeker?.stream ?? STREAM_OPTIONS[0],
+    branch: jobseeker?.stream ?? MODAL_STREAM_OPTIONS[0],
     evaluationStatus: jobseeker ? (EVAL_LABEL_TO_VALUE[jobseeker.evaluationLabel] ?? 'na') : 'na',
     offer: jobseeker?.offerStatus ?? 'None',
     consent: jobseeker?.consent ?? 'Granted',
@@ -201,7 +201,7 @@ export function JobseekerModal({ mode, jobseeker, instituteOptions, onClose }: J
           <div className="fld">
             <label htmlFor="jmStream">Stream</label>
             <select id="jmStream" value={form.branch} onChange={(e) => set('branch', e.target.value)}>
-              {STREAM_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+              {MODAL_STREAM_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div className="fld">

@@ -27,7 +27,12 @@ const DAY = 24 * 60 * 60 * 1000;
 
 const FIRST = ['Aarav', 'Diya', 'Vihaan', 'Ananya', 'Aditya', 'Ishaan', 'Kavya', 'Rohan', 'Meera', 'Arjun', 'Sara', 'Kabir', 'Nisha', 'Dev', 'Riya', 'Yash'];
 const LAST = ['Sharma', 'Reddy', 'Nair', 'Iyer', 'Patel', 'Gupta', 'Rao', 'Menon', 'Das', 'Khan', 'Joshi', 'Verma'];
-const BRANCHES = ['CSE', 'IT', 'ECE', 'EEE', 'MECH'];
+// Matches the client's Jobseekers module MODAL_STREAM_OPTIONS (client/src/pages/Jobseekers/constants.ts)
+// — the same list the Add/Edit Candidate and Change Stream modals offer — so the Jobseeker
+// Management table's Stream column looks consistent across every seeded row. Institute/eval-config
+// `eligibility.branches` arrays (still 'CSE'/'IT'/'ECE'/…) are deliberately left as-is; they are a
+// separate academic-branch eligibility concept and reconciling them is out of scope here.
+const BRANCHES = ['Frontend Engineering', 'Backend Engineering', 'Data / ML', 'Full-stack', 'Business Analytics'];
 const SOURCES = ['Campus', 'Referral', 'Portal', 'Walk-in'];
 const INSTITUTE_SEED = [
   ['VNR Vignana Jyothi', 'Hyderabad'], ['CBIT', 'Hyderabad'], ['VIT-AP', 'Amaravati'],
@@ -129,7 +134,11 @@ async function run() {
         // isEligible() test fixture in this codebase already models an open drive) while
         // satisfying validation, and doesn't consume the rng (no change to any other tuned seed
         // number).
-        sources: ['Institutes', 'Campus', 'Referral', 'Portal', 'Walk-in'], branches: ['CSE', 'IT', 'ECE'], gradYears: [2025, 2026], expType: 'Freshers only',
+        // branches: kept in lockstep with BRANCHES (the pool every seeded jobseeker's `branch` is
+        // drawn from) for the same reason as `sources` above — a narrower list here would make
+        // isEligible() reject seekers and starve the per-slot pools computed below, throwing
+        // "pool too small".
+        sources: ['Institutes', 'Campus', 'Referral', 'Portal', 'Walk-in'], branches: BRANCHES, gradYears: [2025, 2026], expType: 'Freshers only',
       },
       evaluation: [
         { key: 'mcq', enabled: true, config: { questions: 30, durationMin: 30 } },
@@ -263,12 +272,12 @@ async function run() {
   }
   const demoInst = institutes[0];
   jobseekerDocs.push({
-    name: 'Selected Seeker', instituteId: demoInst._id, branch: 'CSE', gradYear: 2026, cgpa: 8.5,
+    name: 'Selected Seeker', instituteId: demoInst._id, branch: 'Backend Engineering', gradYear: 2026, cgpa: 8.5,
     source: 'Institutes', profileCompleted: true, evaluationStatus: 'completed', stage: 'Offer',
     createdAt: spread(), email: 'seeker.selected@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
   });
   jobseekerDocs.push({
-    name: 'Applied Seeker', instituteId: demoInst._id, branch: 'CSE', gradYear: 2026, cgpa: 7.2,
+    name: 'Applied Seeker', instituteId: demoInst._id, branch: 'Frontend Engineering', gradYear: 2026, cgpa: 7.2,
     source: 'Institutes', profileCompleted: false, evaluationStatus: 'na', stage: 'Applied',
     createdAt: spread(), email: 'seeker.applied@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
   });

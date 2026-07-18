@@ -46,6 +46,15 @@ describe('jobseekers routes', () => {
     const miss = await auth(request(createApp()).get('/api/jobseekers/64b000000000000000000000'));
     expect(miss.status).toBe(404);
   });
+  it('unblocks (consent → Granted)', async () => {
+    const inst = await Institute.create({ name: 'CBIT', city: 'Hyd', type: 'Bootcamp' });
+    const c = await auth(request(createApp()).post('/api/jobseekers').send({ name: 'X', instituteId: String(inst._id), branch: 'CSE', gradYear: 2026, cgpa: 7 }));
+    await auth(request(createApp()).post('/api/jobseekers/bulk').send({ ids: [c.body._id], action: 'block' }));
+    const u = await auth(request(createApp()).post('/api/jobseekers/bulk').send({ ids: [c.body._id], action: 'unblock' }));
+    expect(u.body.affected).toBe(1);
+    const get = await auth(request(createApp()).get(`/api/jobseekers/${c.body._id}`));
+    expect(get.body.consent).toBe('Granted');
+  });
   it('400s on a malformed instituteId', async () => {
     const res = await auth(request(createApp()).post('/api/jobseekers').send({ name: 'X', instituteId: 'not-an-id', branch: 'CSE', gradYear: 2026, cgpa: 7 }));
     expect(res.status).toBe(400);

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { createJobseekerSchema, updateJobseekerSchema, listQuerySchema, bulkSchema } from './jobseekers.schemas.js';
-import { listJobseekers, addJobseeker, getJobseeker, updateJobseeker, blockJobseekers } from './jobseekers.service.js';
+import { listJobseekers, addJobseeker, getJobseeker, updateJobseeker, blockJobseekers, unblockJobseekers } from './jobseekers.service.js';
 import { previewImport, commitImport } from './jobseekers.import.js';
 
 const rowsSchema = z.object({ rows: z.array(z.record(z.unknown())).max(5000) });
@@ -19,8 +19,8 @@ export async function patchController(req: Request, res: Response) {
   res.json(await updateJobseeker(req.params.id, updateJobseekerSchema.parse(req.body)));
 }
 export async function bulkController(req: Request, res: Response) {
-  const { ids } = bulkSchema.parse(req.body);
-  res.json(await blockJobseekers(ids));
+  const { ids, action } = bulkSchema.parse(req.body);
+  res.json(action === 'unblock' ? await unblockJobseekers(ids) : await blockJobseekers(ids));
 }
 export async function previewController(req: Request, res: Response) {
   const { rows } = rowsSchema.parse(req.body);
