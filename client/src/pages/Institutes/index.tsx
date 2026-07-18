@@ -160,6 +160,7 @@ export function InstitutesPage() {
           onStatusChange={(v) => updateFilter('status', v)}
           onExport={handleExport}
           onCreate={handleCreate}
+          onOwnership={() => navigate('/institutes/ownership')}
         />
 
         <BulkBar

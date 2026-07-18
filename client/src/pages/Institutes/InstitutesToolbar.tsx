@@ -12,10 +12,11 @@ export interface InstitutesToolbarProps {
   onStatusChange: (v: string) => void;
   onExport: () => void;
   onCreate: () => void;
+  onOwnership: () => void;
 }
 
 export function InstitutesToolbar({
-  q, type, status, onQChange, onTypeChange, onStatusChange, onExport, onCreate,
+  q, type, status, onQChange, onTypeChange, onStatusChange, onExport, onCreate, onOwnership,
 }: InstitutesToolbarProps) {
   const [localQ, setLocalQ] = useState(q);
 
@@ -48,6 +49,7 @@ export function InstitutesToolbar({
         {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
       <div className="grow" />
+      <button className="btn btn-ghost" onClick={onOwnership}><i className="ti ti-users-group" /> Ownership</button>
       <button className="btn btn-ghost" onClick={onExport}><i className="ti ti-download" /> Export</button>
       <button className="btn btn-primary" onClick={onCreate}><i className="ti ti-plus" /> Create Institute</button>
     </div>
