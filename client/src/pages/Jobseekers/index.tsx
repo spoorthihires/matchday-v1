@@ -6,6 +6,7 @@ import { BulkBar } from './BulkBar.js';
 import { JobseekerModal } from './JobseekerModal.js';
 import { JobseekersTable, type JobseekerRowAction, type JobseekerSortKey } from './JobseekersTable.js';
 import { JobseekersToolbar } from './JobseekersToolbar.js';
+import { ResetEvaluationModal } from './ResetEvaluationModal.js';
 import { ViewPills, type JobseekerView } from './ViewPills.js';
 import { useJobseekerMutations } from './hooks/useJobseekerMutations.js';
 import { useJobseekers } from './hooks/useJobseekers.js';
@@ -41,6 +42,7 @@ export function JobseekersPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [resetEvalId, setResetEvalId] = useState<string | null>(null);
 
   const { data: institutesData } = useInstitutes({ limit: 100 });
   const instituteOptions = (institutesData?.items ?? []).map((i) => ({ id: i.id, name: i.name }));
@@ -112,9 +114,11 @@ export function JobseekersPage() {
       case 'unblock':
         if (window.confirm('Unblock this candidate?')) unblockOne.mutate(id);
         break;
-      case 'change-stream':
       case 'reset-evaluation':
-        // Placeholder menu entries — no server action wired yet (see JobseekersTable.tsx).
+        setResetEvalId(id);
+        break;
+      case 'change-stream':
+        // Placeholder menu entry — no server action wired yet (see JobseekersTable.tsx).
         break;
     }
   }
@@ -234,6 +238,8 @@ export function JobseekersPage() {
         )}
 
         {uploadOpen && <UploadWizard onClose={() => setUploadOpen(false)} />}
+
+        {resetEvalId && <ResetEvaluationModal jobseekerId={resetEvalId} onClose={() => setResetEvalId(null)} />}
       </div>
     </AppShell>
   );
