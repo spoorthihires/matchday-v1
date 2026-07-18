@@ -11,7 +11,7 @@ export const createJobseekerSchema = z.object({
   email: z.string().email().or(z.literal('')).optional(),
   consent: z.enum(['Granted', 'Pending', 'Revoked']).optional(),
   stage: z.enum(['Applied', 'Screened', 'Evaluated', 'MatchReady', 'Shortlisted', 'Offer', 'Joined', 'DroppedOff']).optional(),
-  evaluationStatus: z.enum(['na', 'pending', 'completed']).optional(),
+  evaluationStatus: z.enum(['na', 'pending', 'completed', 'failed']).optional(),
   profileCompleted: z.boolean().optional(),
 });
 export const updateJobseekerSchema = createJobseekerSchema.partial();
@@ -20,7 +20,7 @@ export const listQuerySchema = z.object({
   q: z.string().optional(),
   instituteId: z.string().optional(),
   stream: z.string().optional(),                 // = branch
-  evaluationStatus: z.enum(['na', 'pending', 'completed']).optional(),
+  evaluationStatus: z.enum(['na', 'pending', 'completed', 'failed']).optional(),
   offer: z.enum(['None', 'Shortlisted', 'Offer sent', 'Joined', 'Rejected']).optional(),
   consent: z.enum(['Granted', 'Pending', 'Revoked']).optional(),
   matchBucket: z.enum(['high', 'mid', 'low']).optional(),

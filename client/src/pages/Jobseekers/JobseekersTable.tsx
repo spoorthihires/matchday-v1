@@ -27,9 +27,9 @@ export interface JobseekersTableProps {
 }
 
 // evalCls/offerCls/dupCls/consentCls from the prototype (lines 3957-3960), restricted to the
-// values the real derived fields can actually take (evaluationLabel never returns 'Failed';
-// dupRisk is 'High'|'Low' with no 'None' state — see jobseekers.service.ts).
-const EVAL_CLASS: Record<string, string> = { Completed: 'st-active', 'In progress': 'st-published', 'Not started': 'st-draft' };
+// values the real derived fields can actually take (dupRisk is 'High'|'Low' with no 'None' state
+// — see jobseekers.service.ts).
+const EVAL_CLASS: Record<string, string> = { Completed: 'st-active', 'In progress': 'st-published', 'Not started': 'st-draft', Failed: 'st-danger' };
 const OFFER_CLASS: Record<string, string> = { Joined: 'st-active', 'Offer sent': 'st-published', Shortlisted: 'st-teal', Rejected: 'st-danger', None: 'st-draft' };
 const DUP_CLASS: Record<'High' | 'Low', string> = { High: 'st-danger', Low: 'st-pending' };
 const CONSENT_CLASS: Record<'Granted' | 'Pending' | 'Revoked', string> = { Granted: 'st-active', Pending: 'st-pending', Revoked: 'st-danger' };
