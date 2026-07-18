@@ -121,13 +121,14 @@ export function TabConflicts({
                   <td><span className={`badge-st ${SEVERITY_CLASS[r.severity]}`}><i className="ti ti-circle-filled" /> {r.severity}</span></td>
                   <td><span className={`badge-st ${STATUS_CLASS[r.status]}`}><i className="ti ti-circle-filled" /> {r.status}</span></td>
                   <td className="r">
-                    <button
-                      className="btn btn-ghost"
-                      disabled={r.status === 'Resolved'}
-                      onClick={() => setResolveId(r.id)}
-                    >
-                      <i className="ti ti-circle-check" /> Resolve
-                    </button>
+                    {r.status === 'Open' && (
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => setResolveId(r.id)}
+                      >
+                        <i className="ti ti-circle-check" /> Resolve
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
