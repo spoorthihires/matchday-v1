@@ -9,9 +9,9 @@ import type { JobseekerListItem } from '../../types/jobseekers.js';
 //
 // The prototype's row actions are a direct "Edit" button plus a "More" kebab with Edit/Change
 // stream/Reset evaluation/Block-or-Unblock (openJsKebab, lines 4029-4042) — mirrored here the same
-// way EmployersTable.tsx ports its kebab. Change Stream is a placeholder menu entry only (no server
-// action wired yet); Block/Unblock is fully wired; Reset Evaluation opens a confirmation modal
-// (ResetEvaluationModal.tsx) that is UI-only pending backend integration.
+// way EmployersTable.tsx ports its kebab. Change Stream opens a modal (ChangeStreamModal.tsx) that
+// saves via the real PATCH /jobseekers/:id endpoint; Block/Unblock is fully wired; Reset Evaluation
+// opens a confirmation modal (ResetEvaluationModal.tsx) that is UI-only pending backend integration.
 
 export type JobseekerSortKey = 'name' | 'institute' | 'matchReady';
 export type JobseekerRowAction = 'edit' | 'block' | 'unblock' | 'change-stream' | 'reset-evaluation';

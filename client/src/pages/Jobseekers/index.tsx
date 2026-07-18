@@ -3,6 +3,7 @@ import { AppShell } from '../../components/AppShell.js';
 import { useInstitutes } from '../Institutes/hooks/useInstitutes.js';
 import type { JobseekerListItem, JobseekerListParams } from '../../types/jobseekers.js';
 import { BulkBar } from './BulkBar.js';
+import { ChangeStreamModal } from './ChangeStreamModal.js';
 import { JobseekerModal } from './JobseekerModal.js';
 import { JobseekersTable, type JobseekerRowAction, type JobseekerSortKey } from './JobseekersTable.js';
 import { JobseekersToolbar } from './JobseekersToolbar.js';
@@ -43,6 +44,7 @@ export function JobseekersPage() {
   const [modal, setModal] = useState<ModalState>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [resetEvalId, setResetEvalId] = useState<string | null>(null);
+  const [changeStreamTarget, setChangeStreamTarget] = useState<JobseekerListItem | null>(null);
 
   const { data: institutesData } = useInstitutes({ limit: 100 });
   const instituteOptions = (institutesData?.items ?? []).map((i) => ({ id: i.id, name: i.name }));
@@ -117,9 +119,11 @@ export function JobseekersPage() {
       case 'reset-evaluation':
         setResetEvalId(id);
         break;
-      case 'change-stream':
-        // Placeholder menu entry — no server action wired yet (see JobseekersTable.tsx).
+      case 'change-stream': {
+        const jobseeker = data?.items.find((i) => i.id === id);
+        if (jobseeker) setChangeStreamTarget(jobseeker);
         break;
+      }
     }
   }
 
@@ -240,6 +244,14 @@ export function JobseekersPage() {
         {uploadOpen && <UploadWizard onClose={() => setUploadOpen(false)} />}
 
         {resetEvalId && <ResetEvaluationModal jobseekerId={resetEvalId} onClose={() => setResetEvalId(null)} />}
+
+        {changeStreamTarget && (
+          <ChangeStreamModal
+            jobseekerId={changeStreamTarget.id}
+            currentStream={changeStreamTarget.stream}
+            onClose={() => setChangeStreamTarget(null)}
+          />
+        )}
       </div>
     </AppShell>
   );
