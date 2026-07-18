@@ -51,7 +51,14 @@ export function TabInstituteOwnership({
 
   return (
     <div className="card">
-      <div className="dm-toolbar" style={{ padding: '16px 20px 0' }}>
+      <div className="card-h">
+        <div>
+          <h3>Institute Ownership</h3>
+          <div className="sub">SPOC assigned to each participating institute</div>
+        </div>
+      </div>
+
+      <div className="dm-toolbar" style={{ padding: '0 18px' }}>
         <div className="dm-search">
           <i className="ti ti-search" />
           <input

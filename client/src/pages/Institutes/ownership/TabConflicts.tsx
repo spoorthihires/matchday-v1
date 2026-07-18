@@ -63,7 +63,7 @@ export function TabConflicts({
         </div>
       </div>
 
-      <div className="dm-toolbar" style={{ padding: '0 20px' }}>
+      <div className="dm-toolbar" style={{ padding: '0 18px' }}>
         <div className="dm-search">
           <i className="ti ti-search" />
           <input
