@@ -6,6 +6,11 @@
 
 export const STREAM_OPTIONS = ['CSE', 'IT', 'ECE', 'EEE', 'MECH'];
 
+// Stream choices shown in the Add/Edit Candidate modal's "Stream" select. Distinct from
+// STREAM_OPTIONS above (which backs the Jobseekers filter toolbar's "By Stream" view) per the
+// modal-only design update.
+export const MODAL_STREAM_OPTIONS = ['Frontend Engineering', 'Backend Engineering', 'Data / ML', 'Full-stack', 'Business Analytics'];
+
 export const EVAL_OPTIONS: { label: string; value: 'na' | 'pending' | 'completed' }[] = [
   { label: 'Not started', value: 'na' },
   { label: 'In progress', value: 'pending' },
