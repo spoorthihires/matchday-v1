@@ -24,5 +24,13 @@ const employerSchema = new Schema({
   gstNumber: { type: String, default: '' },
 });
 
+// Never serialize passwordHash out of this model -- covers current AND future endpoints
+// that do `res.json(employerDoc)` (e.g. GET/PATCH /api/employers/:id in employers.service.ts,
+// which return the raw Mongoose doc). Doesn't affect direct property access
+// (employer.passwordHash) used by auth.service.login, since that reads the doc field, not
+// the serialized JSON.
+employerSchema.set('toJSON', { transform: (_doc, ret) => { delete ret.passwordHash; return ret; } });
+employerSchema.set('toObject', { transform: (_doc, ret) => { delete ret.passwordHash; return ret; } });
+
 export type EmployerDoc = InferSchemaType<typeof employerSchema>;
 export const Employer = model('Employer', employerSchema);

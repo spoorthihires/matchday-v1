@@ -10,7 +10,9 @@ const INDUSTRIES = [
   'IT Services', 'Product / SaaS', 'Fintech', 'E-commerce',
   'Healthcare / HealthTech', 'AI / ML Research', 'Consulting', 'GCC / Captive', 'Other',
 ];
-const SIZES = ['1–50', '51–200', '201–500', '500–1000', '1000–5000', '5000+'];
+// Must exactly match the Employer.size Mongoose enum (server/src/models/Employer.ts) --
+// offering any other value 500s the signup with a ValidationError and creates no account.
+const SIZES = ['1–50', '51–200', '201–1000', '1000+'];
 const HIRING_TYPES = ['Fresher', 'Lateral', 'Internship'];
 
 interface StepErrors {

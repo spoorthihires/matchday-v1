@@ -54,6 +54,14 @@ describe('EmployerSignup', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it('offers only the 4 company sizes the Employer.size Mongoose enum allows', async () => {
+    renderPage();
+    const options = screen.getAllByRole<HTMLOptionElement>('option', { hidden: true })
+      .filter((o) => o.closest('select')?.getAttribute('aria-label') === 'Company size');
+    const values = options.map((o) => o.value).filter((v) => v !== '');
+    expect(values).toEqual(['1–50', '51–200', '201–1000', '1000+']);
+  });
+
   it('toggles the show-err class on the field wrapper so the CSS-hidden error message becomes visible', async () => {
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));

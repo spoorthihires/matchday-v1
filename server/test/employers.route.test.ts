@@ -45,4 +45,24 @@ describe('employers + registrations routes', () => {
     const miss = await auth(request(createApp()).get('/api/registrations/64b000000000000000000000'));
     expect(miss.status).toBe(404);
   });
+
+  it('GET/PATCH /api/employers/:id never serialize passwordHash, even when the employer has one', async () => {
+    const e = await Employer.create({ ...empBody, passwordHash: 'super-secret-hash' });
+
+    const got = await auth(request(createApp()).get(`/api/employers/${e._id}`));
+    expect(got.status).toBe(200);
+    expect(got.body).not.toHaveProperty('passwordHash');
+    expect(JSON.stringify(got.body)).not.toContain('super-secret-hash');
+
+    const patched = await auth(request(createApp()).patch(`/api/employers/${e._id}`).send({ spoc: 'New SPOC' }));
+    expect(patched.status).toBe(200);
+    expect(patched.body.spoc).toBe('New SPOC');
+    expect(patched.body).not.toHaveProperty('passwordHash');
+    expect(JSON.stringify(patched.body)).not.toContain('super-secret-hash');
+
+    // sanity: the hash is still on the doc/DB itself (login must keep working) -- only
+    // serialization is scrubbed.
+    const raw = await Employer.findById(e._id);
+    expect(raw!.passwordHash).toBe('super-secret-hash');
+  });
 });
