@@ -190,10 +190,10 @@ export function EmployerSignup() {
 
             {step === 1 && (
               <div className="fstep active" data-step="1">
-                <div className="field full">
+                <div className={`field full${errors.name ? ' show-err' : ''}`}>
                   <label>Company name <span className="req">*</span></label>
                   <input
-                    className="input"
+                    className={`input${errors.name ? ' err' : ''}`}
                     aria-label="Company name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -215,10 +215,10 @@ export function EmployerSignup() {
                       />
                     </div>
                   </div>
-                  <div className="field">
+                  <div className={`field${errors.industry ? ' show-err' : ''}`}>
                     <label>Industry <span className="req">*</span></label>
                     <select
-                      className="select"
+                      className={`select${errors.industry ? ' err' : ''}`}
                       aria-label="Industry"
                       value={industry}
                       onChange={(e) => setIndustry(e.target.value)}
@@ -293,10 +293,10 @@ export function EmployerSignup() {
             {step === 2 && (
               <div className="fstep active" data-step="2">
                 <div className="frow">
-                  <div className="field">
+                  <div className={`field${errors.spoc ? ' show-err' : ''}`}>
                     <label>Hiring contact name <span className="req">*</span></label>
                     <input
-                      className="input"
+                      className={`input${errors.spoc ? ' err' : ''}`}
                       aria-label="Hiring contact name"
                       value={spoc}
                       onChange={(e) => setSpoc(e.target.value)}
@@ -316,10 +316,10 @@ export function EmployerSignup() {
                   </div>
                 </div>
                 <div className="frow">
-                  <div className="field">
+                  <div className={`field${errors.email ? ' show-err' : ''}`}>
                     <label>Work email <span className="req">*</span></label>
                     <input
-                      className="input"
+                      className={`input${errors.email ? ' err' : ''}`}
                       type="email"
                       aria-label="Work email"
                       value={email}
@@ -390,10 +390,10 @@ export function EmployerSignup() {
                     />
                   </div>
                 </div>
-                <div className="field">
+                <div className={`field${errors.password ? ' show-err' : ''}`}>
                   <label>Password <span className="req">*</span></label>
                   <input
-                    className="input"
+                    className={`input${errors.password ? ' err' : ''}`}
                     type="password"
                     aria-label="Password"
                     value={password}
@@ -404,7 +404,10 @@ export function EmployerSignup() {
                   {errors.password && <div className="err-msg">Password must be at least 6 characters.</div>}
                 </div>
 
-                <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 6 }}>
+                <div
+                  className={`field${errors.consent ? ' show-err' : ''}`}
+                  style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 6 }}
+                >
                   <div className="consent">
                     <div
                       className={`check ${acceptTerms ? 'on' : ''}`}

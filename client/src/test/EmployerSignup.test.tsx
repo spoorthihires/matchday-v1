@@ -54,6 +54,16 @@ describe('EmployerSignup', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it('toggles the show-err class on the field wrapper so the CSS-hidden error message becomes visible', async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const nameInput = screen.getByLabelText('Company name');
+    const nameField = nameInput.closest('.field');
+    expect(nameField).not.toBeNull();
+    expect(nameField).toHaveClass('show-err');
+  });
+
   it('posts the expected employer-signup body after completing all 3 steps and navigates to verify', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockImplementation((url: string) => {
