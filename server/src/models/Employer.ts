@@ -14,6 +14,14 @@ const employerSchema = new Schema({
   offerRate: { type: Number, default: 0 },
   respHours: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
+  passwordHash: { type: String, default: undefined },
+  website: { type: String, default: '' },
+  hiringType: { type: String, default: '' },
+  workLocations: { type: [String], default: [] },
+  designation: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  billingContact: { type: String, default: '' },
+  gstNumber: { type: String, default: '' },
 });
 
 export type EmployerDoc = InferSchemaType<typeof employerSchema>;
