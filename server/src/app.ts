@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes.js';
 import { driveRoutes } from './modules/drives/drives.routes.js';
+import { employerPortalRoutes } from './modules/employerPortal/employerPortal.routes.js';
 import { employerRoutes } from './modules/employers/employers.routes.js';
 import { evalConfigRoutes } from './modules/evalConfigs/routes.js';
 import { evalMonitorRoutes } from './modules/evalMonitor/routes.js';
@@ -26,6 +27,11 @@ export function createApp(): Express {
 
   // Route modules mounted in later tasks:
   app.use('/api/auth', authRoutes);
+  // employerPortalRoutes must be mounted before seekerPortalRoutes: seekerPortalRoutes
+  // gates its whole '/api/me' prefix via an unscoped `.use(requireRole('jobseeker'))`,
+  // which would otherwise intercept '/api/me/employer' first and reject it with 403
+  // before employerPortalRoutes' own (path-scoped) auth ever runs.
+  app.use('/api/me', employerPortalRoutes);
   app.use('/api/me', seekerPortalRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/drives', driveRoutes);
