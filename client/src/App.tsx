@@ -12,6 +12,7 @@ import { EmployerDashboard } from './pages/EmployerPortal/EmployerDashboard.js';
 import { EmployerLanding } from './pages/EmployerPortal/EmployerLanding.js';
 import { EmployerLogin } from './pages/EmployerPortal/EmployerLogin.js';
 import { EmployerMfa } from './pages/EmployerPortal/EmployerMfa.js';
+import { EmployerShell } from './pages/EmployerPortal/EmployerShell.js';
 import { EmployerSignup } from './pages/EmployerPortal/EmployerSignup.js';
 import { EmployerVerify } from './pages/EmployerPortal/EmployerVerify.js';
 import { ApprovalsPage } from './pages/Employers/approvals/ApprovalsPage.js';
@@ -43,7 +44,7 @@ export default function App() {
         <Route path="/employer/verify" element={<EmployerVerify />} />
         <Route path="/employer/login" element={<EmployerLogin />} />
         <Route path="/employer/mfa" element={<EmployerMfa />} />
-        <Route path="/employer/dashboard" element={<RoleRoute role="employer"><EmployerDashboard /></RoleRoute>} />
+        <Route path="/employer/dashboard" element={<RoleRoute role="employer"><EmployerShell><EmployerDashboard /></EmployerShell></RoleRoute>} />
         <Route path="/employer/coming-soon/:slug" element={<RoleRoute role="employer"><EmployerComingSoon /></RoleRoute>} />
         <Route path="/coming-soon/:slug" element={<RoleRoute role="admin"><ComingSoon /></RoleRoute>} />
         <Route path="/drives" element={<RoleRoute role="admin"><DrivesPage /></RoleRoute>} />
