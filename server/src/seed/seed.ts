@@ -84,24 +84,31 @@ async function run() {
   }
 
   // 48 employers; offersExtended descending-ish so the leaderboard is meaningful.
+  // Employer #0 (index 0, status 'Active') doubles as the demo employer login — its email is
+  // overridden to a known address and it gets a passwordHash, mirroring how the jobseeker demo
+  // accounts get seekerPasswordHash below. Employers #46/#47 stay 'Pending' so the pending-banner
+  // has real data to demo.
   const EMPLOYER_SIZES = ['1–50', '51–200', '201–1000', '1000+'];
+  const employerPasswordHash = await hashPassword('Employer123!');
   const employers: HydratedDocument<EmployerDoc>[] = [];
   for (let i = 0; i < 48; i++) {
     const base = EMPLOYER_SEED[i % EMPLOYER_SEED.length];
     const offers = Math.max(0, 20 - Math.floor(i / 2));
     const name = i < EMPLOYER_SEED.length ? base[0] : `${base[0]} ${i}`;
     const slug = name.toLowerCase().replace(/[^a-z]+/g, '').slice(0, 10) || 'emp';
+    const isDemo = i === 0;
     employers.push(await Employer.create({
       name,
       industry: base[1], status: i < 46 ? 'Active' : 'Pending',
       offersExtended: offers, slotsFillRate: intBetween(rng, 55, 96), createdAt: spread(),
       size: pick(rng, EMPLOYER_SIZES),
       spoc: `${pick(rng, FIRST)} ${pick(rng, LAST)}`,
-      email: `talent@${slug}.com`,
+      email: isDemo ? 'employer.demo@acme.test' : `talent@${slug}.com`,
       candidatesViewed: intBetween(rng, 40, 420),
       shortlistRate: intBetween(rng, 20, 60),
       offerRate: intBetween(rng, 8, 35),
       respHours: intBetween(rng, 4, 96),
+      ...(isDemo ? { passwordHash: employerPasswordHash } : {}),
     }));
   }
 
@@ -504,6 +511,8 @@ async function run() {
   console.log(`Seeker login →  email: seeker.selected@matchday.dev   password: Seeker123!   (stage: Offer)`);
   // eslint-disable-next-line no-console
   console.log(`Seeker login →  email: seeker.applied@matchday.dev    password: Seeker123!   (stage: Applied)`);
+  // eslint-disable-next-line no-console
+  console.log(`Employer login →  email: employer.demo@acme.test   password: Employer123!`);
   await disconnectDb();
   await mongoose.connection.close();
 }
