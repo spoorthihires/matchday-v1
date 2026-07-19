@@ -16,6 +16,10 @@ export function EmployerLogin() {
   const [error, setError] = useState<string | null>(null);
   const { login, token, user } = useAuth();
   const navigate = useNavigate();
+  // Snapshot the auth state at mount: this guard only redirects users who arrive ALREADY
+  // signed in. It must NOT fire after a fresh login on this screen (token would flip truthy),
+  // or it would race the imperative navigate('/employer/mfa') below and skip the MFA step.
+  const [wasAuthed] = useState(() => !!token);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,8 +35,9 @@ export function EmployerLogin() {
     }
   }
 
-  // Already authenticated: redirect without calling navigate() during render.
-  if (token) return <Navigate to={homePathFor(user?.role)} replace />;
+  // Already authenticated at mount: redirect without calling navigate() during render. Uses the
+  // mount snapshot (not live `token`) so a fresh login here proceeds to the MFA stub deterministically.
+  if (wasAuthed) return <Navigate to={homePathFor(user?.role)} replace />;
 
   return (
     <div className="employer-app">
