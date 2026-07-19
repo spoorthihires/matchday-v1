@@ -7,6 +7,13 @@ import { MfaStub } from './auth/MfaStub.js';
 import { RoleRoute } from './auth/RoleRoute.js';
 import { Dashboard } from './pages/Dashboard/index.js';
 import { DrivesPage } from './pages/Drives/index.js';
+import { EmployerComingSoon } from './pages/EmployerPortal/EmployerComingSoon.js';
+import { EmployerDashboard } from './pages/EmployerPortal/EmployerDashboard.js';
+import { EmployerLanding } from './pages/EmployerPortal/EmployerLanding.js';
+import { EmployerLogin } from './pages/EmployerPortal/EmployerLogin.js';
+import { EmployerMfa } from './pages/EmployerPortal/EmployerMfa.js';
+import { EmployerSignup } from './pages/EmployerPortal/EmployerSignup.js';
+import { EmployerVerify } from './pages/EmployerPortal/EmployerVerify.js';
 import { ApprovalsPage } from './pages/Employers/approvals/ApprovalsPage.js';
 import { EmployersPage } from './pages/Employers/index.js';
 import { EvaluationsPage } from './pages/Evaluations/index.js';
@@ -31,6 +38,13 @@ export default function App() {
         <Route path="/mfa" element={<MfaStub />} />
         <Route path="/forgot" element={<ForgotStub />} />
         <Route path="/portal" element={<RoleRoute role="jobseeker"><Portal /></RoleRoute>} />
+        <Route path="/employer" element={<EmployerLanding />} />
+        <Route path="/employer/signup" element={<EmployerSignup />} />
+        <Route path="/employer/verify" element={<EmployerVerify />} />
+        <Route path="/employer/login" element={<EmployerLogin />} />
+        <Route path="/employer/mfa" element={<EmployerMfa />} />
+        <Route path="/employer/dashboard" element={<RoleRoute role="employer"><EmployerDashboard /></RoleRoute>} />
+        <Route path="/employer/coming-soon/:slug" element={<RoleRoute role="employer"><EmployerComingSoon /></RoleRoute>} />
         <Route path="/coming-soon/:slug" element={<RoleRoute role="admin"><ComingSoon /></RoleRoute>} />
         <Route path="/drives" element={<RoleRoute role="admin"><DrivesPage /></RoleRoute>} />
         <Route path="/institutes" element={<RoleRoute role="admin"><InstitutesPage /></RoleRoute>} />
