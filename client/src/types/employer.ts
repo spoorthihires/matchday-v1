@@ -148,3 +148,27 @@ export interface CreateRegistrationResult {
   driveName: string;
   role: string;
 }
+
+// Mirrors server/src/modules/employerPortal/employerPortal.service.ts EmployerSlotItem (Slice 4).
+export interface EmployerSlot {
+  id: string;
+  date: string; // ISO
+  start: string; // 'HH:MM'
+  end: string; // 'HH:MM'
+  capacity: number;
+  booked: number; // derived (0 until the candidate-booking slice)
+  status: string;
+  link: string;
+}
+export interface EmployerSlotsResponse { items: EmployerSlot[]; }
+
+// Mirrors createSlotSchema/updateSlotSchema (Slice 4). driveId comes from the route,
+// employerId from the JWT — neither is part of the body.
+export interface SlotInput {
+  date: string; // ISO date string (one of the drive's eventDates)
+  start: string;
+  end: string;
+  capacity: number;
+  linkMode: 'auto' | 'own';
+  link?: string;
+}

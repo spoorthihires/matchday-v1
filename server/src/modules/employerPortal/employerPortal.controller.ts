@@ -2,9 +2,10 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
   getEmployerPortal, listEmployerDrives, getEmployerDrive, createEmployerRegistration,
-  listEmployerRegistrations, getEmployerRegistration,
+  listEmployerRegistrations, getEmployerRegistration, listEmployerSlots, createEmployerSlot,
+  updateEmployerSlot, deleteEmployerSlot,
 } from './employerPortal.service.js';
-import { createRegistrationSchema } from './employerPortal.schemas.js';
+import { createRegistrationSchema, createSlotSchema, updateSlotSchema } from './employerPortal.schemas.js';
 
 export async function employerPortalController(req: Request, res: Response) {
   res.json(await getEmployerPortal(req.userId as string));
@@ -32,4 +33,19 @@ export async function employerRegistrationsController(req: Request, res: Respons
 
 export async function employerRegistrationController(req: Request, res: Response) {
   res.json(await getEmployerRegistration(req.userId as string, req.params.id));
+}
+
+export async function employerSlotsController(req: Request, res: Response) {
+  res.json(await listEmployerSlots(req.userId as string, req.params.id));
+}
+export async function createEmployerSlotController(req: Request, res: Response) {
+  const parsed = createSlotSchema.parse(req.body);
+  res.status(201).json(await createEmployerSlot(req.userId as string, req.params.id, parsed));
+}
+export async function updateEmployerSlotController(req: Request, res: Response) {
+  const parsed = updateSlotSchema.parse(req.body);
+  res.json(await updateEmployerSlot(req.userId as string, req.params.id, req.params.slotId, parsed));
+}
+export async function deleteEmployerSlotController(req: Request, res: Response) {
+  res.json(await deleteEmployerSlot(req.userId as string, req.params.id, req.params.slotId));
 }
