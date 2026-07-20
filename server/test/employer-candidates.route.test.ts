@@ -46,11 +46,17 @@ describe('GET /api/me/employer/drives/:id/candidates', () => {
     const c = res.body.items[0];
     expect(c).not.toHaveProperty('name');
     expect(c).not.toHaveProperty('email');
+    expect(c).not.toHaveProperty('phone');
+    expect(c).not.toHaveProperty('passwordHash');
+    expect(c).not.toHaveProperty('instituteName');
     expect(c.code).toMatch(/^C-/);
     expect(c.instituteCategory).toBe('Tier-1');   // Institute.type, NOT its name/city
     expect(c.matchScore).toBe(82);                // cgpa8/completed/MatchReady → 100*(.5*.8+.3*1+.2*.6)
     expect(c.evalPill).toBe('Strong');
     expect(c.decision).toBeNull();
+    // the spec's promise: NO identity/institute PII anywhere in the raw payload
+    const raw = JSON.stringify(res.body);
+    for (const pii of ['Real Name', 'real@x.test', 'Secret College', 'Hyderabad']) expect(raw).not.toContain(pii);
   });
 
   it('rejects without an approved registration (Pending does not unlock)', async () => {
@@ -128,6 +134,22 @@ describe('PUT .../candidates/:jobseekerId/decision', () => {
     await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: 'Hold' });
     await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: null });
     expect(await Application.countDocuments({ employerId: emp._id, driveId: d._id, jobseekerId: jsId })).toBe(0);
+  });
+
+  it('clearing the decision to null while a note exists keeps the row (decision null, note preserved)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const app = createApp();
+    await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: 'Shortlisted' });
+    await request(app).post(`/api/me/employer/drives/${d._id}/candidates/${jsId}/notes`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ text: 'keep me' });
+    const cleared = await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.decision).toBeNull();
+    const rows = await Application.find({ employerId: emp._id, driveId: d._id, jobseekerId: jsId }).lean();
+    expect(rows).toHaveLength(1);              // row NOT deleted — a note still lives on it
+    expect(rows[0].decision).toBeNull();
+    expect(rows[0].notes).toHaveLength(1);
+    expect(rows[0].notes[0].text).toBe('keep me');
   });
 });
 

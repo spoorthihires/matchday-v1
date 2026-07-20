@@ -118,9 +118,11 @@ export async function getPassport(employerId: string, driveId: string, jobseeker
 export async function setDecision(employerId: string, driveId: string, jobseekerId: string, decision: 'Shortlisted' | 'Hold' | 'Rejected' | null) {
   const { seeker } = await requirePoolMember(employerId, driveId, jobseekerId);
   if (decision === null) {
-    const existing = await Application.findOne({ employerId, driveId, jobseekerId });
-    if (existing && (existing.notes?.length ?? 0) === 0) await existing.deleteOne();
-    else if (existing) { existing.decision = null; await existing.save(); }
+    // Atomic so a concurrent addNote can't be lost: delete the row only if it has
+    // no notes; if the delete matched nothing (notes exist, or no row), just clear
+    // the decision. A read-then-write here could drop a note landing between the two.
+    const { deletedCount } = await Application.deleteOne({ employerId, driveId, jobseekerId, notes: { $size: 0 } });
+    if (deletedCount === 0) await Application.updateOne({ employerId, driveId, jobseekerId }, { $set: { decision: null } });
   } else {
     await Application.findOneAndUpdate(
       { employerId, driveId, jobseekerId },
