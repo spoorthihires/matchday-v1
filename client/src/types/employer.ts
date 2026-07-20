@@ -172,3 +172,39 @@ export interface SlotInput {
   linkMode: 'auto' | 'own';
   link?: string;
 }
+
+// Mirrors server/src/modules/employerPortal/employerCandidates.service.ts's RedactedCandidate
+// (Slice 5a) exactly -- NO name/email (identity is masked until a shortlisted candidate
+// confirms interest, per the prototype's privacy model).
+export type CandidateDecision = 'Shortlisted' | 'Hold' | 'Rejected' | null;
+
+export interface EmployerCandidate {
+  jobseekerId: string;
+  code: string;
+  branch: string;
+  gradYear: number;
+  source: string;
+  cgpaBand: string;
+  instituteCategory: string;
+  evaluationStatus: string;
+  evaluationLabel: string;
+  stage: string;
+  matchScore: number;
+  evalPill: 'Strong' | 'Qualified';
+  decision: CandidateDecision;
+  noteCount: number;
+}
+export interface EmployerCandidatesResponse { items: EmployerCandidate[]; }
+
+// Mirrors getPassport's return shape (Slice 5a Task 2) -- the passport page is Task 4, but the
+// type + hook are added now so both slices share one source of truth.
+export interface CandidatePassportFactors {
+  cgpa: { weight: number; value: number; contribution: number };
+  evaluation: { weight: number; value: number; contribution: number };
+  stage: { weight: number; value: number; contribution: number };
+}
+export interface CandidateNote { text: string; by: string; at: string; }
+export interface CandidatePassport extends EmployerCandidate {
+  factors: CandidatePassportFactors;
+  notes: CandidateNote[];
+}
