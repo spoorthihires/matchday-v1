@@ -11,6 +11,8 @@ function fmtDate(iso: string): string {
 }
 function errMsg(e: unknown): string { return e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Something went wrong'; }
 
+const AUTO_LINK_PREFIX = 'https://meet.hiringhood.test/';
+
 interface FormState { editingId: string | null; date: string; start: string; end: string; capacity: string; linkMode: 'auto' | 'own'; link: string; }
 const EMPTY: FormState = { editingId: null, date: '', start: '', end: '', capacity: '8', linkMode: 'auto', link: '' };
 
@@ -37,7 +39,11 @@ export function EmployerSlots() {
     if (form.start && form.end && form.end <= form.start) e.end = true;
     const cap = Number(form.capacity);
     if (!Number.isInteger(cap) || cap < 1 || cap > 50) e.capacity = true;
-    if (form.linkMode === 'own' && !form.link.trim()) e.link = true;
+    if (form.linkMode === 'own') {
+      const v = form.link.trim();
+      if (!v) e.link = true;
+      else { try { new URL(v); } catch { e.link = true; } }
+    }
     return e;
   }, [form]);
 
@@ -54,7 +60,8 @@ export function EmployerSlots() {
   }
 
   function startEdit(s: EmployerSlot) {
-    setForm({ editingId: s.id, date: s.date, start: s.start, end: s.end, capacity: String(s.capacity), linkMode: s.link ? 'own' : 'auto', link: s.link });
+    const isAuto = !s.link || s.link.startsWith(AUTO_LINK_PREFIX);
+    setForm({ editingId: s.id, date: s.date, start: s.start, end: s.end, capacity: String(s.capacity), linkMode: isAuto ? 'auto' : 'own', link: isAuto ? '' : s.link });
     setErrors({}); setSubmitError('');
   }
   function cancelSlot(s: EmployerSlot) {
@@ -152,7 +159,7 @@ export function EmployerSlots() {
                 <div style={{ display: 'grid', gap: 10 }}>
                   {items.map((s) => (
                     <div className="slot-row" key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                      <div>
+                      <div className="fact">
                         <div className="fv">{s.start} – {s.end}</div>
                         <div className="fl">{fmtDate(s.date)} · {s.capacity - s.booked} of {s.capacity} seats left</div>
                       </div>
