@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.js';
 import { useEmployerPortal } from './hooks/useEmployerPortal.js';
+import { ThemeToggle } from '../../theme/ThemeToggle.js';
 import './employerBase.js';
 
 // Ported from the prototype Matchday_Employer.html lines ~2630-2704 (view-app's sidebar +
@@ -217,6 +218,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
               <input placeholder="Search drives, candidates, IDs…" aria-label="Search" />
             </div>
             <div className="tb-actions">
+              <ThemeToggle variant="svg" />
               <div
                 className="tb-user"
                 role="button"

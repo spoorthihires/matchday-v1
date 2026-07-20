@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.js';
+import { BrandLogo } from '../theme/BrandLogo.js';
 
 interface NavItem {
   label: string;
@@ -48,8 +49,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar" id="sidebar">
       <div className="sb-brand">
-        <span className="glyph"><i className="ti ti-calendar-bolt" /></span>
-        <div><b>Hiringhood</b><small>MatchDay Admin</small></div>
+        <BrandLogo className="brand-logo" />
       </div>
       <nav className="sb-scroll">
         {NAV.map((item) => (
