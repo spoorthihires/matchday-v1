@@ -116,9 +116,10 @@
   #auth-screen .field .hint a:hover{text-decoration:underline}
   #auth-screen .inp{position:relative;display:flex;align-items:center;background:var(--indigo-050);border:1px solid var(--line);border-radius:var(--r-sm);transition:border-color .15s,box-shadow .15s,background .15s}
   #auth-screen .inp i.lead{padding:0 10px 0 13px;color:var(--muted);font-size:18px}
-  #auth-screen .inp input{flex:1;border:0;background:transparent;padding:12px 12px 12px 0;font-size:14.5px;color:var(--ink);font-family:inherit;outline:none;min-width:0}
+  #auth-screen .inp input{flex:1;border:0;background:transparent;padding:12px 14px;font-size:14.5px;color:var(--ink);font-family:inherit;outline:none;min-width:0;min-height:20px}
+  #auth-screen .inp i.lead + input{padding-left:0}
   #auth-screen .inp input::placeholder{color:#a4aac0}
-  #auth-screen .inp .toggle{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:0 12px;display:grid;place-items:center;font-size:18px}
+  #auth-screen .inp .toggle{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:0 14px;display:grid;place-items:center;font-size:18px}
   #auth-screen .inp .toggle:hover{color:var(--ink-2)}
   #auth-screen .inp:focus-within{border-color:var(--indigo);background:var(--white);box-shadow:var(--focus)}
   #auth-screen .field.invalid .inp{border-color:var(--danger);background:var(--danger-bg)}
