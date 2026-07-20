@@ -44,7 +44,7 @@ function renderPage(path = '/employer/drives/d1') {
           <Routes>
             <Route path="/employer/drives" element={<div>MARKETPLACE PAGE</div>} />
             <Route path="/employer/drives/:id" element={<EmployerDriveDetail />} />
-            <Route path="/employer/coming-soon/register" element={<div>REGISTER PLACEHOLDER</div>} />
+            <Route path="/employer/drives/:id/register" element={<div>REGISTER PLACEHOLDER</div>} />
             <Route path="/employer/coming-soon/slots" element={<div>SLOTS PLACEHOLDER</div>} />
           </Routes>
         </AuthProvider>
@@ -72,7 +72,7 @@ describe('EmployerDriveDetail', () => {
     expect(screen.queryByText('coding')).not.toBeInTheDocument(); // disabled stage not shown
   });
 
-  it('navigates to the register coming-soon page when the Register CTA is clicked', async () => {
+  it('navigates to the registration wizard when the Register CTA is clicked', async () => {
     seedAuth();
     mockDriveFetch();
     renderPage();
