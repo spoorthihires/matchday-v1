@@ -42,3 +42,28 @@ export const createRegistrationSchema = z.object({
 });
 
 export type RegistrationInput = z.infer<typeof createRegistrationSchema>;
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Server-authoritative: employerId comes from the JWT, driveId from the route
+// param — neither is accepted in the body.
+export const createSlotSchema = z.object({
+  date: z.coerce.date(),
+  start: z.string().regex(TIME_RE, 'Invalid time'),
+  end: z.string().regex(TIME_RE, 'Invalid time'),
+  capacity: z.number().int().min(1).max(50),
+  linkMode: z.enum(['auto', 'own']),
+  link: z.string().url().optional(),
+}).refine((v) => v.linkMode !== 'own' || !!(v.link && v.link.length), { message: 'A meeting link is required', path: ['link'] });
+
+export const updateSlotSchema = z.object({
+  date: z.coerce.date().optional(),
+  start: z.string().regex(TIME_RE).optional(),
+  end: z.string().regex(TIME_RE).optional(),
+  capacity: z.number().int().min(1).max(50).optional(),
+  linkMode: z.enum(['auto', 'own']).optional(),
+  link: z.string().url().optional(),
+});
+
+export type SlotInput = z.infer<typeof createSlotSchema>;
+export type SlotPatch = z.infer<typeof updateSlotSchema>;

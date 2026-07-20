@@ -2,9 +2,10 @@ import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Employer } from '../../models/Employer.js';
 import { Slot } from '../../models/Slot.js';
+import { SlotBooking } from '../../models/SlotBooking.js';
 import { Drive } from '../../models/Drive.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
-import type { RegistrationInput } from './employerPortal.schemas.js';
+import type { RegistrationInput, SlotInput } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
   if (!Types.ObjectId.isValid(employerId)) throw new HttpError(404, 'Employer not found', 'not_found');
@@ -124,4 +125,70 @@ export async function getEmployerRegistration(employerId: string, id: string) {
   const r = await RegistrationRequest.findById(id).lean();
   if (!r || String(r.employerId) !== String(employerId)) throw new HttpError(404, 'Registration not found', 'not_found');
   return { id: String(r._id), driveName: r.driveName, role: r.role, openings: r.openings, ctcRange: r.ctcRange, skills: r.skills, slot: r.slot, jd: r.jd, status: r.status, submittedAt: new Date(r.createdAt).toISOString(), activity: (r.activity ?? []).map((a) => ({ action: a.action, by: a.by, at: new Date(a.at).toISOString() })), details: r.details ?? {} };
+}
+
+// --- Employer slot management (Slice 4) -----------------------------------
+// Reuses the Slot model verbatim; employerId is server-set (never from the body).
+// booked is DERIVED from SlotBooking (0 until the candidate-booking slice) and
+// never stored on the slot.
+export interface EmployerSlotItem {
+  id: string; date: string; start: string; end: string;
+  capacity: number; booked: number; status: string; link: string;
+}
+
+async function hasApprovedRegistration(employerId: string, driveId: string): Promise<boolean> {
+  return !!(await RegistrationRequest.findOne({ employerId, driveId, status: 'Approved' }));
+}
+function sameUTCDay(a: Date, b: Date): boolean {
+  return a.getUTCFullYear() === b.getUTCFullYear()
+    && a.getUTCMonth() === b.getUTCMonth()
+    && a.getUTCDate() === b.getUTCDate();
+}
+async function derivedBooked(slotId: Types.ObjectId): Promise<number> {
+  return SlotBooking.countDocuments({ slotId });
+}
+function slotProjection(s: Record<string, any>, booked: number): EmployerSlotItem {
+  return { id: String(s._id), date: new Date(s.date).toISOString(), start: s.start, end: s.end,
+    capacity: s.capacity ?? 0, booked, status: s.status, link: s.link ?? '' };
+}
+function stubLink(slotId: unknown): string { return `https://meet.hiringhood.test/${String(slotId)}`; }
+
+export async function listEmployerSlots(employerId: string, driveId: string) {
+  if (!Types.ObjectId.isValid(driveId)) throw new HttpError(404, 'Drive not found', 'not_found');
+  if (!(await hasApprovedRegistration(employerId, driveId)))
+    throw new HttpError(400, 'You need an approved registration for this drive to manage slots', 'registration_not_approved');
+  const rows = await Slot.find({ driveId, employerId }).sort({ date: 1, start: 1 }).lean();
+  const bk = await SlotBooking.aggregate([
+    { $match: { slotId: { $in: rows.map((r) => r._id) } } },
+    { $group: { _id: '$slotId', n: { $sum: 1 } } },
+  ]);
+  const counts = new Map<string, number>(bk.map((r: Record<string, any>) => [String(r._id), r.n]));
+  return { items: rows.map((s) => slotProjection(s, counts.get(String(s._id)) ?? 0)) };
+}
+
+export async function createEmployerSlot(employerId: string, driveId: string, input: SlotInput) {
+  if (!Types.ObjectId.isValid(driveId)) throw new HttpError(404, 'Drive not found', 'not_found');
+  const emp = await Employer.findById(employerId);
+  if (!emp) throw new HttpError(404, 'Employer not found', 'not_found');
+  if (!(await hasApprovedRegistration(employerId, driveId)))
+    throw new HttpError(400, 'You need an approved registration for this drive to manage slots', 'registration_not_approved');
+  const drive = await Drive.findById(driveId);
+  if (!drive) throw new HttpError(404, 'Drive not found', 'not_found');
+  const allowed = ((drive.eventDates ?? []) as unknown as Date[]).map((d) => new Date(d));
+  if (!allowed.some((d) => sameUTCDay(d, input.date)))
+    throw new HttpError(400, 'That date is not in the drive schedule', 'date_not_in_schedule');
+  if (input.end <= input.start) throw new HttpError(400, 'End time must be after start time', 'validation');
+  const clash = await Slot.findOne({ employerId, driveId, date: input.date, start: input.start, status: { $ne: 'Cancelled' } });
+  if (clash) throw new HttpError(400, 'You already have a slot at that date and time', 'slot_exists');
+  if (drive.slotCap > 0) {
+    const own = await Slot.countDocuments({ employerId, driveId, status: { $ne: 'Cancelled' } });
+    if (own >= drive.slotCap) throw new HttpError(400, 'You have reached the slot cap for this drive', 'slot_cap_reached');
+  }
+  const slot = await Slot.create({
+    driveId: new Types.ObjectId(driveId), employerId: new Types.ObjectId(employerId),
+    date: input.date, start: input.start, end: input.end, capacity: input.capacity,
+    link: input.linkMode === 'own' ? (input.link ?? '') : '', status: 'Scheduled',
+  });
+  if (input.linkMode === 'auto') { slot.link = stubLink(slot._id); await slot.save(); }
+  return slotProjection(slot.toObject(), 0);
 }
