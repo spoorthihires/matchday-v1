@@ -44,7 +44,8 @@ function renderPage(path = '/employer/drives/d1') {
           <Routes>
             <Route path="/employer/drives" element={<div>MARKETPLACE PAGE</div>} />
             <Route path="/employer/drives/:id" element={<EmployerDriveDetail />} />
-            <Route path="/employer/coming-soon/:slug" element={<div>COMING SOON PAGE</div>} />
+            <Route path="/employer/coming-soon/register" element={<div>REGISTER PLACEHOLDER</div>} />
+            <Route path="/employer/coming-soon/slots" element={<div>SLOTS PLACEHOLDER</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -79,7 +80,7 @@ describe('EmployerDriveDetail', () => {
     await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
     await userEvent.click(screen.getByRole('button', { name: /register for this drive/i }));
 
-    expect(await screen.findByText('COMING SOON PAGE')).toBeInTheDocument();
+    expect(await screen.findByText('REGISTER PLACEHOLDER')).toBeInTheDocument();
   });
 
   it('navigates to the slots coming-soon page when View slots is clicked', async () => {
@@ -90,7 +91,17 @@ describe('EmployerDriveDetail', () => {
     await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
     await userEvent.click(screen.getByRole('button', { name: /view slots/i }));
 
-    expect(await screen.findByText('COMING SOON PAGE')).toBeInTheDocument();
+    expect(await screen.findByText('SLOTS PLACEHOLDER')).toBeInTheDocument();
+  });
+
+  it('hides the Register CTA when canRegister is false, but still shows View slots', async () => {
+    seedAuth();
+    mockDriveFetch(200, { ...DRIVE_DETAIL, canRegister: false });
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /register for this drive/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view slots/i })).toBeInTheDocument();
   });
 
   it('renders a not-found state when the drive fetch 404s', async () => {

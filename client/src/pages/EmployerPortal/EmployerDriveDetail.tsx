@@ -177,10 +177,12 @@ export function EmployerDriveDetail() {
               </span>
               <div><div className="nv">{data.eventDay}</div><div className="nl">{data.frequency} MatchDay</div></div>
             </div>
-            <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate('/employer/coming-soon/register')}>
-              Register for this drive
-              <svg className="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </button>
+            {data.canRegister && (
+              <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate('/employer/coming-soon/register')}>
+                Register for this drive
+                <svg className="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </button>
+            )}
             <button type="button" className="btn btn-ghost" onClick={() => navigate('/employer/coming-soon/slots')}>
               View slots
             </button>
