@@ -37,7 +37,7 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'drives',
         label: 'Available Drives',
-        path: '/employer/coming-soon/drives',
+        path: '/employer/drives',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
             <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -145,7 +145,9 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
   }
 
   function isActive(item: NavItem) {
-    return location.pathname === item.path;
+    // Prefix match (not just exact) so the "Available Drives" nav item stays highlighted on
+    // the marketplace's nested detail route too, e.g. /employer/drives/:id (Task 3).
+    return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
   }
 
   function onLogout() {
