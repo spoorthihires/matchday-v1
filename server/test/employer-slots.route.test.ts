@@ -5,6 +5,7 @@ import { signToken } from '../src/modules/auth/auth.service.js';
 import { Employer } from '../src/models/Employer.js';
 import { Drive } from '../src/models/Drive.js';
 import { Slot } from '../src/models/Slot.js';
+import { SlotBooking } from '../src/models/SlotBooking.js';
 import { RegistrationRequest } from '../src/models/RegistrationRequest.js';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 
@@ -156,5 +157,80 @@ describe('GET /api/me/employer/drives/:id/slots', () => {
     const dash = await request(app).get('/api/me/employer').set('Authorization', `Bearer ${tokenFor(emp)}`);
     expect(dash.status).toBe(200);
     expect(dash.body.dashboard.kpis.totalSlots).toBe(1);
+  });
+});
+
+async function makeSlot(app: ReturnType<typeof createApp>, emp: { _id: unknown }, d: { _id: unknown }, over: Record<string, unknown> = {}) {
+  const res = await request(app).post(`/api/me/employer/drives/${d._id}/slots`).set('Authorization', `Bearer ${tokenFor(emp)}`).send(body(over));
+  return res.body.id as string;
+}
+
+describe('PATCH /api/me/employer/drives/:id/slots/:slotId', () => {
+  it('reschedules a slot in place', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    const id = await makeSlot(app, emp, d);
+    const res = await request(app).patch(`/api/me/employer/drives/${d._id}/slots/${id}`)
+      .set('Authorization', `Bearer ${tokenFor(emp)}`).send({ start: '14:00', end: '16:00' });
+    expect(res.status).toBe(200);
+    expect(res.body.start).toBe('14:00');
+    expect(res.body.end).toBe('16:00');
+  });
+
+  it('returns 404 for another employer slot (no oracle)', async () => {
+    const a = await employer({ email: 'a3@a.test' }); const b = await employer({ email: 'b2@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d);
+    await RegistrationRequest.create({ company: 'Beta', industry: 'Tech', submittedBy: 'B', employerId: b._id, driveId: d._id, driveName: 'D', role: 'X', status: 'Approved', activity: [] });
+    const app = createApp();
+    const id = await makeSlot(app, a, d);
+    const res = await request(app).patch(`/api/me/employer/drives/${d._id}/slots/${id}`)
+      .set('Authorization', `Bearer ${tokenFor(b)}`).send({ start: '14:00', end: '16:00' });
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
+
+  it('rejects lowering capacity below existing bookings', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    const id = await makeSlot(app, emp, d, { capacity: 8 });
+    // seed two candidate bookings directly (the candidate flow is a later slice)
+    await SlotBooking.create({ slotId: id, jobseekerId: emp._id, status: 'Booked' });
+    await SlotBooking.create({ slotId: id, jobseekerId: d._id, status: 'Held' });
+    const res = await request(app).patch(`/api/me/employer/drives/${d._id}/slots/${id}`)
+      .set('Authorization', `Bearer ${tokenFor(emp)}`).send({ capacity: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+});
+
+describe('DELETE /api/me/employer/drives/:id/slots/:slotId', () => {
+  it('removes a slot with no bookings', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    const id = await makeSlot(app, emp, d);
+    const res = await request(app).delete(`/api/me/employer/drives/${d._id}/slots/${id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(await Slot.countDocuments({ _id: id })).toBe(0);
+  });
+
+  it('refuses to remove a slot that has candidate bookings', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    const id = await makeSlot(app, emp, d);
+    await SlotBooking.create({ slotId: id, jobseekerId: emp._id, status: 'Booked' });
+    const res = await request(app).delete(`/api/me/employer/drives/${d._id}/slots/${id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('slot_has_bookings');
+  });
+
+  it('returns 404 for another employer slot on delete', async () => {
+    const a = await employer({ email: 'a4@a.test' }); const b = await employer({ email: 'b3@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d);
+    await RegistrationRequest.create({ company: 'Beta', industry: 'Tech', submittedBy: 'B', employerId: b._id, driveId: d._id, driveName: 'D', role: 'X', status: 'Approved', activity: [] });
+    const app = createApp();
+    const id = await makeSlot(app, a, d);
+    const res = await request(app).delete(`/api/me/employer/drives/${d._id}/slots/${id}`).set('Authorization', `Bearer ${tokenFor(b)}`);
+    expect(res.status).toBe(404);
   });
 });

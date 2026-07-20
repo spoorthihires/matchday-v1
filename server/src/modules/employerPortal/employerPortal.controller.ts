@@ -3,8 +3,9 @@ import { z } from 'zod';
 import {
   getEmployerPortal, listEmployerDrives, getEmployerDrive, createEmployerRegistration,
   listEmployerRegistrations, getEmployerRegistration, listEmployerSlots, createEmployerSlot,
+  updateEmployerSlot, deleteEmployerSlot,
 } from './employerPortal.service.js';
-import { createRegistrationSchema, createSlotSchema } from './employerPortal.schemas.js';
+import { createRegistrationSchema, createSlotSchema, updateSlotSchema } from './employerPortal.schemas.js';
 
 export async function employerPortalController(req: Request, res: Response) {
   res.json(await getEmployerPortal(req.userId as string));
@@ -40,4 +41,11 @@ export async function employerSlotsController(req: Request, res: Response) {
 export async function createEmployerSlotController(req: Request, res: Response) {
   const parsed = createSlotSchema.parse(req.body);
   res.status(201).json(await createEmployerSlot(req.userId as string, req.params.id, parsed));
+}
+export async function updateEmployerSlotController(req: Request, res: Response) {
+  const parsed = updateSlotSchema.parse(req.body);
+  res.json(await updateEmployerSlot(req.userId as string, req.params.id, req.params.slotId, parsed));
+}
+export async function deleteEmployerSlotController(req: Request, res: Response) {
+  res.json(await deleteEmployerSlot(req.userId as string, req.params.id, req.params.slotId));
 }

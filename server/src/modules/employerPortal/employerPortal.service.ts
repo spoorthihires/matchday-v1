@@ -5,7 +5,7 @@ import { Slot } from '../../models/Slot.js';
 import { SlotBooking } from '../../models/SlotBooking.js';
 import { Drive } from '../../models/Drive.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
-import type { RegistrationInput, SlotInput } from './employerPortal.schemas.js';
+import type { RegistrationInput, SlotInput, SlotPatch } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
   if (!Types.ObjectId.isValid(employerId)) throw new HttpError(404, 'Employer not found', 'not_found');
@@ -191,4 +191,44 @@ export async function createEmployerSlot(employerId: string, driveId: string, in
   });
   if (input.linkMode === 'auto') { slot.link = stubLink(slot._id); await slot.save(); }
   return slotProjection(slot.toObject(), 0);
+}
+
+export async function updateEmployerSlot(employerId: string, driveId: string, slotId: string, patch: SlotPatch) {
+  if (!Types.ObjectId.isValid(driveId) || !Types.ObjectId.isValid(slotId))
+    throw new HttpError(404, 'Slot not found', 'not_found');
+  const slot = await Slot.findOne({ _id: slotId, employerId, driveId });
+  if (!slot) throw new HttpError(404, 'Slot not found', 'not_found'); // cross-employer isolation, no oracle
+  if (slot.status === 'Cancelled') throw new HttpError(400, 'This slot has been cancelled', 'slot_cancelled');
+  const drive = await Drive.findById(driveId);
+  if (!drive) throw new HttpError(404, 'Drive not found', 'not_found');
+  const nextDate = patch.date ?? new Date(slot.date);
+  const nextStart = patch.start ?? slot.start;
+  const nextEnd = patch.end ?? slot.end;
+  const allowed = ((drive.eventDates ?? []) as unknown as Date[]).map((d) => new Date(d));
+  if (!allowed.some((d) => sameUTCDay(d, nextDate)))
+    throw new HttpError(400, 'That date is not in the drive schedule', 'date_not_in_schedule');
+  if (nextEnd <= nextStart) throw new HttpError(400, 'End time must be after start time', 'validation');
+  if (patch.capacity !== undefined) {
+    const seats = await SlotBooking.countDocuments({ slotId: slot._id });
+    if (patch.capacity < seats) throw new HttpError(400, 'Capacity cannot be lower than existing bookings', 'validation');
+  }
+  if (patch.date !== undefined) slot.date = patch.date;
+  if (patch.start !== undefined) slot.start = patch.start;
+  if (patch.end !== undefined) slot.end = patch.end;
+  if (patch.capacity !== undefined) slot.capacity = patch.capacity;
+  if (patch.linkMode === 'own') slot.link = patch.link ?? '';
+  else if (patch.linkMode === 'auto') slot.link = stubLink(slot._id);
+  await slot.save();
+  return slotProjection(slot.toObject(), await derivedBooked(slot._id));
+}
+
+export async function deleteEmployerSlot(employerId: string, driveId: string, slotId: string) {
+  if (!Types.ObjectId.isValid(driveId) || !Types.ObjectId.isValid(slotId))
+    throw new HttpError(404, 'Slot not found', 'not_found');
+  const slot = await Slot.findOne({ _id: slotId, employerId, driveId });
+  if (!slot) throw new HttpError(404, 'Slot not found', 'not_found');
+  const bookings = await SlotBooking.countDocuments({ slotId: slot._id });
+  if (bookings > 0) throw new HttpError(400, 'This slot has candidate bookings and cannot be removed', 'slot_has_bookings');
+  await slot.deleteOne();
+  return { ok: true as const };
 }
