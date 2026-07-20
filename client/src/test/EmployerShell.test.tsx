@@ -46,6 +46,10 @@ function renderShell() {
               path="/employer/drives"
               element={<EmployerShell><div>DRIVES PAGE</div></EmployerShell>}
             />
+            <Route
+              path="/employer/registrations"
+              element={<EmployerShell><div>REGISTRATIONS PAGE</div></EmployerShell>}
+            />
             <Route path="/employer/coming-soon/:slug" element={<div>COMING SOON PAGE</div>} />
           </Routes>
         </AuthProvider>
@@ -84,10 +88,17 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/coming-soon/registrations when a not-built nav item is clicked', async () => {
+  it('navigates to /employer/registrations when the Registrations nav item is clicked', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
     await userEvent.click(sidebar.getByRole('button', { name: /Registrations/ }));
+    expect(await screen.findByText('REGISTRATIONS PAGE')).toBeInTheDocument();
+  });
+
+  it('navigates to /employer/coming-soon/candidates when a not-built nav item is clicked', async () => {
+    const { container } = renderShell();
+    const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
+    await userEvent.click(sidebar.getByRole('button', { name: /Candidates/ }));
     expect(await screen.findByText('COMING SOON PAGE')).toBeInTheDocument();
   });
 
