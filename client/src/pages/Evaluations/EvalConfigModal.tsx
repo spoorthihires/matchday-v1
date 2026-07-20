@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { useEvalConfigMutations } from './hooks/useEvalConfigMutations.js';
-import { EVAL_TYPES, RETAKE_OPTIONS, type EvalConfigItem } from '../../types/evaluations.js';
+import { useEvalConfigMutations, type CreatedEvalConfig } from './hooks/useEvalConfigMutations.js';
+import { EVAL_TYPES, RETAKE_OPTIONS, type EvalConfigItem, type EvalType } from '../../types/evaluations.js';
 
 export interface EvalConfigModalProps {
   mode: 'create' | 'edit';
   config?: EvalConfigItem;
+  /** Pre-selects the assessment type when creating (e.g. from an inline "+ Add Configuration"). */
+  initialType?: EvalType;
   onClose: () => void;
+  /** Fired with the newly created config right before onClose, for callers that want to auto-select it. */
+  onSaved?: (created: CreatedEvalConfig) => void;
 }
 
-export function EvalConfigModal({ mode, config, onClose }: EvalConfigModalProps) {
+export function EvalConfigModal({ mode, config, initialType, onClose, onSaved }: EvalConfigModalProps) {
   const { create, update } = useEvalConfigMutations();
   const [name, setName] = useState(config?.name ?? '');
-  const [type, setType] = useState(config?.type ?? 'MCQ');
+  const [type, setType] = useState(config?.type ?? initialType ?? 'MCQ');
   const [enabled, setEnabled] = useState(config?.enabled ?? true);
   const [passing, setPassing] = useState(config?.passing ?? 60);
   const [attempts, setAttempts] = useState(config?.attempts ?? 2);
@@ -26,7 +30,7 @@ export function EvalConfigModal({ mode, config, onClose }: EvalConfigModalProps)
     if (!name.trim()) { setNameError(true); return; }
     const body = { name: name.trim(), type, enabled, passing, attempts, retake, cooldown, validity, autoQual, threshold };
     if (mode === 'edit' && config) update.mutate({ id: config.id, body }, { onSuccess: onClose });
-    else create.mutate(body, { onSuccess: onClose });
+    else create.mutate(body, { onSuccess: (created) => { onSaved?.(created); onClose(); } });
   }
   const numOr = (v: string, d: number) => (v === '' ? d : Number(v));
 

@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import type { EvaluationStage } from '../../../types/drives.js';
+import type { EvalType } from '../../../types/evaluations.js';
 import { useEvalConfigs } from '../../Evaluations/hooks/useEvalConfigs.js';
 import { useTemplates } from '../../Templates/hooks/useTemplates.js';
+import { EvalConfigModal } from '../../Evaluations/EvalConfigModal.js';
 import type { WizardStepProps } from './types.js';
 
 // Ported from matchday-admin-app_23.html lines 2150-2181 (STEP 4: Evaluation). Titles,
@@ -63,8 +66,11 @@ const META: EvalMeta[] = [
   },
 ];
 
-const KEY_TO_TYPE: Record<EvaluationStage['key'], string> = {
+const KEY_TO_TYPE: Record<EvaluationStage['key'], EvalType> = {
   mcq: 'MCQ', coding: 'Coding', tara: 'TARA', assignments: 'Assignments',
+};
+const TYPE_TO_KEY: Record<string, EvaluationStage['key']> = {
+  MCQ: 'mcq', Coding: 'coding', TARA: 'tara', Assignments: 'assignments',
 };
 
 export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
@@ -74,6 +80,7 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
   const evalConfigs = cfgData?.items ?? [];
   const anyEnabled = model.evaluation.some((e) => e.enabled);
   const showErr = errors.length > 0 && !anyEnabled;
+  const [addConfigFor, setAddConfigFor] = useState<EvaluationStage['key'] | null>(null);
 
   function toggleEnabled(key: EvaluationStage['key']) {
     onChange({
@@ -152,18 +159,30 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
                   ))}
                   <div className="mini-fld">
                     <label htmlFor={`evcfg-${meta.key}`}>{meta.cfgLabel}</label>
-                    <select
-                      id={`evcfg-${meta.key}`}
-                      className="select"
-                      style={{ appearance: 'auto' }}
-                      value={stage?.evalConfigId ?? ''}
-                      onChange={(e) => setStageEvalConfig(meta.key, e.target.value)}
-                    >
-                      <option value="">No configuration</option>
-                      {evalConfigs.filter((c) => c.type === KEY_TO_TYPE[meta.key]).map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <select
+                        id={`evcfg-${meta.key}`}
+                        className="select"
+                        style={{ appearance: 'auto', flex: 1 }}
+                        value={stage?.evalConfigId ?? ''}
+                        onChange={(e) => setStageEvalConfig(meta.key, e.target.value)}
+                      >
+                        <option value="">No configuration</option>
+                        {evalConfigs.filter((c) => c.type === KEY_TO_TYPE[meta.key]).map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        style={{ padding: '7px 9px' }}
+                        aria-label={`Add ${KEY_TO_TYPE[meta.key]} assessment configuration`}
+                        title="Add Configuration"
+                        onClick={() => setAddConfigFor(meta.key)}
+                      >
+                        <i className="ti ti-plus" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -177,6 +196,14 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
           <i className="ti ti-alert-circle" /> Enable at least one evaluation stage.
         </div>
       </div>
+      {addConfigFor && (
+        <EvalConfigModal
+          mode="create"
+          initialType={KEY_TO_TYPE[addConfigFor]}
+          onSaved={(created) => setStageEvalConfig(TYPE_TO_KEY[created.type] ?? addConfigFor, created._id)}
+          onClose={() => setAddConfigFor(null)}
+        />
+      )}
     </section>
   );
 }
