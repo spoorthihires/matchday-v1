@@ -31,8 +31,7 @@ export function LoginPage() {
     <div id="auth-screen">
       <header className="topbar">
         <div className="brand">
-          <span className="glyph"><i className="ti ti-calendar-bolt" /></span>
-          <div>Hiringhood <small>MatchDay Admin</small></div>
+          <img src="/logo.png" alt="MatchDay" className="brand-logo" />
         </div>
         <div className="env"><i className="ti ti-circle-filled" /><span>Production</span></div>
       </header>

@@ -48,8 +48,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar" id="sidebar">
       <div className="sb-brand">
-        <span className="glyph"><i className="ti ti-calendar-bolt" /></span>
-        <div><b>Hiringhood</b><small>MatchDay Admin</small></div>
+        <img src="/logo.png" alt="MatchDay" className="brand-logo" />
       </div>
       <nav className="sb-scroll">
         {NAV.map((item) => (

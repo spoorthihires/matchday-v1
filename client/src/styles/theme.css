@@ -35,7 +35,7 @@
     padding:0 20px;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
   }
   #auth-screen .brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.01em}
-  #auth-screen .brand .glyph{width:26px;height:26px;border-radius:7px;background:var(--indigo);display:grid;place-items:center;color:#fff;font-size:16px}
+  #auth-screen .brand .brand-logo{height:28px;width:auto;display:block}
   #auth-screen .brand small{display:block;font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:-2px}
   #auth-screen .env{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:#fff}
   #auth-screen .env i{color:var(--success);font-size:9px}
@@ -163,7 +163,7 @@
      ========================================================= */
   .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:30;transition:transform .25s}
   .sb-brand{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
-  .sb-brand .glyph{width:30px;height:30px;border-radius:8px;background:var(--indigo);display:grid;place-items:center;color:#fff;font-size:18px}
+  .sb-brand .brand-logo{height:34px;width:auto;display:block}
   .sb-brand b{font-weight:700;letter-spacing:-.01em;font-size:15px}
   .sb-brand small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .sb-scroll{flex:1;overflow-y:auto;padding:12px 12px 20px}

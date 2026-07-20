@@ -7,8 +7,7 @@ export function PortalShell({ name, children }: { name: string; children: ReactN
     <div className="portal">
       <header className="portal-top">
         <div className="brand">
-          <span className="glyph"><i className="ti ti-calendar-bolt" /></span>
-          <div>Hiringhood <small>MatchDay</small></div>
+          <img src="/logo.png" alt="MatchDay" className="brand-logo" />
         </div>
         <div className="grow" />
         <span className="portal-user"><i className="ti ti-user-circle" /> {name}</span>
