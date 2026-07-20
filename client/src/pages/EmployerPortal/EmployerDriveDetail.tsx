@@ -178,7 +178,7 @@ export function EmployerDriveDetail() {
               <div><div className="nv">{data.eventDay}</div><div className="nl">{data.frequency} MatchDay</div></div>
             </div>
             {data.canRegister && (
-              <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate('/employer/coming-soon/register')}>
+              <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate(`/employer/drives/${id}/register`)}>
                 Register for this drive
                 <svg className="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>

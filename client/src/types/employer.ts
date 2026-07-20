@@ -65,3 +65,86 @@ export interface EmployerDriveDetail extends EmployerDriveListItem {
   evaluation: { key: string; enabled: boolean; config: Record<string, number> }[];
   streamId: string | null;
 }
+
+// Mirrors server/src/modules/employerPortal/employerPortal.schemas.ts's createRegistrationSchema
+// (Tasks 1+2) exactly -- field names/nesting must match the zod shape verbatim, since the server
+// rejects (400) any body it doesn't recognise and silently ignores anything else (it derives
+// company/industry/employerId server-side, so those are deliberately NOT part of this type).
+export interface RegistrationDetailsInput {
+  roleDescription?: string;
+  deadline?: string;
+  urgency?: string;
+  goodToHave?: string[];
+  qualification?: string;
+  gradYearFrom?: number;
+  gradYearTo?: number;
+  expMin?: number;
+  expMax?: number;
+  stipend?: number;
+  cities?: string[];
+  workMode?: string;
+  officeLocation?: string;
+  rounds?: number;
+  roundNames?: string;
+  minEvalScore?: number;
+  mandatorySkills?: string[];
+}
+
+export interface RegistrationInput {
+  driveId: string;
+  role: string;
+  openings?: number;
+  ctcMin?: number;
+  ctcMax?: number;
+  mustHave?: string[];
+  preferredWednesday?: string;
+  timeSlot?: string;
+  jd?: string;
+  details?: RegistrationDetailsInput;
+}
+
+// Mirrors listEmployerRegistrations' row shape (Task 2) -- the tracker row (Task 4 consumes this).
+export interface EmployerRegistrationItem {
+  id: string;
+  driveId: string;
+  driveName: string;
+  role: string;
+  openings: number;
+  status: string;
+  submittedAt: string;
+  latestActivity: string;
+}
+
+export interface EmployerRegistrationsResponse {
+  items: EmployerRegistrationItem[];
+}
+
+export interface EmployerRegistrationActivity {
+  action: string;
+  by: string;
+  at: string;
+}
+
+// Mirrors getEmployerRegistration's return shape (Task 2).
+export interface EmployerRegistrationDetail {
+  id: string;
+  driveName: string;
+  role: string;
+  openings: number;
+  ctcRange: string;
+  skills: string[];
+  slot: string;
+  jd: string;
+  status: string;
+  submittedAt: string;
+  activity: EmployerRegistrationActivity[];
+  details: RegistrationDetailsInput;
+}
+
+// Mirrors createEmployerRegistration's 201 response shape (Task 2).
+export interface CreateRegistrationResult {
+  id: string;
+  status: string;
+  driveName: string;
+  role: string;
+}
