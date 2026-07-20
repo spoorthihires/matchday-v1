@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { Stream, type StreamDoc } from '../../models/Stream.js';
 import { Drive } from '../../models/Drive.js';
-import { ALL_FLOW, type CreateStreamInput, type UpdateStreamInput } from './streams.schemas.js';
+import { ALL_FLOW, type CreateStreamInput, type ListQuery, type UpdateStreamInput } from './streams.schemas.js';
 
 const ACTOR = 'Platform Admin';
 
@@ -35,15 +35,21 @@ function toItem(d: StreamDoc & { _id: unknown }): StreamItem {
   };
 }
 
-export async function listStreams(params: { q?: string; parent?: string; status?: string; sort?: string; order?: string }) {
+export async function listStreams(params: Partial<ListQuery>) {
   const match: Record<string, unknown> = {};
-  if (params.parent) match.parent = params.parent;
-  if (params.status) match.status = params.status;
+  if (params.parent?.length) match.parent = { $in: params.parent };
+  if (params.status?.length) match.status = { $in: params.status };
   if (params.q && params.q.trim()) {
     const rx = new RegExp(params.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     match.$or = [{ name: rx }, { parent: rx }, { label: rx }, { skills: rx }];
   }
-  const key = (params.sort === 'parent' || params.sort === 'cutoff') ? params.sort : 'name';
+  if (params.cutoffFrom !== undefined || params.cutoffTo !== undefined) {
+    const range: Record<string, number> = {};
+    if (params.cutoffFrom !== undefined) range.$gte = params.cutoffFrom;
+    if (params.cutoffTo !== undefined) range.$lte = params.cutoffTo;
+    match.cutoff = range;
+  }
+  const key = (params.sort === 'parent' || params.sort === 'cutoff' || params.sort === 'status') ? params.sort : 'name';
   const dir = params.order === 'desc' ? -1 : 1;
   const rows = await Stream.find(match).collation({ locale: 'en', strength: 2 }).sort({ [key]: dir }).lean();
   const items = rows.map((r) => toItem(r as never));

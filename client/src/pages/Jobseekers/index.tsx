@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AppShell } from '../../components/AppShell.js';
 import { useInstitutes } from '../Institutes/hooks/useInstitutes.js';
+import { useTableSort } from '../../hooks/useTableSort.js';
+import { useColumnFilters } from '../../hooks/useColumnFilters.js';
 import type { JobseekerListItem, JobseekerListParams } from '../../types/jobseekers.js';
 import { BulkBar } from './BulkBar.js';
 import { ChangeStreamModal } from './ChangeStreamModal.js';
@@ -36,9 +38,16 @@ export function JobseekersPage() {
   const [view, setView] = useState<JobseekerView>('all');
   const [viewFilterValue, setViewFilterValue] = useState(EMPTY_VIEW_FILTER);
   const [q, setQ] = useState('');
-  const [sort, setSort] = useState<JobseekerSortKey | undefined>(undefined);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
+  const { sort, order, onSort } = useTableSort<JobseekerSortKey>(undefined, () => setPage(1));
+  // No explicit type argument and no cast to the JobseekerColumnFilters interface: F is inferred
+  // structurally from this object literal, which (unlike the interface itself) TS treats as
+  // assignable to useColumnFilters's `Record<string, ColumnFilterValue>` constraint — interfaces
+  // have no implicit index signature, but a fresh literal does for this purpose.
+  const columnFilters = useColumnFilters(
+    { instituteId: [] as string[], stream: [] as string[], evaluationStatus: [] as string[], offer: [] as string[], dupRisk: [] as string[], consent: [] as string[] },
+    () => setPage(1),
+  );
   const [limit, setLimit] = useState(10);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
@@ -58,6 +67,7 @@ export function JobseekersPage() {
     ...(view === 'match' && viewFilterValue ? { matchBucket: viewFilterValue } : {}),
     ...(view === 'offer' && viewFilterValue ? { offer: viewFilterValue } : {}),
     ...(view === 'consent' && viewFilterValue ? { consent: viewFilterValue } : {}),
+    ...columnFilters.toQueryParams(),
   };
   const { data, isLoading, isError, error } = useJobseekers(params);
   const { block, blockOne, unblockOne } = useJobseekerMutations();
@@ -75,16 +85,6 @@ export function JobseekersPage() {
 
   function handleQChange(next: string) {
     setQ(next);
-    setPage(1);
-  }
-
-  function handleSort(key: JobseekerSortKey) {
-    if (sort === key) {
-      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSort(key);
-      setOrder('asc');
-    }
     setPage(1);
   }
 
@@ -197,11 +197,15 @@ export function JobseekersPage() {
             selectedIds={selectedIds}
             onToggle={toggle}
             onToggleAll={toggleAll}
-            onSort={handleSort}
+            onSort={onSort}
             sort={sort}
             order={order}
             onRowAction={handleRowAction}
             isLoading={isLoading}
+            instituteOptions={instituteOptions}
+            filters={columnFilters.filters}
+            onFilterChange={columnFilters.setFilter}
+            onFilterClear={columnFilters.clearFilter}
           />
           <div className="dm-pager">
             <div className="pinfo">

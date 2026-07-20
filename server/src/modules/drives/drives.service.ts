@@ -96,15 +96,39 @@ export async function listDrives(params: ListParams, now: Date = new Date()) {
     const rx = new RegExp(params.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     match.$or = [{ name: rx }, { domain: rx }, { stream: rx }];
   }
-  if (params.status) match.status = params.status;
-  if (params.stream) match.stream = params.stream;
-  if (params.domain) match.domain = params.domain;
+  if (params.status?.length) match.status = { $in: params.status };
+  if (params.stream?.length) match.stream = { $in: params.stream };
+  if (params.domain?.length) match.domain = { $in: params.domain };
   if (params.month) {
     const [y, m] = params.month.split('-').map(Number);
     const start = new Date(Date.UTC(y, m - 1, 1));
     const end = new Date(Date.UTC(y, m, 1));
     match.eventDates = { $elemMatch: { $gte: start, $lt: end } };
+  } else if (params.monthFrom || params.monthTo) {
+    const range: Record<string, Date> = {};
+    if (params.monthFrom) {
+      const [y, m] = params.monthFrom.split('-').map(Number);
+      range.$gte = new Date(Date.UTC(y, m - 1, 1));
+    }
+    if (params.monthTo) {
+      const [y, m] = params.monthTo.split('-').map(Number);
+      range.$lt = new Date(Date.UTC(y, m, 1)); // exclusive end = first day of the month AFTER monthTo
+    }
+    match.eventDates = { $elemMatch: range };
   }
+  const capRange = (min?: number, max?: number): Record<string, number> | undefined => {
+    if (min === undefined && max === undefined) return undefined;
+    const r: Record<string, number> = {};
+    if (min !== undefined) r.$gte = min;
+    if (max !== undefined) r.$lte = max;
+    return r;
+  };
+  const candCapRange = capRange(params.candCapFrom, params.candCapTo);
+  if (candCapRange) match.candCap = candCapRange;
+  const empCapRange = capRange(params.empCapFrom, params.empCapTo);
+  if (empCapRange) match.empCap = empCapRange;
+  const slotCapRange = capRange(params.slotCapFrom, params.slotCapTo);
+  if (slotCapRange) match.slotCap = slotCapRange;
 
   const sortField = params.sort === 'month' ? 'primaryEventDate'
     : params.sort ?? 'createdAt';

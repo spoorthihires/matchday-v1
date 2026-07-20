@@ -16,15 +16,25 @@ export const createJobseekerSchema = z.object({
 });
 export const updateJobseekerSchema = createJobseekerSchema.partial();
 
+// Splits a CSV query param into a trimmed, non-empty string array (supports multi-select column
+// filters while staying backward-compatible with a lone single value, which round-trips fine).
+function csv() {
+  return z.string().transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean));
+}
+function csvEnum<T extends [string, ...string[]]>(values: T) {
+  return csv().pipe(z.array(z.enum(values)));
+}
+
 export const listQuerySchema = z.object({
   q: z.string().optional(),
-  instituteId: z.string().optional(),
-  stream: z.string().optional(),                 // = branch
-  evaluationStatus: z.enum(['na', 'pending', 'completed', 'failed']).optional(),
-  offer: z.enum(['None', 'Shortlisted', 'Offer sent', 'Joined', 'Rejected']).optional(),
-  consent: z.enum(['Granted', 'Pending', 'Revoked']).optional(),
-  matchBucket: z.enum(['high', 'mid', 'low']).optional(),
-  sort: z.enum(['name', 'institute', 'matchReady']).optional(),
+  instituteId: csv().optional(),
+  stream: csv().optional(),                 // = branch
+  evaluationStatus: csvEnum(['na', 'pending', 'completed', 'failed']).optional(),
+  offer: csvEnum(['None', 'Shortlisted', 'Offer sent', 'Joined', 'Rejected']).optional(),
+  consent: csvEnum(['Granted', 'Pending', 'Revoked']).optional(),
+  matchBucket: csvEnum(['high', 'mid', 'low']).optional(),
+  dupRisk: z.enum(['High', 'Low']).optional(),
+  sort: z.enum(['name', 'institute', 'stream', 'matchReady', 'evaluationStatus', 'offerStatus', 'dupRisk', 'consent']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),

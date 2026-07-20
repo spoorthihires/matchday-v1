@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import type { EmployerListItem } from '../../types/employers.js';
+import { SortableHeader } from '../../components/table/SortableHeader.js';
+import { EnumFilter, FilterPopover, RangeFilter, formatRangeSummary, type RangeValue } from '../../components/table/filters/index.js';
+import { INDUSTRY_OPTIONS, STATUS_OPTIONS } from './constants.js';
 
 // Ported from matchday-admin-app_23.html lines 1917-1931 (table.dm inside .dm-table-wrap/.dm-scroll)
 // and the renderEmployers()/stCls/pctCls/fmtResp row template around lines 3389-3409.
@@ -9,6 +12,16 @@ import type { EmployerListItem } from '../../types/employers.js';
 
 export type EmployerSortKey = 'name' | 'industry' | 'drives' | 'viewed' | 'shortlist' | 'offer' | 'respHours';
 export type EmployerRowAction = 'edit' | 'approve' | 'disable' | 'view-drives';
+
+export interface EmployerColumnFilters {
+  industry: string[];
+  status: string[];
+  drives: RangeValue;
+  viewed: RangeValue;
+  shortlist: RangeValue;
+  offer: RangeValue;
+  respHours: RangeValue;
+}
 
 export interface EmployersTableProps {
   items: EmployerListItem[];
@@ -20,6 +33,9 @@ export interface EmployersTableProps {
   order: 'asc' | 'desc';
   onRowAction: (action: EmployerRowAction, id: string) => void;
   isLoading?: boolean;
+  filters: EmployerColumnFilters;
+  onFilterChange: <K extends keyof EmployerColumnFilters>(key: K, value: EmployerColumnFilters[K]) => void;
+  onFilterClear: (key: keyof EmployerColumnFilters) => void;
 }
 
 // stCls from the prototype (line 3392): Active→st-active, Pending→st-pending,
@@ -31,21 +47,7 @@ const STATUS_CLASS: Record<EmployerListItem['status'], string> = {
   Disabled: 'st-archived',
 };
 
-// Column order mirrors the prototype's <thead> exactly (lines 1918-1929).
-interface Column { label: string; sortKey?: EmployerSortKey; className?: string; }
-const COLUMNS: Column[] = [
-  { label: 'Employer', sortKey: 'name' },
-  { label: 'Industry', sortKey: 'industry' },
-  { label: 'Active Drives', sortKey: 'drives', className: 'r' },
-  { label: 'Candidates Viewed', sortKey: 'viewed', className: 'r' },
-  { label: 'Shortlist Rate', sortKey: 'shortlist', className: 'r' },
-  { label: 'Offer Rate', sortKey: 'offer', className: 'r' },
-  { label: 'Response Time', sortKey: 'respHours', className: 'r' },
-  { label: 'Status' },
-  { label: 'Actions', className: 'r' },
-];
-
-const COLSPAN = COLUMNS.length + 1; // +1 for the checkbox column
+const COLSPAN = 10; // 9 columns (8 data + Actions) + 1 checkbox column
 
 // empColors from the prototype (line 3363) — cycled by a stable hash of the (string) id since
 // real ids are Mongo ObjectIds rather than the prototype's small integers.
@@ -81,13 +83,9 @@ function respClass(h: number): string {
   return h <= 12 ? 'pct-good' : h <= 24 ? 'pct-mid' : 'pct-low';
 }
 
-function sortIcon(active: boolean, order: 'asc' | 'desc'): string {
-  if (!active) return 'ti-arrows-sort';
-  return order === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending';
-}
-
 export function EmployersTable({
   items, selectedIds, onToggle, onToggleAll, onSort, sort, order, onRowAction, isLoading,
+  filters, onFilterChange, onFilterClear,
 }: EmployersTableProps) {
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id));
   // Local, presentation-only UI state (which row's overflow menu is open) — mirrors
@@ -113,21 +111,58 @@ export function EmployersTable({
                 <i className="ti ti-check" />
               </span>
             </th>
-            {COLUMNS.map((col) => {
-              if (!col.sortKey) {
-                return <th key={col.label} className={col.className}>{col.label}</th>;
+            <SortableHeader label="Employer" sortKey="name" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader
+              label="Industry" sortKey="industry" sort={sort} order={order} onSort={onSort}
+              filter={<EnumFilter options={INDUSTRY_OPTIONS.map((i) => ({ value: i, label: i }))} value={filters.industry} onChange={(v) => onFilterChange('industry', v)} />}
+            />
+            <SortableHeader
+              label="Active Drives" sortKey="drives" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.drives, 'Select range')} active={!!(filters.drives.from || filters.drives.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.drives} onChange={(v) => onFilterChange('drives', v)} onClear={() => onFilterClear('drives')} close={close} />}
+                </FilterPopover>
               }
-              const active = sort === col.sortKey;
-              return (
-                <th
-                  key={col.label}
-                  className={`sortable${col.className ? ` ${col.className}` : ''}${active ? ' sorted' : ''}`}
-                  onClick={() => onSort(col.sortKey!)}
-                >
-                  {col.label} <i className={`ti ${sortIcon(active, order)} sa`} />
-                </th>
-              );
-            })}
+            />
+            <SortableHeader
+              label="Candidates Viewed" sortKey="viewed" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.viewed, 'Select range')} active={!!(filters.viewed.from || filters.viewed.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.viewed} onChange={(v) => onFilterChange('viewed', v)} onClear={() => onFilterClear('viewed')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Shortlist Rate" sortKey="shortlist" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.shortlist, 'Select range')} active={!!(filters.shortlist.from || filters.shortlist.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.shortlist} onChange={(v) => onFilterChange('shortlist', v)} onClear={() => onFilterClear('shortlist')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Offer Rate" sortKey="offer" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.offer, 'Select range')} active={!!(filters.offer.from || filters.offer.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.offer} onChange={(v) => onFilterChange('offer', v)} onClear={() => onFilterClear('offer')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Response Time" sortKey="respHours" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.respHours, 'Select range')} active={!!(filters.respHours.from || filters.respHours.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.respHours} onChange={(v) => onFilterChange('respHours', v)} onClear={() => onFilterClear('respHours')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <th>
+              <div className="col-label">Status</div>
+              <div className="col-filter-row">
+                <EnumFilter options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))} value={filters.status} onChange={(v) => onFilterChange('status', v)} />
+              </div>
+            </th>
+            <th className="r">Actions</th>
           </tr>
         </thead>
         <tbody>

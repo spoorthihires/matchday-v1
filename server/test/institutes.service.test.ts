@@ -67,8 +67,28 @@ describe('institutes.service', () => {
   it('filters by status and searches by q', async () => {
     await seedInstituteWithFunnel('Active');
     await createInstitute({ ...baseInput(), name: 'Bootcamp X', type: 'Bootcamp', status: 'Pending' }, 'Platform Admin');
-    expect((await listInstitutes({ status: 'Pending' })).total).toBe(1);
+    expect((await listInstitutes({ status: ['Pending'] })).total).toBe(1);
     expect((await listInstitutes({ q: 'cbit' })).total).toBe(1);
+  });
+
+  it('CSV multi-value type filter accepts more than one selected option', async () => {
+    await seedInstituteWithFunnel('Active'); // CBIT, Engineering College
+    await createInstitute({ ...baseInput(), name: 'Bootcamp X', type: 'Bootcamp', status: 'Pending' }, 'Platform Admin');
+    await createInstitute({ ...baseInput(), name: 'Big U', type: 'University', status: 'Pending' }, 'Platform Admin');
+    const res = await listInstitutes({ type: ['Engineering College', 'Bootcamp'] });
+    expect(res.total).toBe(2);
+    expect(res.items.map((i) => i.name).sort()).toEqual(['Bootcamp X', 'CBIT']);
+  });
+
+  it('range-filters a derived funnel column (matchReadyFrom/To) via JS post-processing', async () => {
+    await seedInstituteWithFunnel('Active'); // matchReadyPct 40
+    await createInstitute({ ...baseInput(), name: 'ZeroInst', status: 'Active' }, 'Platform Admin'); // matchReadyPct 0
+    const onlyHigh = await listInstitutes({ matchReadyFrom: 10 });
+    expect(onlyHigh.total).toBe(1);
+    expect(onlyHigh.items[0].name).toBe('CBIT');
+    const bounded = await listInstitutes({ matchReadyFrom: 0, matchReadyTo: 0 });
+    expect(bounded.total).toBe(1);
+    expect(bounded.items[0].name).toBe('ZeroInst');
   });
 
   it('sorts by a funnel column (matchReady desc)', async () => {
