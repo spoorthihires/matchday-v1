@@ -30,7 +30,15 @@ export async function getRegistration(id: string) {
   return r;
 }
 
-async function upsertEmployerFrom(reg: { company: string; industry: string; submittedBy: string }, actor: string) {
+async function upsertEmployerFrom(reg: { company: string; industry: string; submittedBy: string; employerId?: Types.ObjectId | null }, actor: string) {
+  if (reg.employerId) {
+    const emp = await Employer.findById(reg.employerId);
+    if (emp) {
+      if (emp.status === 'Pending') { emp.status = 'Active'; await emp.save(); }
+      return;
+    }
+  }
+  // fallback: name-match/create (unchanged)
   const escaped = reg.company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const existing = await Employer.findOne({ name: new RegExp(`^${escaped}$`, 'i') });
   if (existing) return;

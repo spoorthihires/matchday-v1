@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { getEmployerPortal, listEmployerDrives, getEmployerDrive, createEmployerRegistration } from './employerPortal.service.js';
+import {
+  getEmployerPortal, listEmployerDrives, getEmployerDrive, createEmployerRegistration,
+  listEmployerRegistrations, getEmployerRegistration,
+} from './employerPortal.service.js';
 import { createRegistrationSchema } from './employerPortal.schemas.js';
 
 export async function employerPortalController(req: Request, res: Response) {
@@ -21,4 +24,12 @@ export async function createEmployerRegistrationController(req: Request, res: Re
   const parsed = createRegistrationSchema.parse(req.body);
   const result = await createEmployerRegistration(req.userId as string, parsed);
   res.status(201).json(result);
+}
+
+export async function employerRegistrationsController(req: Request, res: Response) {
+  res.json(await listEmployerRegistrations(req.userId as string));
+}
+
+export async function employerRegistrationController(req: Request, res: Response) {
+  res.json(await getEmployerRegistration(req.userId as string, req.params.id));
 }

@@ -188,3 +188,97 @@ describe('POST /api/me/employer/registrations', () => {
     expect(reg!.company).not.toBe('EvilCo');
   });
 });
+
+describe('GET /api/me/employer/registrations (tracker)', () => {
+  it('lists only the caller employer\'s registrations, newest first, in tracker projection', async () => {
+    const empA = await employer({ name: 'Acme' });
+    const empB = await employer({ name: 'Beta', email: 'b@b.test' });
+    const d = await drive();
+    const tokA = employerToken(empA);
+    const app = createApp();
+
+    await request(app).post('/api/me/employer/registrations').set('Authorization', `Bearer ${tokA}`).send(basePayload(String(d._id)));
+    const d2 = await drive({ name: 'D2' });
+    await request(app).post('/api/me/employer/registrations').set('Authorization', `Bearer ${tokA}`).send(basePayload(String(d2._id)));
+    // employer B's own registration must not leak into A's list
+    const tokB = employerToken(empB);
+    const d3 = await drive({ name: 'D3' });
+    await request(app).post('/api/me/employer/registrations').set('Authorization', `Bearer ${tokB}`).send(basePayload(String(d3._id)));
+
+    const resA = await request(app).get('/api/me/employer/registrations').set('Authorization', `Bearer ${tokA}`);
+    expect(resA.status).toBe(200);
+    expect(resA.body.items).toHaveLength(2);
+    expect(resA.body.items.every((r: { driveName: string }) => r.driveName !== 'D3')).toBe(true);
+    const item = resA.body.items[0];
+    expect(item).toMatchObject({ role: 'Data Analyst', openings: 3, status: 'Pending review' });
+    expect(item).toHaveProperty('id');
+    expect(item).toHaveProperty('driveId');
+    expect(item).toHaveProperty('driveName');
+    expect(item).toHaveProperty('submittedAt');
+    expect(item).toHaveProperty('latestActivity');
+
+    const resB = await request(app).get('/api/me/employer/registrations').set('Authorization', `Bearer ${tokB}`);
+    expect(resB.status).toBe(200);
+    expect(resB.body.items).toHaveLength(1);
+    expect(resB.body.items[0].driveName).toBe('D3');
+  });
+
+  it('403 for an admin token; 401 for no token', async () => {
+    const app = createApp();
+    const noToken = await request(app).get('/api/me/employer/registrations');
+    expect(noToken.status).toBe(401);
+
+    const adminTok = signToken({ sub: 'admin1', role: 'admin' });
+    const forbidden = await request(app).get('/api/me/employer/registrations').set('Authorization', `Bearer ${adminTok}`);
+    expect(forbidden.status).toBe(403);
+  });
+});
+
+describe('GET /api/me/employer/registrations/:id (tracker detail)', () => {
+  it('returns full detail for the caller\'s own registration', async () => {
+    const emp = await employer();
+    const d = await drive();
+    const tok = employerToken(emp);
+    const app = createApp();
+
+    const created = await request(app).post('/api/me/employer/registrations').set('Authorization', `Bearer ${tok}`).send(basePayload(String(d._id)));
+    const id = created.body.id;
+
+    const res = await request(app).get(`/api/me/employer/registrations/${id}`).set('Authorization', `Bearer ${tok}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id, driveName: 'D', role: 'Data Analyst', status: 'Pending review' });
+    expect(res.body.details?.urgency).toBe('High');
+    expect(Array.isArray(res.body.activity)).toBe(true);
+  });
+
+  it('404s when the registration belongs to a different employer (no cross-employer leak)', async () => {
+    const empA = await employer({ name: 'Acme' });
+    const empB = await employer({ name: 'Beta', email: 'b@b.test' });
+    const d = await drive();
+    const app = createApp();
+
+    const created = await request(app).post('/api/me/employer/registrations')
+      .set('Authorization', `Bearer ${employerToken(empA)}`)
+      .send(basePayload(String(d._id)));
+    const id = created.body.id;
+
+    const res = await request(app).get(`/api/me/employer/registrations/${id}`)
+      .set('Authorization', `Bearer ${employerToken(empB)}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('404s for a well-formed but nonexistent id', async () => {
+    const emp = await employer();
+    const app = createApp();
+    const res = await request(app).get('/api/me/employer/registrations/64b000000000000000000000')
+      .set('Authorization', `Bearer ${employerToken(emp)}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('403 for an admin token', async () => {
+    const app = createApp();
+    const adminTok = signToken({ sub: 'admin1', role: 'admin' });
+    const res = await request(app).get('/api/me/employer/registrations/64b000000000000000000000').set('Authorization', `Bearer ${adminTok}`);
+    expect(res.status).toBe(403);
+  });
+});

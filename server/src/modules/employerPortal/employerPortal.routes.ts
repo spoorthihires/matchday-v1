@@ -4,6 +4,7 @@ import { requireAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import {
   employerPortalController, employerDrivesController, employerDriveController, createEmployerRegistrationController,
+  employerRegistrationsController, employerRegistrationController,
 } from './employerPortal.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
@@ -16,4 +17,6 @@ employerPortalRoutes.use('/employer', requireAuth, requireRole('employer'));
 employerPortalRoutes.get('/employer/drives', asyncHandler(employerDrivesController));
 employerPortalRoutes.get('/employer/drives/:id', asyncHandler(employerDriveController));
 employerPortalRoutes.post('/employer/registrations', asyncHandler(createEmployerRegistrationController));
+employerPortalRoutes.get('/employer/registrations', asyncHandler(employerRegistrationsController));
+employerPortalRoutes.get('/employer/registrations/:id', asyncHandler(employerRegistrationController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));

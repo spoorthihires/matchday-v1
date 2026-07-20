@@ -22,6 +22,8 @@ export async function getEmployerPortal(employerId: string) {
   const now = new Date();
   const upcoming = await Slot.find({ employerId: empObjId, date: { $gte: now } }).sort({ date: 1 }).limit(20).lean();
   const calendar = upcoming.map((s) => ({ id: String(s._id), date: new Date(s.date).toISOString(), start: s.start, end: s.end, driveId: String(s.driveId) }));
+  const regRows = await RegistrationRequest.find({ employerId: empObjId }).sort({ createdAt: -1 }).limit(5).lean();
+  const registrations = regRows.map((r) => ({ id: String(r._id), driveName: r.driveName ?? '', role: r.role, status: r.status }));
   return {
     profile: {
       id: String(emp._id), name: emp.name, email: emp.email ?? '', industry: emp.industry,
@@ -30,7 +32,7 @@ export async function getEmployerPortal(employerId: string) {
     dashboard: {
       kpis: { activeDrives, upcomingInterviews: calendar.length, totalSlots },
       calendar,
-      registrations: [] as unknown[],   // placeholder — filled by Slice 3
+      registrations,
       shortlist: [] as unknown[],       // placeholder — filled by Slice 6
     },
   };
@@ -109,4 +111,17 @@ export async function createEmployerRegistration(employerId: string, input: Regi
     details: input.details ?? {},
   });
   return { id: String(reg._id), status: reg.status, driveName: reg.driveName, role: reg.role };
+}
+
+// --- Registration tracker (Slice 3) ---------------------------------------
+export async function listEmployerRegistrations(employerId: string) {
+  const rows = await RegistrationRequest.find({ employerId }).sort({ createdAt: -1 }).lean();
+  return { items: rows.map((r) => ({ id: String(r._id), driveId: String(r.driveId ?? ''), driveName: r.driveName ?? '', role: r.role, openings: r.openings ?? 0, status: r.status, submittedAt: new Date(r.createdAt).toISOString(), latestActivity: r.activity?.[0]?.action ?? '' })) };
+}
+
+export async function getEmployerRegistration(employerId: string, id: string) {
+  if (!Types.ObjectId.isValid(id)) throw new HttpError(404, 'Registration not found', 'not_found');
+  const r = await RegistrationRequest.findById(id).lean();
+  if (!r || String(r.employerId) !== String(employerId)) throw new HttpError(404, 'Registration not found', 'not_found');
+  return { id: String(r._id), driveName: r.driveName, role: r.role, openings: r.openings, ctcRange: r.ctcRange, skills: r.skills, slot: r.slot, jd: r.jd, status: r.status, submittedAt: new Date(r.createdAt).toISOString(), activity: (r.activity ?? []).map((a) => ({ action: a.action, by: a.by, at: new Date(a.at).toISOString() })), details: r.details ?? {} };
 }
