@@ -4,6 +4,7 @@ import { Drive } from '../../models/Drive.js';
 import { Institute } from '../../models/Institute.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Application } from '../../models/Application.js';
+import { Employer } from '../../models/Employer.js';
 import { MATCH_READY_STAGES, MATCH_READY_STAGE_SET } from '../../constants/stages.js';
 import { isEligible } from '../seekerPortal/seekerPortal.service.js';
 import { codeFor, evaluationLabel } from '../jobseekers/jobseekers.service.js';
@@ -96,3 +97,50 @@ export async function requirePoolMember(employerId: string, driveId: string, job
 }
 
 export { redactCandidate };
+
+export async function getPassport(employerId: string, driveId: string, jobseekerId: string) {
+  const { seeker } = await requirePoolMember(employerId, driveId, jobseekerId);
+  const inst = await Institute.findById(seeker.instituteId).select('type').lean<{ type?: string }>();
+  const app = await Application.findOne({ employerId, driveId, jobseekerId }).lean();
+  const base = redactCandidate(seeker, inst?.type ?? '—', app);
+  const { factors } = candidateScore(seeker.cgpa, seeker.evaluationStatus, seeker.stage);
+  return {
+    ...base,
+    factors: {
+      cgpa: { weight: 0.5, value: factors.normCgpa, contribution: Math.round(100 * 0.5 * factors.normCgpa) },
+      evaluation: { weight: 0.3, value: factors.evalW, contribution: Math.round(100 * 0.3 * factors.evalW) },
+      stage: { weight: 0.2, value: factors.stageW, contribution: Math.round(100 * 0.2 * factors.stageW) },
+    },
+    notes: (app?.notes ?? []).map((n: { text: string; by?: string; at: Date }) => ({ text: n.text, by: n.by ?? '', at: new Date(n.at).toISOString() })),
+  };
+}
+
+export async function setDecision(employerId: string, driveId: string, jobseekerId: string, decision: 'Shortlisted' | 'Hold' | 'Rejected' | null) {
+  const { seeker } = await requirePoolMember(employerId, driveId, jobseekerId);
+  if (decision === null) {
+    const existing = await Application.findOne({ employerId, driveId, jobseekerId });
+    if (existing && (existing.notes?.length ?? 0) === 0) await existing.deleteOne();
+    else if (existing) { existing.decision = null; await existing.save(); }
+  } else {
+    await Application.findOneAndUpdate(
+      { employerId, driveId, jobseekerId },
+      { $set: { decision }, $setOnInsert: { employerId, driveId, jobseekerId } },
+      { upsert: true, new: true },
+    );
+  }
+  const app = await Application.findOne({ employerId, driveId, jobseekerId }).lean();
+  const inst = await Institute.findById(seeker.instituteId).select('type').lean<{ type?: string }>();
+  return redactCandidate(seeker, inst?.type ?? '—', app);
+}
+
+export async function addNote(employerId: string, driveId: string, jobseekerId: string, text: string) {
+  await requirePoolMember(employerId, driveId, jobseekerId);
+  const emp = await Employer.findById(employerId).select('spoc name').lean<{ spoc?: string; name?: string }>();
+  const by = emp?.spoc || emp?.name || 'Employer';
+  await Application.findOneAndUpdate(
+    { employerId, driveId, jobseekerId },
+    { $push: { notes: { text, by, at: new Date() } }, $setOnInsert: { employerId, driveId, jobseekerId } },
+    { upsert: true, new: true },
+  );
+  return getPassport(employerId, driveId, jobseekerId);
+}

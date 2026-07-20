@@ -7,6 +7,7 @@ import { Drive } from '../src/models/Drive.js';
 import { Institute } from '../src/models/Institute.js';
 import { Jobseeker } from '../src/models/Jobseeker.js';
 import { RegistrationRequest } from '../src/models/RegistrationRequest.js';
+import { Application } from '../src/models/Application.js';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 
 beforeAll(setupTestDb);
@@ -76,5 +77,78 @@ describe('GET /api/me/employer/drives/:id/candidates', () => {
     expect((await request(app).get(`/api/me/employer/drives/${d._id}/candidates`)).status).toBe(401);
     const adminTok = signToken({ sub: String(emp._id), role: 'admin' });
     expect((await request(app).get(`/api/me/employer/drives/${d._id}/candidates`).set('Authorization', `Bearer ${adminTok}`)).status).toBe(403);
+  });
+});
+
+async function poolSeekerId(instId: unknown) {
+  const s = await seeker(instId);
+  return String(s._id);
+}
+
+describe('GET .../candidates/:jobseekerId (passport)', () => {
+  it('returns the redacted passport with factor breakdown + notes', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const res = await request(createApp()).get(`/api/me/employer/drives/${d._id}/candidates/${jsId}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('name');
+    expect(res.body.code).toMatch(/^C-/);
+    expect(res.body.factors.cgpa.weight).toBe(0.5);
+    expect(Array.isArray(res.body.notes)).toBe(true);
+  });
+
+  it('404 for a jobseeker not in the pool (Applied stage)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id, { stage: 'Applied' });
+    const res = await request(createApp()).get(`/api/me/employer/drives/${d._id}/candidates/${s._id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
+});
+
+describe('PUT .../candidates/:jobseekerId/decision', () => {
+  it('upserts an Application and is employer-scoped', async () => {
+    const a = await employer(); const b = await employer({ email: 'b@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d); await approve(b, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const app = createApp();
+    const put = await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ decision: 'Shortlisted' });
+    expect(put.status).toBe(200);
+    expect(put.body.decision).toBe('Shortlisted');
+    expect(await Application.countDocuments({ employerId: a._id, driveId: d._id, jobseekerId: jsId })).toBe(1);
+    // employer B sees NO decision on the same candidate
+    const bList = await request(app).get(`/api/me/employer/drives/${d._id}/candidates`).set('Authorization', `Bearer ${tokenFor(b)}`);
+    expect(bList.body.items.find((c: { jobseekerId: string }) => c.jobseekerId === jsId).decision).toBeNull();
+  });
+
+  it('clearing the decision to null with no notes deletes the row', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const app = createApp();
+    await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: 'Hold' });
+    await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${jsId}/decision`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ decision: null });
+    expect(await Application.countDocuments({ employerId: emp._id, driveId: d._id, jobseekerId: jsId })).toBe(0);
+  });
+});
+
+describe('POST .../candidates/:jobseekerId/notes', () => {
+  it('appends a private note visible only to that employer', async () => {
+    const a = await employer(); const b = await employer({ email: 'b2@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d); await approve(b, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const app = createApp();
+    const note = await request(app).post(`/api/me/employer/drives/${d._id}/candidates/${jsId}/notes`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ text: 'Strong SQL' });
+    expect(note.status).toBe(200);
+    expect(note.body.notes[0].text).toBe('Strong SQL');
+    expect(note.body.notes[0].by).toBe('Jane'); // employer spoc
+    const bPass = await request(app).get(`/api/me/employer/drives/${d._id}/candidates/${jsId}`).set('Authorization', `Bearer ${tokenFor(b)}`);
+    expect(bPass.body.notes).toHaveLength(0);
+  });
+
+  it('rejects an empty note (400)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const jsId = await poolSeekerId(inst._id);
+    const res = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${jsId}/notes`).set('Authorization', `Bearer ${tokenFor(emp)}`).send({ text: '' });
+    expect(res.status).toBe(400);
   });
 });
