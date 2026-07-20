@@ -44,6 +44,7 @@ function renderPage() {
           <Routes>
             <Route path="/employer/drives" element={<EmployerDrives />} />
             <Route path="/employer/drives/:id" element={<div>DRIVE DETAIL PAGE</div>} />
+            <Route path="/employer/drives/:id/register" element={<div>REGISTER PLACEHOLDER</div>} />
             <Route path="/employer/coming-soon/:slug" element={<div>COMING SOON PAGE</div>} />
           </Routes>
         </AuthProvider>
@@ -112,5 +113,17 @@ describe('EmployerDrives', () => {
     await userEvent.click(within(activeCard).getByRole('button', { name: /view/i }));
 
     expect(await screen.findByText('DRIVE DETAIL PAGE')).toBeInTheDocument();
+  });
+
+  it('navigates to the registration wizard when the Register CTA is clicked', async () => {
+    seedAuth();
+    mockDrivesFetch();
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
+    const activeCard = screen.getByText('ActiveOne').closest('.dcard') as HTMLElement;
+    await userEvent.click(within(activeCard).getByRole('button', { name: /register/i }));
+
+    expect(await screen.findByText('REGISTER PLACEHOLDER')).toBeInTheDocument();
   });
 });

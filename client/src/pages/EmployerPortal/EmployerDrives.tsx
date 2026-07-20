@@ -174,7 +174,7 @@ export function EmployerDrives() {
                   key={drive.id}
                   drive={drive}
                   onView={() => navigate(`/employer/drives/${drive.id}`)}
-                  onRegister={() => navigate('/employer/coming-soon/register')}
+                  onRegister={() => navigate(`/employer/drives/${drive.id}/register`)}
                 />
               ))}
             </div>
