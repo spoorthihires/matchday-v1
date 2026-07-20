@@ -7,6 +7,7 @@ import {
   employerRegistrationsController, employerRegistrationController, employerSlotsController, createEmployerSlotController,
   updateEmployerSlotController, deleteEmployerSlotController,
 } from './employerPortal.controller.js';
+import { candidatesController } from './employerCandidates.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -24,4 +25,5 @@ employerPortalRoutes.get('/employer/drives/:id/slots', asyncHandler(employerSlot
 employerPortalRoutes.post('/employer/drives/:id/slots', asyncHandler(createEmployerSlotController));
 employerPortalRoutes.patch('/employer/drives/:id/slots/:slotId', asyncHandler(updateEmployerSlotController));
 employerPortalRoutes.delete('/employer/drives/:id/slots/:slotId', asyncHandler(deleteEmployerSlotController));
+employerPortalRoutes.get('/employer/drives/:id/candidates', asyncHandler(candidatesController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));
