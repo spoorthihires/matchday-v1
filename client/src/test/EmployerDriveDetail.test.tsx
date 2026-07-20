@@ -25,11 +25,16 @@ const DRIVE_DETAIL = {
   streamId: 's1',
 };
 
-function mockDriveFetch(status = 200, body: unknown = DRIVE_DETAIL) {
-  const fetchMock = vi.fn().mockResolvedValue({
-    ok: status < 400,
-    status,
-    json: async () => (status < 400 ? body : { error: { message: 'Drive not found', code: 'not_found' } }),
+function mockDriveFetch(status = 200, body: unknown = DRIVE_DETAIL, registrations: unknown[] = []) {
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url.includes('/me/employer/registrations')) {
+      return { ok: true, status: 200, json: async () => ({ items: registrations }) };
+    }
+    return {
+      ok: status < 400,
+      status,
+      json: async () => (status < 400 ? body : { error: { message: 'Drive not found', code: 'not_found' } }),
+    };
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
@@ -45,7 +50,7 @@ function renderPage(path = '/employer/drives/d1') {
             <Route path="/employer/drives" element={<div>MARKETPLACE PAGE</div>} />
             <Route path="/employer/drives/:id" element={<EmployerDriveDetail />} />
             <Route path="/employer/drives/:id/register" element={<div>REGISTER PLACEHOLDER</div>} />
-            <Route path="/employer/coming-soon/slots" element={<div>SLOTS PLACEHOLDER</div>} />
+            <Route path="/employer/drives/:id/slots" element={<div>SLOTS PLACEHOLDER</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -83,13 +88,24 @@ describe('EmployerDriveDetail', () => {
     expect(await screen.findByText('REGISTER PLACEHOLDER')).toBeInTheDocument();
   });
 
-  it('navigates to the slots coming-soon page when View slots is clicked', async () => {
+  it('disables View slots when there is no approved registration for this drive', async () => {
     seedAuth();
-    mockDriveFetch();
+    mockDriveFetch(200, DRIVE_DETAIL, []);
     renderPage();
 
     await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: /view slots/i }));
+    expect(screen.getByRole('button', { name: /view slots/i })).toBeDisabled();
+  });
+
+  it('enables View slots and navigates to the slots page when the drive has an approved registration', async () => {
+    seedAuth();
+    mockDriveFetch(200, DRIVE_DETAIL, [{ id: 'r1', driveId: 'd1', driveName: 'ActiveOne', role: 'SDE', openings: 2, status: 'Approved', submittedAt: '2026-07-01T00:00:00.000Z', latestActivity: '2026-07-02T00:00:00.000Z' }]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
+    const btn = screen.getByRole('button', { name: /view slots/i });
+    await waitFor(() => expect(btn).toBeEnabled());
+    await userEvent.click(btn);
 
     expect(await screen.findByText('SLOTS PLACEHOLDER')).toBeInTheDocument();
   });

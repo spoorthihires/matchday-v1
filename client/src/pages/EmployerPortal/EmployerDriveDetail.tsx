@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployerDrive } from './hooks/useEmployerDrives.js';
+import { useEmployerRegistrations } from './hooks/useEmployerRegistrations.js';
 import type { EmployerDriveDetail as EmployerDriveDetailType } from '../../types/employer.js';
 import './employerBase.js';
 
@@ -104,6 +105,8 @@ export function EmployerDriveDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useEmployerDrive(id!);
+  const { data: regsData } = useEmployerRegistrations();
+  const approvedForDrive = (regsData?.items ?? []).some((r) => r.driveId === id && r.status === 'Approved');
 
   if (isLoading) {
     return (
@@ -183,7 +186,13 @@ export function EmployerDriveDetail() {
                 <svg className="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
             )}
-            <button type="button" className="btn btn-ghost" onClick={() => navigate('/employer/coming-soon/slots')}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={!approvedForDrive}
+              title={approvedForDrive ? undefined : 'Available once your registration is approved'}
+              onClick={() => navigate(`/employer/drives/${id}/slots`)}
+            >
               View slots
             </button>
             <div className="ap-note">
