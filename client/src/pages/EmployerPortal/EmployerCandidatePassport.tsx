@@ -72,7 +72,7 @@ export function EmployerCandidatePassport() {
         <div className="card-head"><h3>Match score — {p.matchScore}</h3></div>
         <div className="card-body" style={{ display: 'grid', gap: 8 }}>
           {([['CGPA', p.factors.cgpa], ['Evaluation', p.factors.evaluation], ['Stage', p.factors.stage]] as const).map(([label, f]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div key={label} className="fact" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="fl">{label} (weight {Math.round(f.weight * 100)}%)</span>
               <span className="fv">+{f.contribution}</span>
             </div>
