@@ -52,7 +52,7 @@ export function EmployerCandidates() {
         </select>
         <div style={{ display: 'flex', gap: 6 }}>
           {DECISIONS.map((d) => (
-            <button key={d.key} type="button" className={`chip${filters.decision === d.key ? ' on' : ''}`}
+            <button key={d.key} type="button" className={`fchip${filters.decision === d.key ? ' on' : ''}`}
               onClick={() => setFilters((f) => ({ ...f, decision: d.key }))}>{d.label}</button>
           ))}
         </div>
@@ -68,7 +68,7 @@ export function EmployerCandidates() {
                 <div className="cand-row" key={c.jobseekerId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--line, #eee)' }}>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <span className="match-ring" title="Match score">{c.matchScore}</span>
-                    <div>
+                    <div className="fact">
                       <div className="fv">{c.code} <span className={`status-pill ${c.evalPill === 'Strong' ? 'st-approved' : 'st-inprog'}`}>{c.evalPill}</span></div>
                       <div className="fl">{c.branch} · {c.gradYear} · CGPA {c.cgpaBand} · {c.instituteCategory} · {c.evaluationLabel} · {c.stage}{c.decision ? ` · ${c.decision}` : ''}</div>
                     </div>
