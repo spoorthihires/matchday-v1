@@ -4,6 +4,8 @@ import { ApiError } from '../api/client.js';
 import { useAuth } from './AuthContext.js';
 import { useLogin } from '../hooks/useLogin.js';
 import { homePathFor } from './roles.js';
+import { ThemeToggle } from '../theme/ThemeToggle.js';
+import { BrandLogo } from '../theme/BrandLogo.js';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -31,9 +33,12 @@ export function LoginPage() {
     <div id="auth-screen">
       <header className="topbar">
         <div className="brand">
-          <img src="/logo.png" alt="MatchDay" className="brand-logo" />
+          <BrandLogo className="brand-logo" />
         </div>
-        <div className="env"><i className="ti ti-circle-filled" /><span>Production</span></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="env"><i className="ti ti-circle-filled" /><span>Production</span></div>
+          <ThemeToggle />
+        </div>
       </header>
       <div className="shell">
         <section className="panel" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.js';
+import { BrandLogo } from '../theme/BrandLogo.js';
 
 interface NavItem {
   label: string;
@@ -48,7 +49,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar" id="sidebar">
       <div className="sb-brand">
-        <img src="/logo.png" alt="MatchDay" className="brand-logo" />
+        <BrandLogo className="brand-logo" />
       </div>
       <nav className="sb-scroll">
         {NAV.map((item) => (
