@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../../api/client.js';
 import { useAuth } from '../../../auth/AuthContext.js';
 import type { EmployerDriveDetail, EmployerDrivesResponse } from '../../../types/employer.js';
@@ -17,6 +17,9 @@ export function useEmployerDrives(params: { q?: string; domain?: string }) {
     queryKey: ['employer-drives', params.q ?? '', params.domain ?? ''],
     queryFn: () => apiFetch<EmployerDrivesResponse>(`/me/employer/drives${qs ? `?${qs}` : ''}`, { token }),
     enabled: !!token,
+    // Keep the previous list visible while a filter/search change refetches, instead of
+    // flashing the empty "Loading drives…" state on every keystroke/chip click.
+    placeholderData: keepPreviousData,
   });
 }
 
