@@ -6,6 +6,7 @@ import { useLogin } from '../hooks/useLogin.js';
 import { homePathFor } from './roles.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { BrandLogo } from '../theme/BrandLogo.js';
+import { BrandMark } from '../theme/BrandMark.js';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -49,8 +50,26 @@ export function LoginPage() {
               Orchestrate Employers, Institutes, Vendors, Recruiters and Jobseekers across recurring Wednesday
               drives.
             </p>
+            <div className="rail" role="presentation">
+              <div className="day"><div className="dow">Mon</div></div>
+              <div className="day"><div className="dow">Tue</div></div>
+              <div className="day wed">
+                <BrandMark className="mark" />
+                <div className="dow">Wed</div>
+                <span className="tag">Match Day</span>
+              </div>
+              <div className="day"><div className="dow">Thu</div></div>
+              <div className="day"><div className="dow">Fri</div></div>
+            </div>
           </div>
-          <div className="foot">Secured with SSO &amp; multi-factor authentication · SOC 2 aligned</div>
+          <div>
+            <div className="metrics">
+              <div className="m"><div className="v mono">6</div><div className="k">days to hire, avg</div></div>
+              <div className="m"><div className="v mono">1,068</div><div className="k">profiles in June</div></div>
+              <div className="m"><div className="v mono">15</div><div className="k">pipeline stages</div></div>
+            </div>
+            <div className="foot">Secured with SSO &amp; multi-factor authentication · SOC 2 aligned</div>
+          </div>
         </section>
 
         <main className="authwrap">
