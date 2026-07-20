@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import type { JobseekerListItem } from '../../types/jobseekers.js';
+import { SortableHeader } from '../../components/table/SortableHeader.js';
+import { EnumFilter } from '../../components/table/filters/index.js';
+import { CONSENT_OPTIONS, EVAL_OPTIONS, OFFER_OPTIONS, STREAM_OPTIONS } from './constants.js';
 
 // Ported from matchday-admin-app_23.html lines 1666-1683 (table.dm inside .dm-table-wrap/.dm-scroll)
 // and the renderJobseekers()/badge/evalCls/offerCls/dupCls/consentCls row template around lines
@@ -13,8 +16,20 @@ import type { JobseekerListItem } from '../../types/jobseekers.js';
 // saves via the real PATCH /jobseekers/:id endpoint; Block/Unblock is fully wired; Reset Evaluation
 // opens a confirmation modal (ResetEvaluationModal.tsx) that is UI-only pending backend integration.
 
-export type JobseekerSortKey = 'name' | 'institute' | 'matchReady';
+export type JobseekerSortKey =
+  | 'name' | 'institute' | 'stream' | 'evaluationStatus' | 'matchReady' | 'offerStatus' | 'dupRisk' | 'consent';
 export type JobseekerRowAction = 'edit' | 'block' | 'unblock' | 'change-stream' | 'reset-evaluation';
+
+export interface InstituteOption { id: string; name: string; }
+
+export interface JobseekerColumnFilters {
+  instituteId: string[];
+  stream: string[];
+  evaluationStatus: string[];
+  offer: string[];
+  dupRisk: string[];
+  consent: string[];
+}
 
 export interface JobseekersTableProps {
   items: JobseekerListItem[];
@@ -26,6 +41,10 @@ export interface JobseekersTableProps {
   order: 'asc' | 'desc';
   onRowAction: (action: JobseekerRowAction, id: string) => void;
   isLoading?: boolean;
+  instituteOptions: InstituteOption[];
+  filters: JobseekerColumnFilters;
+  onFilterChange: <K extends keyof JobseekerColumnFilters>(key: K, value: JobseekerColumnFilters[K]) => void;
+  onFilterClear: (key: keyof JobseekerColumnFilters) => void;
 }
 
 // evalCls/offerCls/dupCls/consentCls from the prototype (lines 3957-3960), restricted to the
@@ -42,28 +61,11 @@ function pctClass(v: number): string {
   return v >= 70 ? 'pct-good' : v >= 40 ? 'pct-mid' : 'pct-low';
 }
 
-function sortIcon(active: boolean, order: 'asc' | 'desc'): string {
-  if (!active) return 'ti-arrows-sort';
-  return order === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending';
-}
-
-interface Column { label: string; sortKey?: JobseekerSortKey; className?: string; }
-const COLUMNS: Column[] = [
-  { label: 'Candidate', sortKey: 'name' },
-  { label: 'Institute', sortKey: 'institute' },
-  { label: 'Stream' },
-  { label: 'Evaluation' },
-  { label: 'Match', sortKey: 'matchReady', className: 'r' },
-  { label: 'Offer' },
-  { label: 'Dup. Risk' },
-  { label: 'Consent' },
-  { label: 'Actions', className: 'r' },
-];
-
-const COLSPAN = COLUMNS.length + 1; // +1 for the checkbox column
+const COLSPAN = 10; // 9 columns (8 data + Actions) + 1 checkbox column
 
 export function JobseekersTable({
   items, selectedIds, onToggle, onToggleAll, onSort, sort, order, onRowAction, isLoading,
+  instituteOptions, filters, onFilterChange, onFilterClear,
 }: JobseekersTableProps) {
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id));
   // Local, presentation-only UI state (which row's overflow menu is open) — mirrors
@@ -89,21 +91,69 @@ export function JobseekersTable({
                 <i className="ti ti-check" />
               </span>
             </th>
-            {COLUMNS.map((col) => {
-              if (!col.sortKey) {
-                return <th key={col.label} className={col.className}>{col.label}</th>;
+            <SortableHeader label="Candidate" sortKey="name" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader
+              label="Institute" sortKey="institute" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={instituteOptions.map((i) => ({ value: i.id, label: i.name }))}
+                  value={filters.instituteId}
+                  onChange={(v) => onFilterChange('instituteId', v)}
+                />
               }
-              const active = sort === col.sortKey;
-              return (
-                <th
-                  key={col.label}
-                  className={`sortable${col.className ? ` ${col.className}` : ''}${active ? ' sorted' : ''}`}
-                  onClick={() => onSort(col.sortKey!)}
-                >
-                  {col.label} <i className={`ti ${sortIcon(active, order)} sa`} />
-                </th>
-              );
-            })}
+            />
+            <SortableHeader
+              label="Stream" sortKey="stream" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={STREAM_OPTIONS.map((s) => ({ value: s, label: s }))}
+                  value={filters.stream}
+                  onChange={(v) => onFilterChange('stream', v)}
+                />
+              }
+            />
+            <SortableHeader
+              label="Evaluation" sortKey="evaluationStatus" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={EVAL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  value={filters.evaluationStatus}
+                  onChange={(v) => onFilterChange('evaluationStatus', v)}
+                />
+              }
+            />
+            <SortableHeader label="Match" sortKey="matchReady" className="r" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader
+              label="Offer" sortKey="offerStatus" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={OFFER_OPTIONS.map((o) => ({ value: o, label: o }))}
+                  value={filters.offer}
+                  onChange={(v) => onFilterChange('offer', v)}
+                />
+              }
+            />
+            <SortableHeader
+              label="Dup. Risk" sortKey="dupRisk" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={[{ value: 'High', label: 'High' }, { value: 'Low', label: 'Low' }]}
+                  value={filters.dupRisk}
+                  onChange={(v) => onFilterChange('dupRisk', v)}
+                />
+              }
+            />
+            <SortableHeader
+              label="Consent" sortKey="consent" sort={sort} order={order} onSort={onSort}
+              filter={
+                <EnumFilter
+                  options={CONSENT_OPTIONS.map((c) => ({ value: c, label: c }))}
+                  value={filters.consent}
+                  onChange={(v) => onFilterChange('consent', v)}
+                />
+              }
+            />
+            <th className="r">Actions</th>
           </tr>
         </thead>
         <tbody>

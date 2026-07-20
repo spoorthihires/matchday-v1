@@ -7,7 +7,12 @@ export interface DriveListItem {
 }
 export interface DriveListResponse { items: DriveListItem[]; total: number; page: number; limit: number; }
 export interface DriveListParams {
+  // status/stream/domain accept a single value (the toolbar dropdowns) or CSV (a per-column
+  // filter popover) — see drives.schemas.ts#csv.
   q?: string; status?: string; month?: string; stream?: string; domain?: string;
+  monthFrom?: string; monthTo?: string;
+  candCapFrom?: string; candCapTo?: string; empCapFrom?: string; empCapTo?: string;
+  slotCapFrom?: string; slotCapTo?: string;
   sort?: string; order?: 'asc' | 'desc'; page?: number; limit?: number;
 }
 export interface EvaluationStage { key: 'mcq' | 'coding' | 'tara' | 'assignments'; enabled: boolean; config: Record<string, number>; evalConfigId?: string; }

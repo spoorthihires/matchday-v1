@@ -411,11 +411,8 @@
   .dm-table-wrap{background:var(--white);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
   .dm-scroll{overflow-x:auto}
   table.dm{width:100%;border-collapse:collapse;min-width:1120px}
-  table.dm th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;text-align:left;padding:12px 14px;background:var(--indigo-050);border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
-  table.dm th.sortable{cursor:pointer;user-select:none}
-  table.dm th.sortable:hover{color:var(--indigo)}
-  table.dm th .sa{font-size:13px;opacity:.4;vertical-align:-2px}
-  table.dm th.sorted .sa{opacity:1;color:var(--indigo)}
+  table.dm th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;text-align:left;padding:10px 12px;background:var(--indigo-050);border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;vertical-align:top}
+  table.dm th .sa{font-size:12px}
   table.dm th.r,table.dm td.r{text-align:right}
   table.dm th.c,table.dm td.c{text-align:center}
   table.dm td{padding:12px 14px;border-top:1px solid var(--line);font-size:13px;white-space:nowrap;vertical-align:middle}
@@ -464,15 +461,25 @@
   .kebab-menu button.danger:hover{background:var(--danger-bg)}
   .kebab-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 
-  /* column filter popovers (table.dm header filters) */
-  .col-filter-trigger{width:20px;height:20px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--faint);display:inline-grid;place-items:center;cursor:pointer;vertical-align:-4px;margin-left:2px;font-size:12px}
-  .col-filter-trigger:hover{background:var(--indigo-100);color:var(--indigo)}
-  .col-filter-trigger.active{color:var(--indigo);background:var(--indigo-100)}
-  .col-filter-pop{position:absolute;z-index:70;top:100%;left:0;margin-top:4px;background:var(--white);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:10px;min-width:210px;text-transform:none;letter-spacing:normal;font-weight:400;cursor:default;white-space:normal}
+  /* column header: label + always-visible inline filter row (table.dm header filters) */
+  .col-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;white-space:nowrap}
+  .col-filter-row{display:flex;align-items:center;gap:4px;margin-top:6px;text-transform:none;letter-spacing:normal}
+  .col-select,.col-text-input{appearance:none;background:var(--white);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink);width:104px;min-width:0}
+  .col-select:focus,.col-text-input:focus{outline:none;border-color:var(--indigo)}
+  .col-sort-btn{flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--white);color:var(--faint);display:inline-grid;place-items:center;cursor:pointer}
+  .col-sort-btn:hover{background:var(--indigo-100);color:var(--indigo)}
+  .col-sort-btn.active{color:var(--indigo);background:var(--indigo-100);border-color:var(--indigo)}
+  .col-range-wrap{position:relative;display:inline-block}
+  .col-range-trigger{display:flex;align-items:center;gap:5px;background:var(--white);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-family:inherit;font-size:12px;font-weight:500;color:var(--muted);width:104px;cursor:pointer}
+  .col-range-trigger .crt-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}
+  .col-range-trigger i{font-size:13px;flex:0 0 auto}
+  .col-range-trigger.active{color:var(--ink);border-color:var(--indigo)}
+  .col-range-trigger.active .crt-text{color:var(--indigo);font-weight:600}
+  .col-filter-pop{z-index:70;background:var(--white);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:10px;min-width:210px;text-transform:none;letter-spacing:normal;font-weight:400;cursor:default;white-space:normal}
   .col-filter-pop .cf-opt{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;font-family:inherit;font-size:13px;color:var(--ink-2);padding:7px 8px;border-radius:7px;cursor:pointer;text-align:left}
   .col-filter-pop .cf-opt:hover{background:var(--indigo-050)}
   .col-filter-pop .cf-opt.on{color:var(--indigo);font-weight:600}
-  .col-filter-pop input[type=text],.col-filter-pop input[type=number],.col-filter-pop input[type=date]{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:inherit;font-size:13px;margin-bottom:6px;color:var(--ink)}
+  .col-filter-pop input[type=text],.col-filter-pop input[type=number],.col-filter-pop input[type=date]{display:block;width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:inherit;font-size:13px;margin-bottom:6px;color:var(--ink);box-sizing:border-box}
   .col-filter-pop .cal{padding:2px 0 0}
   .col-filter-pop .cal-cell{cursor:pointer}
   .col-filter-pop .cal-cell.picked{background:var(--indigo);color:#fff;font-weight:700}

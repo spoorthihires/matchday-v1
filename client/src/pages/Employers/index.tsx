@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
 import { pagerWindow } from '../../utils/pagerWindow.js';
+import { useTableSort } from '../../hooks/useTableSort.js';
+import { useColumnFilters } from '../../hooks/useColumnFilters.js';
 import type { EmployerListItem, EmployerListParams } from '../../types/employers.js';
 import { BulkBar } from './BulkBar.js';
 import { EmployerModal } from './EmployerModal.js';
@@ -28,29 +30,29 @@ function csvEscape(v: string | number): string {
 export function EmployersPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [sort, setSort] = useState<EmployerSortKey | undefined>(undefined);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(8);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
+  const { sort, order, onSort } = useTableSort<EmployerSortKey>(undefined, () => setPage(1));
+  const columnFilters = useColumnFilters(
+    {
+      industry: [] as string[], status: [] as string[],
+      drives: {} as { from?: string; to?: string },
+      viewed: {} as { from?: string; to?: string },
+      shortlist: {} as { from?: string; to?: string },
+      offer: {} as { from?: string; to?: string },
+      respHours: {} as { from?: string; to?: string },
+    },
+    () => setPage(1),
+  );
 
-  const params: EmployerListParams = { ...filters, sort, order, page, limit };
+  const params: EmployerListParams = { ...filters, sort, order, page, limit, ...columnFilters.toQueryParams() };
   const { data, isLoading, isError, error } = useEmployers(params);
   const { bulk, setStatus } = useEmployerMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
-    setPage(1);
-  }
-
-  function handleSort(key: EmployerSortKey) {
-    if (sort === key) {
-      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSort(key);
-      setOrder('asc');
-    }
     setPage(1);
   }
 
@@ -155,11 +157,14 @@ export function EmployersPage() {
             selectedIds={selectedIds}
             onToggle={toggle}
             onToggleAll={toggleAll}
-            onSort={handleSort}
+            onSort={onSort}
             sort={sort}
             order={order}
             onRowAction={handleRowAction}
             isLoading={isLoading}
+            filters={columnFilters.filters}
+            onFilterChange={columnFilters.setFilter}
+            onFilterClear={columnFilters.clearFilter}
           />
           <div className="dm-pager">
             <div className="pinfo">

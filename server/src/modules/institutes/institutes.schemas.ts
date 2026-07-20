@@ -12,10 +12,27 @@ export const createInstituteSchema = z.object({
 });
 export const updateInstituteSchema = createInstituteSchema.partial();
 
+// Splits a CSV query param into a trimmed, non-empty string array (multi-select column filters,
+// backward-compatible with a lone single value — see jobseekers.schemas.ts's identical helper).
+function csv() {
+  return z.string().transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean));
+}
+function pctRange() {
+  return z.coerce.number().int().min(0).max(100).optional();
+}
+
 export const listQuerySchema = z.object({
   q: z.string().optional(),
-  type: z.string().optional(),
-  status: z.string().optional(),
+  type: csv().optional(),
+  status: csv().optional(),
+  uploadedFrom: z.coerce.number().int().min(0).optional(),
+  uploadedTo: z.coerce.number().int().min(0).optional(),
+  signupFrom: pctRange(), signupTo: pctRange(),
+  completionFrom: pctRange(), completionTo: pctRange(),
+  matchReadyFrom: pctRange(), matchReadyTo: pctRange(),
+  shortlistFrom: pctRange(), shortlistTo: pctRange(),
+  offerFrom: pctRange(), offerTo: pctRange(),
+  joinedFrom: pctRange(), joinedTo: pctRange(),
   sort: z.enum(['name', 'type', 'uploaded', 'signup', 'completion', 'matchReady', 'shortlist', 'offer', 'joined']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
   page: z.coerce.number().int().min(1).default(1),

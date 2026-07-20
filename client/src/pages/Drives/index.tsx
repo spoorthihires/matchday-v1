@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
+import { useTableSort } from '../../hooks/useTableSort.js';
+import { useColumnFilters } from '../../hooks/useColumnFilters.js';
 import type { DriveListParams } from '../../types/drives.js';
 import { BulkBar } from './BulkBar.js';
 import { DrivesTable, type DriveRowAction, type DriveSortKey } from './DrivesTable.js';
@@ -26,9 +28,18 @@ function csvEscape(v: string | number): string {
 // under ProtectedRoute with no outer AppShell of its own.
 export function DrivesPage() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [sort, setSort] = useState<DriveSortKey | undefined>(undefined);
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
+  const { sort, order, onSort } = useTableSort<DriveSortKey>(undefined, () => setPage(1));
+  const columnFilters = useColumnFilters(
+    {
+      domain: [] as string[], stream: [] as string[], status: [] as string[],
+      month: {} as { from?: string; to?: string },
+      candCap: {} as { from?: string; to?: string },
+      empCap: {} as { from?: string; to?: string },
+      slotCap: {} as { from?: string; to?: string },
+    },
+    () => setPage(1),
+  );
   const [limit, setLimit] = useState(8);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [wizard, setWizard] = useState<WizardState>(null);
@@ -48,22 +59,12 @@ export function DrivesPage() {
     // reopen the wizard right after `new` is stripped above.
   }, []);
 
-  const params: DriveListParams = { ...filters, sort, order, page, limit };
+  const params: DriveListParams = { ...filters, sort, order, page, limit, ...columnFilters.toQueryParams() };
   const { data, isLoading, isError, error } = useDrives(params);
   const { clone, bulk, setStatus } = useDriveMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
-    setPage(1);
-  }
-
-  function handleSort(key: DriveSortKey) {
-    if (sort === key) {
-      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSort(key);
-      setOrder('asc');
-    }
     setPage(1);
   }
 
@@ -170,11 +171,14 @@ export function DrivesPage() {
             selectedIds={selectedIds}
             onToggle={toggle}
             onToggleAll={toggleAll}
-            onSort={handleSort}
+            onSort={onSort}
             sort={sort}
             order={order}
             onRowAction={handleRowAction}
             isLoading={isLoading}
+            filters={columnFilters.filters}
+            onFilterChange={columnFilters.setFilter}
+            onFilterClear={columnFilters.clearFilter}
           />
           <div className="dm-pager">
             <div className="pinfo">

@@ -31,8 +31,8 @@ export async function listEmployers(params: ListParams) {
     const rx = new RegExp(params.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     match.$or = [{ name: rx }, { industry: rx }];
   }
-  if (params.industry) match.industry = params.industry;
-  if (params.status) match.status = params.status;
+  if (params.industry?.length) match.industry = { $in: params.industry };
+  if (params.status?.length) match.status = { $in: params.status };
   const docs = await Employer.find(match).lean();
   const driveAgg = await Slot.aggregate([
     { $match: { employerId: { $ne: null } } },
@@ -47,6 +47,24 @@ export async function listEmployers(params: ListParams) {
     shortlistRate: (d.shortlistRate as number) ?? 0, offerRate: (d.offerRate as number) ?? 0,
     respHours: (d.respHours as number) ?? 0,
   }));
+  // activeDrives/candidatesViewed/... are computed above (activeDrives via a separate Slot
+  // aggregate; the rest are stored fields but read alongside it), so range-filtering them happens
+  // here in JS before the sort — reusing SORT_KEY as the filter-field lookup, same as institutes.
+  const RANGE_NAMES = ['drives', 'viewed', 'shortlist', 'offer', 'respHours'] as const;
+  const rangeParams = params as unknown as Record<string, number | undefined>;
+  for (const name of RANGE_NAMES) {
+    const from = rangeParams[`${name}From`];
+    const to = rangeParams[`${name}To`];
+    if (from === undefined && to === undefined) continue;
+    const field = SORT_KEY[name];
+    items = items.filter((it) => {
+      const v = it[field] as number;
+      if (from !== undefined && v < from) return false;
+      if (to !== undefined && v > to) return false;
+      return true;
+    });
+  }
+
   const key = params.sort ? SORT_KEY[params.sort] : null;
   const dir = (params.order ?? 'asc') === 'desc' ? -1 : 1;
   items.sort((a, b) => {

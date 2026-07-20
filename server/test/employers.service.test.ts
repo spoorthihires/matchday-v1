@@ -29,10 +29,32 @@ describe('employers.service', () => {
     await createEmployer(input({ name: 'Quantbridge', industry: 'Fintech' as const, status: 'Pending' as const }), 'Platform Admin');
     await Employer.updateOne({ name: 'Quantbridge' }, { $set: { respHours: 40 } });
     expect((await listEmployers({ q: 'quant' })).total).toBe(1);
-    expect((await listEmployers({ industry: 'Fintech' })).total).toBe(1);
-    expect((await listEmployers({ status: 'Pending' })).total).toBe(1);
+    expect((await listEmployers({ industry: ['Fintech'] })).total).toBe(1);
+    expect((await listEmployers({ status: ['Pending'] })).total).toBe(1);
     const sorted = await listEmployers({ sort: 'respHours', order: 'desc' });
     expect(sorted.items[0].name).toBe('Quantbridge');
+  });
+
+  it('CSV multi-value industry filter accepts more than one selected option', async () => {
+    await createEmployer(input(), 'Platform Admin'); // Product · SaaS
+    await createEmployer(input({ name: 'Quantbridge', industry: 'Fintech' as const }), 'Platform Admin');
+    await createEmployer(input({ name: 'CloudCo', industry: 'Cloud Infra' as const }), 'Platform Admin');
+    const res = await listEmployers({ industry: ['Product · SaaS', 'Fintech'] });
+    expect(res.total).toBe(2);
+    expect(res.items.map((i) => i.name).sort()).toEqual(['Nexatech Labs', 'Quantbridge']);
+  });
+
+  it('range-filters a stat column (respHoursFrom/To)', async () => {
+    const a = await createEmployer(input(), 'Platform Admin');
+    const b = await createEmployer(input({ name: 'Quantbridge', industry: 'Fintech' as const }), 'Platform Admin');
+    await Employer.updateOne({ _id: a._id }, { $set: { respHours: 5 } });
+    await Employer.updateOne({ _id: b._id }, { $set: { respHours: 40 } });
+    const fast = await listEmployers({ respHoursTo: 10 });
+    expect(fast.total).toBe(1);
+    expect(fast.items[0].name).toBe('Nexatech Labs');
+    const slow = await listEmployers({ respHoursFrom: 20 });
+    expect(slow.total).toBe(1);
+    expect(slow.items[0].name).toBe('Quantbridge');
   });
 
   it('updates with the right audit action, bulk-approves, and 404s', async () => {

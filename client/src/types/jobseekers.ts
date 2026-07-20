@@ -6,8 +6,11 @@ export interface JobseekerListItem {
 }
 export interface JobseekerListResponse { items: JobseekerListItem[]; total: number; page: number; limit: number; }
 export interface JobseekerListParams {
+  // instituteId/stream/evaluationStatus/offer/consent carry either a single value (the "view
+  // pill" toolbar) or a comma-separated multi-select value (a per-column filter popover) — the
+  // server accepts CSV for all of these (see jobseekers.schemas.ts#csv/csvEnum).
   q?: string; instituteId?: string; stream?: string; evaluationStatus?: string;
-  offer?: string; consent?: string; matchBucket?: string;
+  offer?: string; consent?: string; matchBucket?: string; dupRisk?: string;
   sort?: string; order?: 'asc' | 'desc'; page?: number; limit?: number;
 }
 export interface JobseekerInput {

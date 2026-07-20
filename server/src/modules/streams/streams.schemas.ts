@@ -38,13 +38,23 @@ export const updateStreamSchema = z.object({
 });
 
 export const restoreSchema = z.object({ v: z.string().trim().min(1) });
+
+// Splits a CSV query param into a trimmed, non-empty string array (multi-select column filters,
+// backward-compatible with a lone single value — see jobseekers.schemas.ts's identical helper).
+function csv() {
+  return z.string().transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean));
+}
+
 export const listQuerySchema = z.object({
   q: z.string().optional(),
-  parent: z.string().optional(),
-  status: z.string().optional(),
-  sort: z.enum(['name', 'parent', 'cutoff']).optional(),
+  parent: csv().optional(),
+  status: csv().optional(),
+  cutoffFrom: z.coerce.number().int().min(0).max(100).optional(),
+  cutoffTo: z.coerce.number().int().min(0).max(100).optional(),
+  sort: z.enum(['name', 'parent', 'cutoff', 'status']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
 });
 
 export type CreateStreamInput = z.infer<typeof createStreamSchema>;
 export type UpdateStreamInput = z.infer<typeof updateStreamSchema>;
+export type ListQuery = z.infer<typeof listQuerySchema>;

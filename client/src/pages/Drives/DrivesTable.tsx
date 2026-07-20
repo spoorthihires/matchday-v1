@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { DriveListItem } from '../../types/drives.js';
+import { SortableHeader } from '../../components/table/SortableHeader.js';
+import { EnumFilter, FilterPopover, RangeFilter, formatRangeSummary, type RangeValue } from '../../components/table/filters/index.js';
 
 // Ported from matchday-admin-app_23.html lines 1367-1389 (table.dm inside .dm-table-wrap/.dm-scroll)
 // and the renderDrives()/stClass row template around lines 2460-2487.
@@ -9,6 +11,16 @@ import type { DriveListItem } from '../../types/drives.js';
 
 export type DriveSortKey = 'name' | 'domain' | 'stream' | 'month' | 'candCap' | 'empCap' | 'slotCap' | 'status';
 export type DriveRowAction = 'edit' | 'clone' | 'publish' | 'archive';
+
+export interface DriveColumnFilters {
+  domain: string[];
+  stream: string[];
+  status: string[];
+  month: RangeValue;
+  candCap: RangeValue;
+  empCap: RangeValue;
+  slotCap: RangeValue;
+}
 
 export interface DrivesTableProps {
   items: DriveListItem[];
@@ -20,7 +32,14 @@ export interface DrivesTableProps {
   order: 'asc' | 'desc';
   onRowAction: (action: DriveRowAction, id: string) => void;
   isLoading?: boolean;
+  filters: DriveColumnFilters;
+  onFilterChange: <K extends keyof DriveColumnFilters>(key: K, value: DriveColumnFilters[K]) => void;
+  onFilterClear: (key: keyof DriveColumnFilters) => void;
 }
+
+const STATUS_OPTIONS = ['Active', 'Published', 'Draft', 'Archived'];
+const STREAM_OPTIONS = ['B.Tech', 'M.Tech', 'MCA', 'MBA'];
+const DOMAIN_OPTIONS = ['Frontend', 'Backend', 'Full-stack', 'Data / ML', 'DevOps'];
 
 const STATUS_CLASS: Record<DriveListItem['status'], string> = {
   Active: 'st-active',
@@ -29,25 +48,7 @@ const STATUS_CLASS: Record<DriveListItem['status'], string> = {
   Archived: 'st-archived',
 };
 
-// Column order mirrors the prototype's <thead> exactly (lines 1373-1384): sortable and
-// plain columns are interleaved, not grouped.
-interface Column { label: string; sortKey?: DriveSortKey; className?: string; }
-const COLUMNS: Column[] = [
-  { label: 'Drive Name', sortKey: 'name' },
-  { label: 'Domain', sortKey: 'domain' },
-  { label: 'Stream', sortKey: 'stream' },
-  { label: 'Month', sortKey: 'month' },
-  { label: 'Frequency' },
-  { label: 'Event Day' },
-  { label: 'Cand. Cap', sortKey: 'candCap', className: 'r' },
-  { label: 'Emp. Cap', sortKey: 'empCap', className: 'r' },
-  { label: 'Slot Cap', sortKey: 'slotCap', className: 'r' },
-  { label: 'Status', sortKey: 'status' },
-  { label: 'Created By' },
-  { label: 'Actions', className: 'r' },
-];
-
-const COLSPAN = COLUMNS.length + 1; // +1 for the checkbox column
+const COLSPAN = 13; // 12 columns (11 data + Actions) + 1 checkbox column
 
 function num(n: number): string {
   return n.toLocaleString('en-IN');
@@ -57,13 +58,9 @@ function initials(name: string): string {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
 
-function sortIcon(active: boolean, order: 'asc' | 'desc'): string {
-  if (!active) return 'ti-arrows-sort';
-  return order === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending';
-}
-
 export function DrivesTable({
   items, selectedIds, onToggle, onToggleAll, onSort, sort, order, onRowAction, isLoading,
+  filters, onFilterChange, onFilterClear,
 }: DrivesTableProps) {
   const allSelected = items.length > 0 && items.every((d) => selectedIds.includes(d.id));
   // Local, presentation-only UI state (which row's overflow menu is open) — ported from the
@@ -90,21 +87,55 @@ export function DrivesTable({
                 <i className="ti ti-check" />
               </span>
             </th>
-            {COLUMNS.map((col) => {
-              if (!col.sortKey) {
-                return <th key={col.label} className={col.className}>{col.label}</th>;
+            <SortableHeader label="Drive Name" sortKey="name" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader
+              label="Domain" sortKey="domain" sort={sort} order={order} onSort={onSort}
+              filter={<EnumFilter options={DOMAIN_OPTIONS.map((d) => ({ value: d, label: d }))} value={filters.domain} onChange={(v) => onFilterChange('domain', v)} />}
+            />
+            <SortableHeader
+              label="Stream" sortKey="stream" sort={sort} order={order} onSort={onSort}
+              filter={<EnumFilter options={STREAM_OPTIONS.map((s) => ({ value: s, label: s }))} value={filters.stream} onChange={(v) => onFilterChange('stream', v)} />}
+            />
+            <SortableHeader
+              label="Month" sortKey="month" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.month, 'Select date range')} active={!!(filters.month.from || filters.month.to)}>
+                  {(close) => <RangeFilter type="date" value={filters.month} onChange={(v) => onFilterChange('month', v)} onClear={() => onFilterClear('month')} close={close} />}
+                </FilterPopover>
               }
-              const active = sort === col.sortKey;
-              return (
-                <th
-                  key={col.label}
-                  className={`sortable${col.className ? ` ${col.className}` : ''}${active ? ' sorted' : ''}`}
-                  onClick={() => onSort(col.sortKey!)}
-                >
-                  {col.label} <i className={`ti ${sortIcon(active, order)} sa`} />
-                </th>
-              );
-            })}
+            />
+            <th>Frequency</th>
+            <th>Event Day</th>
+            <SortableHeader
+              label="Cand. Cap" sortKey="candCap" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.candCap, 'Select range')} active={!!(filters.candCap.from || filters.candCap.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.candCap} onChange={(v) => onFilterChange('candCap', v)} onClear={() => onFilterClear('candCap')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Emp. Cap" sortKey="empCap" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.empCap, 'Select range')} active={!!(filters.empCap.from || filters.empCap.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.empCap} onChange={(v) => onFilterChange('empCap', v)} onClear={() => onFilterClear('empCap')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Slot Cap" sortKey="slotCap" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.slotCap, 'Select range')} active={!!(filters.slotCap.from || filters.slotCap.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.slotCap} onChange={(v) => onFilterChange('slotCap', v)} onClear={() => onFilterClear('slotCap')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Status" sortKey="status" sort={sort} order={order} onSort={onSort}
+              filter={<EnumFilter options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))} value={filters.status} onChange={(v) => onFilterChange('status', v)} />}
+            />
+            <th>Created By</th>
+            <th className="r">Actions</th>
           </tr>
         </thead>
         <tbody>

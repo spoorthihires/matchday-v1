@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import type { InstituteListItem } from '../../types/institutes.js';
+import { SortableHeader } from '../../components/table/SortableHeader.js';
+import { EnumFilter, FilterPopover, RangeFilter, formatRangeSummary, type RangeValue } from '../../components/table/filters/index.js';
+import { STATUS_OPTIONS, TYPE_OPTIONS } from './constants.js';
 
 // Ported from matchday-admin-app_23.html lines 1507-1584 (table.dm inside .dm-table-wrap/.dm-scroll)
 // and the renderInstitutes()/stCls/pctCls row template around lines 3700-3725.
@@ -9,6 +12,18 @@ import type { InstituteListItem } from '../../types/institutes.js';
 
 export type InstituteSortKey = 'name' | 'type' | 'uploaded' | 'signup' | 'completion' | 'matchReady' | 'shortlist' | 'offer' | 'joined';
 export type InstituteRowAction = 'view' | 'edit' | 'approve' | 'disable';
+
+export interface InstituteColumnFilters {
+  type: string[];
+  status: string[];
+  uploaded: RangeValue;
+  signup: RangeValue;
+  completion: RangeValue;
+  matchReady: RangeValue;
+  shortlist: RangeValue;
+  offer: RangeValue;
+  joined: RangeValue;
+}
 
 export interface InstitutesTableProps {
   items: InstituteListItem[];
@@ -20,6 +35,9 @@ export interface InstitutesTableProps {
   order: 'asc' | 'desc';
   onRowAction: (action: InstituteRowAction, id: string) => void;
   isLoading?: boolean;
+  filters: InstituteColumnFilters;
+  onFilterChange: <K extends keyof InstituteColumnFilters>(key: K, value: InstituteColumnFilters[K]) => void;
+  onFilterClear: (key: keyof InstituteColumnFilters) => void;
 }
 
 // stCls from the prototype (line 3392/3710): Active→st-active, Pending→st-pending,
@@ -30,23 +48,7 @@ const STATUS_CLASS: Record<InstituteListItem['status'], string> = {
   Disabled: 'st-archived',
 };
 
-// Column order mirrors the prototype's <thead> exactly (lines 1524-1537).
-interface Column { label: string; sortKey?: InstituteSortKey; className?: string; }
-const COLUMNS: Column[] = [
-  { label: 'Institute', sortKey: 'name' },
-  { label: 'Type', sortKey: 'type' },
-  { label: 'Uploaded', sortKey: 'uploaded', className: 'r' },
-  { label: 'Signup', sortKey: 'signup', className: 'r' },
-  { label: 'Completion', sortKey: 'completion', className: 'r' },
-  { label: 'Match-Ready', sortKey: 'matchReady', className: 'r' },
-  { label: 'Shortlist', sortKey: 'shortlist', className: 'r' },
-  { label: 'Offer', sortKey: 'offer', className: 'r' },
-  { label: 'Joined', sortKey: 'joined', className: 'r' },
-  { label: 'Status' },
-  { label: 'Actions', className: 'r' },
-];
-
-const COLSPAN = COLUMNS.length + 1; // +1 for the checkbox column
+const COLSPAN = 12; // 11 columns (10 data + Actions) + 1 checkbox column
 
 // iColors from the prototype (line 3677) — cycled by a stable hash of the (string) id since
 // real ids are Mongo ObjectIds rather than the prototype's small integers.
@@ -67,13 +69,9 @@ function pctClass(v: number): string {
   return v >= 75 ? 'pct-good' : v >= 50 ? 'pct-mid' : 'pct-low';
 }
 
-function sortIcon(active: boolean, order: 'asc' | 'desc'): string {
-  if (!active) return 'ti-arrows-sort';
-  return order === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending';
-}
-
 export function InstitutesTable({
   items, selectedIds, onToggle, onToggleAll, onSort, sort, order, onRowAction, isLoading,
+  filters, onFilterChange, onFilterClear,
 }: InstitutesTableProps) {
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id));
   // Local, presentation-only UI state (which row's overflow menu is open) — mirrors
@@ -99,21 +97,74 @@ export function InstitutesTable({
                 <i className="ti ti-check" />
               </span>
             </th>
-            {COLUMNS.map((col) => {
-              if (!col.sortKey) {
-                return <th key={col.label} className={col.className}>{col.label}</th>;
+            <SortableHeader label="Institute" sortKey="name" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader
+              label="Type" sortKey="type" sort={sort} order={order} onSort={onSort}
+              filter={<EnumFilter options={TYPE_OPTIONS.map((t) => ({ value: t, label: t }))} value={filters.type} onChange={(v) => onFilterChange('type', v)} />}
+            />
+            <SortableHeader
+              label="Uploaded" sortKey="uploaded" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.uploaded, 'Select range')} active={!!(filters.uploaded.from || filters.uploaded.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.uploaded} onChange={(v) => onFilterChange('uploaded', v)} onClear={() => onFilterClear('uploaded')} close={close} />}
+                </FilterPopover>
               }
-              const active = sort === col.sortKey;
-              return (
-                <th
-                  key={col.label}
-                  className={`sortable${col.className ? ` ${col.className}` : ''}${active ? ' sorted' : ''}`}
-                  onClick={() => onSort(col.sortKey!)}
-                >
-                  {col.label} <i className={`ti ${sortIcon(active, order)} sa`} />
-                </th>
-              );
-            })}
+            />
+            <SortableHeader
+              label="Signup" sortKey="signup" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.signup, 'Select range')} active={!!(filters.signup.from || filters.signup.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.signup} onChange={(v) => onFilterChange('signup', v)} onClear={() => onFilterClear('signup')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Completion" sortKey="completion" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.completion, 'Select range')} active={!!(filters.completion.from || filters.completion.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.completion} onChange={(v) => onFilterChange('completion', v)} onClear={() => onFilterClear('completion')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Match-Ready" sortKey="matchReady" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.matchReady, 'Select range')} active={!!(filters.matchReady.from || filters.matchReady.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.matchReady} onChange={(v) => onFilterChange('matchReady', v)} onClear={() => onFilterClear('matchReady')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Shortlist" sortKey="shortlist" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.shortlist, 'Select range')} active={!!(filters.shortlist.from || filters.shortlist.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.shortlist} onChange={(v) => onFilterChange('shortlist', v)} onClear={() => onFilterClear('shortlist')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Offer" sortKey="offer" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.offer, 'Select range')} active={!!(filters.offer.from || filters.offer.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.offer} onChange={(v) => onFilterChange('offer', v)} onClear={() => onFilterClear('offer')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <SortableHeader
+              label="Joined" sortKey="joined" className="r" sort={sort} order={order} onSort={onSort}
+              filter={
+                <FilterPopover summary={formatRangeSummary(filters.joined, 'Select range')} active={!!(filters.joined.from || filters.joined.to)}>
+                  {(close) => <RangeFilter type="number" value={filters.joined} onChange={(v) => onFilterChange('joined', v)} onClear={() => onFilterClear('joined')} close={close} />}
+                </FilterPopover>
+              }
+            />
+            <th>
+              <div className="col-label">Status</div>
+              <div className="col-filter-row">
+                <EnumFilter options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))} value={filters.status} onChange={(v) => onFilterChange('status', v)} />
+              </div>
+            </th>
+            <th className="r">Actions</th>
           </tr>
         </thead>
         <tbody>
