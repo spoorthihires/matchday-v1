@@ -13,10 +13,25 @@ const activitySchema = new Schema({
   at: { type: Date, default: Date.now },
 }, { _id: false });
 
+const detailsSchema = new Schema({
+  roleDescription: { type: String, default: '' },
+  deadline: { type: String, default: '' }, urgency: { type: String, default: '' },
+  goodToHave: { type: [String], default: [] }, qualification: { type: String, default: '' },
+  gradYearFrom: { type: Number, default: null }, gradYearTo: { type: Number, default: null },
+  expMin: { type: Number, default: null }, expMax: { type: Number, default: null },
+  ctcMin: { type: Number, default: null }, ctcMax: { type: Number, default: null },
+  stipend: { type: Number, default: null }, cities: { type: [String], default: [] },
+  workMode: { type: String, default: '' }, officeLocation: { type: String, default: '' },
+  rounds: { type: Number, default: null }, roundNames: { type: String, default: '' },
+  preferredWednesday: { type: String, default: '' }, timeSlot: { type: String, default: '' },
+  minEvalScore: { type: Number, default: null }, mandatorySkills: { type: [String], default: [] },
+}, { _id: false });
+
 const registrationSchema = new Schema({
   company: { type: String, required: true },
   industry: { type: String, required: true },
   role: { type: String, required: true },
+  employerId: { type: Schema.Types.ObjectId, ref: 'Employer', default: null },
   driveId: { type: Schema.Types.ObjectId, ref: 'Drive', default: null },
   driveName: { type: String, default: '' },
   openings: { type: Number, default: 1 },
@@ -28,6 +43,7 @@ const registrationSchema = new Schema({
   submittedBy: { type: String, default: '' },
   status: { type: String, enum: REGISTRATION_STATUSES, default: 'Pending review' },
   activity: { type: [activitySchema], default: [] },
+  details: { type: detailsSchema, default: () => ({}) },
   createdAt: { type: Date, default: Date.now },
 });
 

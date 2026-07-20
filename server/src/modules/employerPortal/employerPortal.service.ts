@@ -3,6 +3,8 @@ import { HttpError } from '../../middleware/errorHandler.js';
 import { Employer } from '../../models/Employer.js';
 import { Slot } from '../../models/Slot.js';
 import { Drive } from '../../models/Drive.js';
+import { RegistrationRequest } from '../../models/RegistrationRequest.js';
+import type { RegistrationInput } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
   if (!Types.ObjectId.isValid(employerId)) throw new HttpError(404, 'Employer not found', 'not_found');
@@ -80,4 +82,31 @@ export async function getEmployerDrive(id: string) {
     evaluation: ((d.evaluation ?? []) as unknown as Record<string, unknown>[]).map((e) => ({ key: e.key, enabled: !!e.enabled, config: e.config ?? {} })),
     streamId: d.streamId ? String(d.streamId) : null,
   };
+}
+
+// --- Registration create (Slice 3) ----------------------------------------
+// Server-authoritative identity: company/industry/submittedBy/employerId are
+// derived from the authenticated Employer profile — never from the client
+// body — so a spoofed `company` in the request is always ignored.
+export async function createEmployerRegistration(employerId: string, input: RegistrationInput) {
+  const emp = await Employer.findById(employerId);
+  if (!emp) throw new HttpError(404, 'Employer not found', 'not_found');
+  if (!Types.ObjectId.isValid(input.driveId)) throw new HttpError(400, 'Invalid drive', 'validation');
+  const drive = await Drive.findById(input.driveId);
+  if (!drive || !['Active', 'Published'].includes(drive.status) || drive.visibility?.employerReg === 'Closed') {
+    throw new HttpError(400, 'This drive is not open for registration', 'not_registerable');
+  }
+  const dup = await RegistrationRequest.findOne({ employerId: emp._id, driveId: drive._id, status: { $in: ['Pending review', 'Approved', 'Changes requested'] } });
+  if (dup) throw new HttpError(400, 'You already have an active registration for this drive', 'already_registered');
+  const submittedBy = emp.spoc || emp.name;
+  const reg = await RegistrationRequest.create({
+    company: emp.name, industry: emp.industry, submittedBy, employerId: emp._id,
+    driveId: drive._id, driveName: drive.name, role: input.role, openings: input.openings ?? 1,
+    ctcRange: input.ctcMin != null && input.ctcMax != null ? `${input.ctcMin}–${input.ctcMax} LPA` : '',
+    skills: input.mustHave ?? [], slot: [input.preferredWednesday, input.timeSlot].filter(Boolean).join(' · '),
+    jd: input.jd ?? '', status: 'Pending review',
+    activity: [{ action: 'Submitted', by: submittedBy, at: new Date() }],
+    details: input.details ?? {},
+  });
+  return { id: String(reg._id), status: reg.status, driveName: reg.driveName, role: reg.role };
 }

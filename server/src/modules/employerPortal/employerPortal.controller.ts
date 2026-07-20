@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { getEmployerPortal, listEmployerDrives, getEmployerDrive } from './employerPortal.service.js';
+import { getEmployerPortal, listEmployerDrives, getEmployerDrive, createEmployerRegistration } from './employerPortal.service.js';
+import { createRegistrationSchema } from './employerPortal.schemas.js';
 
 export async function employerPortalController(req: Request, res: Response) {
   res.json(await getEmployerPortal(req.userId as string));
@@ -14,4 +15,10 @@ export async function employerDrivesController(req: Request, res: Response) {
 
 export async function employerDriveController(req: Request, res: Response) {
   res.json(await getEmployerDrive(req.params.id));
+}
+
+export async function createEmployerRegistrationController(req: Request, res: Response) {
+  const parsed = createRegistrationSchema.parse(req.body);
+  const result = await createEmployerRegistration(req.userId as string, parsed);
+  res.status(201).json(result);
 }
