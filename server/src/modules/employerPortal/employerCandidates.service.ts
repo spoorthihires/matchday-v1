@@ -9,10 +9,13 @@ import { MATCH_READY_STAGES, MATCH_READY_STAGE_SET } from '../../constants/stage
 import { isEligible } from '../seekerPortal/seekerPortal.service.js';
 import { codeFor, evaluationLabel } from '../jobseekers/jobseekers.service.js';
 import { hasApprovedRegistration } from './employerPortal.service.js';
+import { consentBlock, type ConsentBlock } from '../../constants/consent.js';
 import type { CandidatesQuery } from './employerCandidates.schemas.js';
 
 interface DriveLean { _id: Types.ObjectId; eligibility?: { branches?: string[]; gradYears?: number[]; sources?: string[] } }
 interface SeekerLean { _id: Types.ObjectId; instituteId: Types.ObjectId; branch: string; gradYear: number; cgpa: number; source: string; evaluationStatus: string; stage: string }
+
+export interface RevealedIdentity { name: string; email: string; institute: string; city: string; }
 
 export interface RedactedCandidate {
   jobseekerId: string; code: string;
@@ -21,6 +24,8 @@ export interface RedactedCandidate {
   evaluationStatus: string; evaluationLabel: string; stage: string;
   matchScore: number; evalPill: 'Strong' | 'Qualified';
   decision: 'Shortlisted' | 'Hold' | 'Rejected' | null; noteCount: number;
+  consent: ConsentBlock | null;
+  revealed: RevealedIdentity | null;
 }
 
 const EVAL_WEIGHT: Record<string, number> = { completed: 1, pending: 0.5, na: 0.3, failed: 0 };
@@ -37,7 +42,7 @@ export function cgpaBand(cgpa: number): string {
   const lo = Math.floor((cgpa ?? 0) * 2) / 2;
   return `${lo.toFixed(1)}–${(lo + 0.5).toFixed(1)}`;
 }
-function redactCandidate(s: SeekerLean, instituteCategory: string, app?: { decision?: string | null; notes?: unknown[] } | null): RedactedCandidate {
+function redactCandidate(s: SeekerLean, instituteCategory: string, app?: { decision?: string | null; notes?: unknown[]; consent?: unknown } | null, reveal?: RevealedIdentity | null): RedactedCandidate {
   const { matchScore } = candidateScore(s.cgpa, s.evaluationStatus, s.stage);
   return {
     jobseekerId: String(s._id), code: codeFor(s._id),
@@ -45,7 +50,9 @@ function redactCandidate(s: SeekerLean, instituteCategory: string, app?: { decis
     cgpaBand: cgpaBand(s.cgpa), instituteCategory,
     evaluationStatus: s.evaluationStatus, evaluationLabel: evaluationLabel(s.evaluationStatus), stage: s.stage,
     matchScore, evalPill: matchScore >= 80 ? 'Strong' : 'Qualified',
-    decision: (app?.decision as RedactedCandidate['decision']) ?? null, noteCount: app?.notes?.length ?? 0,
+    decision: (app?.decision as RedactedCandidate['decision']) ?? null, noteCount: (app?.notes as unknown[] | undefined)?.length ?? 0,
+    consent: consentBlock(app?.consent as Parameters<typeof consentBlock>[0]),
+    revealed: reveal ?? null,
   };
 }
 
@@ -67,7 +74,21 @@ export async function listCandidates(employerId: string, driveId: string, filter
   const instType = new Map(insts.map((i) => [String(i._id), i.type ?? '—']));
   const apps = await Application.find({ employerId, driveId, jobseekerId: { $in: pool.map((s) => s._id) } }).lean();
   const appByJs = new Map(apps.map((a) => [String(a.jobseekerId), a]));
-  let items = pool.map((s) => redactCandidate(s, instType.get(String(s.instituteId)) ?? '—', appByJs.get(String(s._id))));
+  const grantedIds = apps.filter((a) => (a.consent as { status?: string } | undefined)?.status === 'granted').map((a) => a.jobseekerId);
+  const revealMap = new Map<string, RevealedIdentity>();
+  if (grantedIds.length) {
+    const revealed = await Jobseeker.find({ _id: { $in: grantedIds } }).select('name email instituteId')
+      .lean<{ _id: Types.ObjectId; name: string; email?: string; instituteId: Types.ObjectId }[]>();
+    const revInstIds = [...new Set(revealed.map((r) => String(r.instituteId)))];
+    const revInsts = await Institute.find({ _id: { $in: revInstIds } }).select('name city')
+      .lean<{ _id: Types.ObjectId; name: string; city: string }[]>();
+    const revInstMap = new Map(revInsts.map((i) => [String(i._id), i]));
+    for (const r of revealed) {
+      const ri = revInstMap.get(String(r.instituteId));
+      revealMap.set(String(r._id), { name: r.name, email: r.email ?? '', institute: ri?.name ?? '—', city: ri?.city ?? '—' });
+    }
+  }
+  let items = pool.map((s) => redactCandidate(s, instType.get(String(s.instituteId)) ?? '—', appByJs.get(String(s._id)), revealMap.get(String(s._id)) ?? null));
   if (filters.evaluation) items = items.filter((c) => c.evalPill === filters.evaluation);
   if (filters.decision) items = items.filter((c) => (filters.decision === 'undecided' ? c.decision === null : c.decision === filters.decision));
   if (filters.q && filters.q.trim()) {
@@ -102,7 +123,15 @@ export async function getPassport(employerId: string, driveId: string, jobseeker
   const { seeker } = await requirePoolMember(employerId, driveId, jobseekerId);
   const inst = await Institute.findById(seeker.instituteId).select('type').lean<{ type?: string }>();
   const app = await Application.findOne({ employerId, driveId, jobseekerId }).lean();
-  const base = redactCandidate(seeker, inst?.type ?? '—', app);
+  let reveal: RevealedIdentity | null = null;
+  if ((app?.consent as { status?: string } | undefined)?.status === 'granted') {
+    const [ident, revInst] = await Promise.all([
+      Jobseeker.findById(jobseekerId).select('name email').lean<{ name: string; email?: string }>(),
+      Institute.findById(seeker.instituteId).select('name city').lean<{ name: string; city: string }>(),
+    ]);
+    reveal = { name: ident?.name ?? '—', email: ident?.email ?? '', institute: revInst?.name ?? '—', city: revInst?.city ?? '—' };
+  }
+  const base = redactCandidate(seeker, inst?.type ?? '—', app, reveal);
   const { factors } = candidateScore(seeker.cgpa, seeker.evaluationStatus, seeker.stage);
   return {
     ...base,
@@ -121,7 +150,7 @@ export async function setDecision(employerId: string, driveId: string, jobseeker
     // Atomic so a concurrent addNote can't be lost: delete the row only if it has
     // no notes; if the delete matched nothing (notes exist, or no row), just clear
     // the decision. A read-then-write here could drop a note landing between the two.
-    const { deletedCount } = await Application.deleteOne({ employerId, driveId, jobseekerId, notes: { $size: 0 } });
+    const { deletedCount } = await Application.deleteOne({ employerId, driveId, jobseekerId, notes: { $size: 0 }, consent: { $exists: false } });
     if (deletedCount === 0) await Application.updateOne({ employerId, driveId, jobseekerId }, { $set: { decision: null } });
   } else {
     await Application.findOneAndUpdate(

@@ -5,6 +5,8 @@ import { Employer } from '../../models/Employer.js';
 import { Institute } from '../../models/Institute.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Slot } from '../../models/Slot.js';
+import { Application } from '../../models/Application.js';
+import { isExpired } from '../../constants/consent.js';
 import { codeFor, evaluationLabel, matchReadinessPct, offerStatus } from '../jobseekers/jobseekers.service.js';
 
 // The positive pipeline shown to the seeker (DroppedOff is a separate terminal state).
@@ -111,4 +113,39 @@ export async function getPortal(jobseekerId: string) {
     },
     drives: driveItems,
   };
+}
+
+export async function listRevealRequests(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const apps = await Application.find({ jobseekerId, 'consent.status': { $in: ['requested', 'granted', 'declined'] } })
+    .sort({ 'consent.requestedAt': -1 }).lean();
+  const emps = await Employer.find({ _id: { $in: [...new Set(apps.map((a) => String(a.employerId)))] } }).select('name').lean();
+  const empName = new Map(emps.map((e) => [String(e._id), e.name as string]));
+  const drives = await Drive.find({ _id: { $in: [...new Set(apps.map((a) => String(a.driveId)))] } }).select('name').lean<{ _id: Types.ObjectId; name?: string }[]>();
+  const driveName = new Map(drives.map((d) => [String(d._id), d.name ?? '—']));
+  return {
+    items: apps.map((a) => ({
+      applicationId: String(a._id),
+      company: empName.get(String(a.employerId)) ?? '—',
+      driveName: driveName.get(String(a.driveId)) ?? '—',
+      status: a.consent?.status as 'requested' | 'granted' | 'declined',
+      expired: isExpired(a.consent),
+      requestedAt: a.consent?.requestedAt ? new Date(a.consent.requestedAt).toISOString() : null,
+      expiresAt: a.consent?.expiresAt ? new Date(a.consent.expiresAt).toISOString() : null,
+      respondedAt: a.consent?.respondedAt ? new Date(a.consent.respondedAt).toISOString() : null,
+    })),
+  };
+}
+
+export async function respondReveal(jobseekerId: string, applicationId: string, decision: 'grant' | 'deny') {
+  if (!Types.ObjectId.isValid(applicationId)) throw new HttpError(404, 'Request not found', 'not_found');
+  const app = await Application.findOne({ _id: applicationId, jobseekerId });
+  const status = app?.consent?.status;
+  if (!app || !status) throw new HttpError(404, 'Request not found', 'not_found');
+  if (status === 'granted' || status === 'declined') throw new HttpError(400, 'You have already responded to this request', 'already_responded');
+  if (isExpired(app.consent)) throw new HttpError(400, 'This reveal request has expired', 'request_expired');
+  app.set('consent.status', decision === 'grant' ? 'granted' : 'declined');
+  app.set('consent.respondedAt', new Date());
+  await app.save();
+  return { status: app.consent?.status };
 }

@@ -28,6 +28,7 @@ export function EmployerCandidates() {
   const drive = useEmployerDrive(driveId);
   const [filters, setFilters] = useState<CandidateFilters>({ q: '', decision: '', evaluation: '' });
   const candidates = useEmployerCandidates(driveId, filters);
+  const shortlisted = useEmployerCandidates(driveId, { decision: 'Shortlisted' });
   const { setDecision } = useCandidateMutations(driveId);
   const items = candidates.data?.items ?? [];
 
@@ -42,6 +43,10 @@ export function EmployerCandidates() {
       <div className="card">
         <h2>Candidates — {drive.data?.name ?? '…'}</h2>
         <p className="cand-privacy hint">Names, contact details and resumes stay hidden. Identity is only revealed after a shortlisted candidate confirms interest.</p>
+        <div style={{ marginTop: 10 }}>
+          <button type="button" className="btn btn-ghost" disabled={!(shortlisted.data?.items?.length)}
+            onClick={() => navigate(`/employer/drives/${driveId}/consent`)}>Consent status</button>
+        </div>
       </div>
 
       <div className="card" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>

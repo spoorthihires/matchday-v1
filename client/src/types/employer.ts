@@ -178,6 +178,15 @@ export interface SlotInput {
 // confirms interest, per the prototype's privacy model).
 export type CandidateDecision = 'Shortlisted' | 'Hold' | 'Rejected' | null;
 
+export interface CandidateConsent {
+  status: 'requested' | 'granted' | 'declined' | null;
+  expired: boolean;
+  requestedAt: string | null;
+  expiresAt: string | null;
+  respondedAt: string | null;
+}
+export interface RevealedIdentity { name: string; email: string; institute: string; city: string; }
+
 export interface EmployerCandidate {
   jobseekerId: string;
   code: string;
@@ -193,6 +202,8 @@ export interface EmployerCandidate {
   evalPill: 'Strong' | 'Qualified';
   decision: CandidateDecision;
   noteCount: number;
+  consent: CandidateConsent | null;
+  revealed: RevealedIdentity | null;
 }
 export interface EmployerCandidatesResponse { items: EmployerCandidate[]; }
 

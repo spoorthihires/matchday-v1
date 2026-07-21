@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCandidatePassport, useCandidateMutations } from './hooks/useEmployerCandidates.js';
+import { useCandidatePassport, useCandidateMutations, useRevealMutations } from './hooks/useEmployerCandidates.js';
 import type { CandidateDecision } from '../../types/employer.js';
 import { ApiError } from '../../api/client.js';
 import './employerBase.js';
@@ -14,6 +14,7 @@ export function EmployerCandidatePassport() {
   const navigate = useNavigate();
   const passport = useCandidatePassport(driveId, jsId);
   const { setDecision, addNote } = useCandidateMutations(driveId);
+  const { requestReveal, remindReveal, withdrawReveal } = useRevealMutations(driveId);
   const [note, setNote] = useState('');
   const [noteErr, setNoteErr] = useState(false);
   const p = passport.data;
@@ -46,10 +47,15 @@ export function EmployerCandidatePassport() {
         </span>
         <div>
           <div className="ps-id">{p.code} <span className={`status-pill ${p.evalPill === 'Strong' ? 'st-approved' : 'st-inprog'}`}>{p.evalPill}</span></div>
-          <div className="ps-anon">
-            <svg className="ic" viewBox="0 0 24 24" style={{ width: 12, height: 12 }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
-            Identity hidden — redacted passport. Match score {p.matchScore}.
-          </div>
+          {p.revealed
+            ? <div className="ps-anon" style={{ color: 'var(--green, #067647)' }}>
+                <svg className="ic" viewBox="0 0 24 24" style={{ width: 12, height: 12 }}><path d="M5 12l5 5L20 7" /></svg>
+                {p.revealed.name} · {p.revealed.email} · {p.revealed.institute}, {p.revealed.city}
+              </div>
+            : <div className="ps-anon">
+                <svg className="ic" viewBox="0 0 24 24" style={{ width: 12, height: 12 }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
+                Identity hidden — redacted passport. Match score {p.matchScore}.
+              </div>}
         </div>
       </div>
 
@@ -86,6 +92,29 @@ export function EmployerCandidatePassport() {
           <button type="button" className={`btn ${p.decision === 'Shortlisted' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => decide('Shortlisted')}>Shortlist</button>
           <button type="button" className={`btn ${p.decision === 'Hold' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => decide('Hold')}>Hold</button>
           <button type="button" className={`btn ${p.decision === 'Rejected' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => decide('Rejected')}>Reject</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head"><h3>Identity reveal</h3></div>
+        <div className="card-body" style={{ display: 'grid', gap: 8 }}>
+          {(() => {
+            const c = p.consent;
+            const st = !c ? 'none' : c.status === 'requested' ? (c.expired ? 'expired' : 'waiting') : c.status === 'granted' ? 'interested' : 'declined';
+            const busy = requestReveal.isPending || remindReveal.isPending || withdrawReveal.isPending;
+            const label = { none: 'Not requested', waiting: 'Waiting for the candidate to consent', expired: 'Request expired', interested: 'Consent granted — identity revealed', declined: 'Candidate declined' }[st];
+            return (
+              <>
+                <p className="hint">{label}{st === 'waiting' && c?.expiresAt ? ` · expires ${new Date(c.expiresAt).toLocaleDateString()}` : ''}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {st === 'none' && <button type="button" className="btn btn-primary" disabled={busy || p.decision !== 'Shortlisted'} onClick={() => requestReveal.mutate(jsId)}>Request reveal</button>}
+                  {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => remindReveal.mutate(jsId)}>Send reminder</button>}
+                  {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => withdrawReveal.mutate(jsId)}>Withdraw</button>}
+                </div>
+                {st === 'none' && p.decision !== 'Shortlisted' && <p className="hint">Shortlist this candidate to request a reveal.</p>}
+              </>
+            );
+          })()}
         </div>
       </div>
 

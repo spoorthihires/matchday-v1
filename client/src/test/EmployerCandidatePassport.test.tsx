@@ -70,3 +70,43 @@ describe('EmployerCandidatePassport', () => {
     expect(post).not.toHaveBeenCalled();
   });
 });
+
+const GRANTED_PASSPORT = {
+  ...PASSPORT, decision: 'Shortlisted',
+  consent: { status: 'granted', expired: false, requestedAt: '2026-07-19T00:00:00.000Z', expiresAt: '2026-07-21T00:00:00.000Z', respondedAt: '2026-07-20T00:00:00.000Z' },
+  revealed: { name: 'Ananya Sharma', email: 'ananya@x.test', institute: 'CBIT', city: 'Hyd' },
+};
+const SHORTLISTED_PASSPORT = { ...PASSPORT, decision: 'Shortlisted', consent: null, revealed: null };
+
+function mockPassport(passport: unknown) {
+  const post = vi.fn();
+  const fetchMock = vi.fn(async (url: string, opts: { method?: string } = {}) => {
+    const method = opts.method ?? 'GET';
+    if (url.includes('/reveal-request') && method === 'POST') { post(url); return { ok: true, status: 200, json: async () => passport }; }
+    if (url.match(/\/candidates\/[^/]+$/)) return { ok: true, status: 200, json: async () => passport };
+    return { ok: false, status: 404, json: async () => ({ error: { message: 'no', code: 'not_found' } }) };
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return { post };
+}
+
+describe('EmployerCandidatePassport — reveal block', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); });
+
+  it('shows the revealed identity when consent is granted', async () => {
+    seedAuth(); mockPassport(GRANTED_PASSPORT); renderPage();
+    // the header concatenates name/email into one text node → match with a regex substring
+    await waitFor(() => expect(screen.getByText(/Ananya Sharma/)).toBeInTheDocument());
+    expect(screen.getByText(/ananya@x.test/)).toBeInTheDocument();
+    expect(screen.queryByText(/Identity hidden/i)).toBeNull();
+  });
+
+  it('fires a reveal request for a shortlisted, un-requested candidate', async () => {
+    seedAuth(); const { post } = mockPassport(SHORTLISTED_PASSPORT); renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: /Request reveal/i })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /Request reveal/i }));
+    await waitFor(() => expect(post).toHaveBeenCalled());
+    expect(post.mock.calls[0][0]).toMatch(/\/candidates\/j1\/reveal-request$/);
+  });
+});

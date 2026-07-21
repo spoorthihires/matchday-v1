@@ -56,3 +56,28 @@ export function useCandidateMutations(driveId: string) {
   });
   return { setDecision, addNote };
 }
+
+// Reveal-consent mutations (Slice 5b). Each takes a jobseekerId and returns the updated passport.
+export function useRevealMutations(driveId: string) {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  const invalidate = (jobseekerId: string) => {
+    qc.invalidateQueries({ queryKey: ['employer-candidates', driveId] });
+    qc.invalidateQueries({ queryKey: ['candidate-passport', driveId, jobseekerId] });
+    qc.invalidateQueries({ queryKey: ['employer-portal'] });
+  };
+  const base = (jobseekerId: string) => `/me/employer/drives/${driveId}/candidates/${jobseekerId}/reveal-request`;
+  const requestReveal = useMutation({
+    mutationFn: (jobseekerId: string) => apiFetch<CandidatePassport>(base(jobseekerId), { method: 'POST', token }),
+    onSuccess: (_d, jobseekerId) => invalidate(jobseekerId),
+  });
+  const remindReveal = useMutation({
+    mutationFn: (jobseekerId: string) => apiFetch<CandidatePassport>(`${base(jobseekerId)}/remind`, { method: 'POST', token }),
+    onSuccess: (_d, jobseekerId) => invalidate(jobseekerId),
+  });
+  const withdrawReveal = useMutation({
+    mutationFn: (jobseekerId: string) => apiFetch<CandidatePassport>(base(jobseekerId), { method: 'DELETE', token }),
+    onSuccess: (_d, jobseekerId) => invalidate(jobseekerId),
+  });
+  return { requestReveal, remindReveal, withdrawReveal };
+}
