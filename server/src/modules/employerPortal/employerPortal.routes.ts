@@ -8,6 +8,7 @@ import {
   updateEmployerSlotController, deleteEmployerSlotController,
 } from './employerPortal.controller.js';
 import { candidatesController, passportController, decisionController, noteController } from './employerCandidates.controller.js';
+import { requestRevealController, remindRevealController, withdrawRevealController } from './employerConsent.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -29,4 +30,7 @@ employerPortalRoutes.get('/employer/drives/:id/candidates', asyncHandler(candida
 employerPortalRoutes.get('/employer/drives/:id/candidates/:jobseekerId', asyncHandler(passportController));
 employerPortalRoutes.put('/employer/drives/:id/candidates/:jobseekerId/decision', asyncHandler(decisionController));
 employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/notes', asyncHandler(noteController));
+employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/reveal-request', asyncHandler(requestRevealController));
+employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/reveal-request/remind', asyncHandler(remindRevealController));
+employerPortalRoutes.delete('/employer/drives/:id/candidates/:jobseekerId/reveal-request', asyncHandler(withdrawRevealController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));

@@ -76,3 +76,69 @@ describe('reveal gating (read side)', () => {
     expect(raw).not.toContain('s2@x.test');
   });
 });
+
+async function shortlisted(emp: { _id: unknown }, d: { _id: unknown }, jsId: unknown, over: Record<string, unknown> = {}) {
+  return Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: jsId, decision: 'Shortlisted', ...over });
+}
+
+describe('POST .../reveal-request (+ remind, withdraw)', () => {
+  it('requests a reveal for a Shortlisted candidate → requested + expiresAt', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await shortlisted(emp, d, s._id);
+    const res = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(200);
+    expect(res.body.consent.status).toBe('requested');
+    expect(res.body.consent.expiresAt).toBeTruthy();
+    expect(res.body.revealed).toBeNull();
+  });
+
+  it('rejects a reveal request when the candidate is not Shortlisted', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); // no Application / not shortlisted
+    const res = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('not_shortlisted');
+  });
+
+  it('is terminal after a response (already_responded)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    const now = new Date();
+    await shortlisted(emp, d, s._id, { consent: { status: 'granted', requestedAt: now, expiresAt: now, respondedAt: now } });
+    const res = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('already_responded');
+  });
+
+  it('remind re-arms an expired request; withdraw clears it', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    const past = new Date(Date.now() - 3600_000);
+    await shortlisted(emp, d, s._id, { consent: { status: 'requested', requestedAt: past, expiresAt: past } });
+    const remind = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request/remind`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(remind.status).toBe(200);
+    expect(remind.body.consent.status).toBe('requested');
+    expect(remind.body.consent.expired).toBe(false); // re-armed into the future
+    const withdraw = await request(createApp()).delete(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(withdraw.status).toBe(200);
+    expect(withdraw.body.consent).toBeNull();
+  });
+
+  it('remind/withdraw reject when there is no pending request', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await shortlisted(emp, d, s._id);
+    const remind = await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request/remind`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(remind.status).toBe(400);
+    expect(remind.body.error.code).toBe('not_remindable');
+  });
+
+  it('is employer-scoped: employer B never sees A\'s consent', async () => {
+    const a = await employer(); const b = await employer({ email: 'b@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d); await approve(b, d); const inst = await institute();
+    const s = await seeker(inst._id); await shortlisted(a, d, s._id);
+    await request(createApp()).post(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(a)}`);
+    const bPass = await request(createApp()).get(`/api/me/employer/drives/${d._id}/candidates/${s._id}`).set('Authorization', `Bearer ${tokenFor(b)}`);
+    expect(bPass.body.consent).toBeNull();
+    expect(bPass.body.revealed).toBeNull();
+  });
+});
