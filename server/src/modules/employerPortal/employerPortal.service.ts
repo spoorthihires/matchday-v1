@@ -136,7 +136,7 @@ export interface EmployerSlotItem {
   capacity: number; booked: number; status: string; link: string;
 }
 
-async function hasApprovedRegistration(employerId: string, driveId: string): Promise<boolean> {
+export async function hasApprovedRegistration(employerId: string, driveId: string): Promise<boolean> {
   return !!(await RegistrationRequest.findOne({ employerId, driveId, status: 'Approved' }));
 }
 function sameUTCDay(a: Date, b: Date): boolean {

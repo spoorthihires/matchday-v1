@@ -95,10 +95,17 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('REGISTRATIONS PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/coming-soon/candidates when a not-built nav item is clicked', async () => {
+  it('navigates to /employer/drives when the Candidates nav item is clicked (candidates are viewed per-drive)', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
     await userEvent.click(sidebar.getByRole('button', { name: /Candidates/ }));
+    expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
+  });
+
+  it('navigates to /employer/coming-soon/interviews when a not-built nav item is clicked', async () => {
+    const { container } = renderShell();
+    const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
+    await userEvent.click(sidebar.getByRole('button', { name: /Interviews/ }));
     expect(await screen.findByText('COMING SOON PAGE')).toBeInTheDocument();
   });
 

@@ -195,6 +195,15 @@ export function EmployerDriveDetail() {
             >
               View slots
             </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={!approvedForDrive}
+              title={approvedForDrive ? undefined : 'Available once your registration is approved'}
+              onClick={() => navigate(`/employer/drives/${id}/candidates`)}
+            >
+              View candidates
+            </button>
             <div className="ap-note">
               <svg className="ic" viewBox="0 0 24 24" style={{ width: 13, height: 13 }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
               Aggregate data only — no identities

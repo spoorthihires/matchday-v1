@@ -64,7 +64,7 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'candidates',
         label: 'Candidates',
-        path: '/employer/coming-soon/candidates',
+        path: '/employer/drives',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
             <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6M21 20a6 6 0 00-4-5.6" />
