@@ -5,6 +5,7 @@ import { Slot } from '../../models/Slot.js';
 import { SlotBooking } from '../../models/SlotBooking.js';
 import { Drive } from '../../models/Drive.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
+import { Interview } from '../../models/Interview.js';
 import type { RegistrationInput, SlotInput, SlotPatch } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
@@ -25,13 +26,15 @@ export async function getEmployerPortal(employerId: string) {
   const calendar = upcoming.map((s) => ({ id: String(s._id), date: new Date(s.date).toISOString(), start: s.start, end: s.end, driveId: String(s.driveId) }));
   const regRows = await RegistrationRequest.find({ employerId: empObjId }).sort({ createdAt: -1 }).limit(5).lean();
   const registrations = regRows.map((r) => ({ id: String(r._id), driveName: r.driveName ?? '', role: r.role, status: r.status }));
+  // derived: count of live (not cancelled) interviews still to happen, not a slot count
+  const upcomingInterviews = await Interview.countDocuments({ employerId, status: { $in: ['Scheduled', 'Confirmed'] } });
   return {
     profile: {
       id: String(emp._id), name: emp.name, email: emp.email ?? '', industry: emp.industry,
       size: emp.size ?? '', status: emp.status ?? 'Active', spoc: emp.spoc ?? '', website: emp.website ?? '',
     },
     dashboard: {
-      kpis: { activeDrives, upcomingInterviews: calendar.length, totalSlots },
+      kpis: { activeDrives, upcomingInterviews, totalSlots },
       calendar,
       registrations,
       shortlist: [] as unknown[],       // placeholder — filled by Slice 6
@@ -229,6 +232,8 @@ export async function deleteEmployerSlot(employerId: string, driveId: string, sl
   if (!slot) throw new HttpError(404, 'Slot not found', 'not_found');
   const bookings = await SlotBooking.countDocuments({ slotId: slot._id });
   if (bookings > 0) throw new HttpError(400, 'This slot has candidate bookings and cannot be removed', 'slot_has_bookings');
+  const interviews = await Interview.countDocuments({ slotId: slot._id, status: { $ne: 'Cancelled' } });
+  if (interviews > 0) throw new HttpError(400, 'This slot has scheduled interviews', 'slot_has_interviews');
   await slot.deleteOne();
   return { ok: true as const };
 }

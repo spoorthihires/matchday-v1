@@ -230,3 +230,19 @@ export interface ShortlistPackItem {
   notes: string[];
 }
 export interface ShortlistPack { driveName: string; generatedAt: string; items: ShortlistPackItem[]; }
+
+// Mirrors server/src/modules/employerPortal/employerInterviews.service.ts's projectWith/
+// projectOne return shape exactly (Slice 7 Tasks 1-2) -- the schedule/agenda/action endpoints
+// this task's EmployerInterviews page reads and writes.
+export interface InterviewSlotRef { id: string; date: string; start: string; end: string; link: string; }
+export interface EmployerInterview {
+  id: string; jobseekerId: string; code: string; name: string; email: string;
+  time: string; status: 'Scheduled' | 'Confirmed' | 'Cancelled' | 'Completed'; interviewers: string[];
+  slot: InterviewSlotRef | null;
+}
+export interface EmployerInterviewsResponse { items: EmployerInterview[]; }
+export interface ScheduleInterviewInput { jobseekerId: string; slotId: string; time: string; interviewers?: string[]; }
+export type InterviewAction =
+  | { action: 'confirm' } | { action: 'complete' } | { action: 'cancel' }
+  | { action: 'reschedule'; slotId: string; time: string }
+  | { action: 'set-interviewers'; interviewers: string[] };

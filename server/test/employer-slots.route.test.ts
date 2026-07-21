@@ -4,8 +4,10 @@ import { createApp } from '../src/app.js';
 import { signToken } from '../src/modules/auth/auth.service.js';
 import { Employer } from '../src/models/Employer.js';
 import { Drive } from '../src/models/Drive.js';
+import { Types } from 'mongoose';
 import { Slot } from '../src/models/Slot.js';
 import { SlotBooking } from '../src/models/SlotBooking.js';
+import { Interview } from '../src/models/Interview.js';
 import { RegistrationRequest } from '../src/models/RegistrationRequest.js';
 import { clearDb, setupTestDb, teardownTestDb } from './helpers/db.js';
 
@@ -222,6 +224,16 @@ describe('DELETE /api/me/employer/drives/:id/slots/:slotId', () => {
     const res = await request(app).delete(`/api/me/employer/drives/${d._id}/slots/${id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('slot_has_bookings');
+  });
+
+  it('refuses to remove a slot that has a scheduled interview', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    const id = await makeSlot(app, emp, d);
+    await Interview.create({ employerId: emp._id, driveId: d._id, jobseekerId: new Types.ObjectId(), slotId: id, time: '10:30', status: 'Scheduled' });
+    const res = await request(app).delete(`/api/me/employer/drives/${d._id}/slots/${id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('slot_has_interviews');
   });
 
   it('returns 404 for another employer slot on delete', async () => {
