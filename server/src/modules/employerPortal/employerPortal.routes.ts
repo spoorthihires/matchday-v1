@@ -13,6 +13,7 @@ import { bulkDecisionController, shortlistPackController } from './employerShort
 import { interviewsController, scheduleInterviewController, interviewActionController } from './employerInterviews.controller.js';
 import { boardController, setStageController } from './employerBoard.controller.js';
 import { upsertOfferController, offersController } from './employerOffers.controller.js';
+import { reportsController } from './employerReports.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -46,4 +47,5 @@ employerPortalRoutes.get('/employer/drives/:id/board', asyncHandler(boardControl
 employerPortalRoutes.patch('/employer/drives/:id/candidates/:jobseekerId/stage', asyncHandler(setStageController));
 employerPortalRoutes.get('/employer/drives/:id/offers', asyncHandler(offersController));
 employerPortalRoutes.put('/employer/drives/:id/candidates/:jobseekerId/offer', asyncHandler(upsertOfferController));
+employerPortalRoutes.get('/employer/reports', asyncHandler(reportsController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));
