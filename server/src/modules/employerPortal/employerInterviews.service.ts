@@ -76,7 +76,15 @@ export async function scheduleInterview(employerId: string, driveId: string, inp
   const slot = await validateSlot(employerId, driveId, input.slotId, input.time, null);
   if (await Interview.findOne({ employerId, driveId, jobseekerId: input.jobseekerId }))
     throw new HttpError(400, 'This candidate already has an interview for this drive', 'already_scheduled');
-  const created = await Interview.create({ employerId, driveId, jobseekerId: input.jobseekerId, slotId: slot._id, time: input.time, interviewers: input.interviewers ?? [] });
+  let created;
+  try {
+    created = await Interview.create({ employerId, driveId, jobseekerId: input.jobseekerId, slotId: slot._id, time: input.time, interviewers: input.interviewers ?? [] });
+  } catch (err) {
+    if ((err as { code?: number }).code === 11000) {
+      throw new HttpError(400, 'This candidate already has an interview for this drive', 'already_scheduled');
+    }
+    throw err;
+  }
   return projectOne(created.toObject() as unknown as InterviewLean);
 }
 

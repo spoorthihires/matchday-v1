@@ -53,6 +53,7 @@ describe('POST .../interviews (schedule)', () => {
       .set('Authorization', `Bearer ${tokenFor(emp)}`).send({ jobseekerId: String(s._id), slotId: String(sl._id), time: '10:30', interviewers: ['Priya M'] });
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Real Name');           // revealed (consent granted)
+    expect(res.body.email).toBe('real@x.test');         // revealed (consent granted)
     expect(res.body.status).toBe('Scheduled');
     expect(res.body.slot.link).toBe('https://meet.test/x');
     expect(res.body.time).toBe('10:30');
