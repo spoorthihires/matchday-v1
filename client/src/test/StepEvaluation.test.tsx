@@ -32,8 +32,11 @@ describe('StepEvaluation — template picker', () => {
   beforeEach(() => {
     localStorage.clear();
     localStorage.setItem('matchday.auth', JSON.stringify({ token: 't', user: { id: 'u1', name: 'Admin', email: 'a@b.io', role: 'admin' } }));
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
+    vi.stubGlobal('fetch', vi.fn((url: string, opts?: RequestInit) => {
       if (url.includes('/templates')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ items: [TEMPLATE] }) });
+      if (url.includes('/eval-configs') && (opts?.method ?? 'GET') === 'POST') {
+        return Promise.resolve({ ok: true, status: 201, json: async () => ({ _id: 'cfg-new', type: 'Coding', name: 'New coding cfg' }) });
+      }
       if (url.includes('/eval-configs')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ items: [MCQ_CFG] }) });
       return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
     }));
@@ -65,6 +68,23 @@ describe('StepEvaluation — template picker', () => {
     await userEvent.selectOptions(select, 'cfg-1');
     const call = onChange.mock.calls.find((c) => Array.isArray(c[0].evaluation)
       && c[0].evaluation.find((s: { key: string; evalConfigId?: string }) => s.key === 'mcq')?.evalConfigId === 'cfg-1');
+    expect(call).toBeTruthy();
+  });
+
+  it('inline "+ Add Configuration" creates a config and auto-selects it on the matching stage', async () => {
+    const onChange = vi.fn();
+    renderStep(onChange);
+    const user = userEvent.setup();
+    await screen.findByLabelText(/Coding configuration/i);
+    await user.click(screen.getByRole('button', { name: /Add Coding assessment configuration/i }));
+    // The Create Configuration modal opens with "Coding" pre-selected.
+    expect(screen.getByLabelText(/Assessment type/i)).toHaveValue('Coding');
+    await user.type(screen.getByLabelText(/Configuration name/i), 'New coding cfg');
+    await user.click(screen.getByRole('button', { name: /Save configuration/i }));
+    // Modal closes and the new config is auto-selected on the coding stage.
+    await screen.findByLabelText(/Coding configuration/i);
+    const call = onChange.mock.calls.find((c) => Array.isArray(c[0].evaluation)
+      && c[0].evaluation.find((s: { key: string; evalConfigId?: string }) => s.key === 'coding')?.evalConfigId === 'cfg-new');
     expect(call).toBeTruthy();
   });
 });
