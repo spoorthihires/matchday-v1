@@ -133,3 +133,58 @@ describe('GET .../interviews (list)', () => {
     expect(listB.body.items).toHaveLength(0);
   });
 });
+
+async function schedule(emp: { _id: unknown }, d: { _id: unknown }, jsId: unknown, slId: unknown, time: string) {
+  return request(createApp()).post(`/api/me/employer/drives/${d._id}/interviews`).set('Authorization', `Bearer ${tokenFor(emp)}`)
+    .send({ jobseekerId: String(jsId), slotId: String(slId), time });
+}
+
+describe('PATCH .../interviews/:interviewId (actions)', () => {
+  it('confirm / complete / cancel transition the status', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await granted(emp, d, s._id); const sl = await slot(emp, d);
+    const id = (await schedule(emp, d, s._id, sl._id, '10:30')).body.id;
+    const app = createApp(); const tok = tokenFor(emp); const url = `/api/me/employer/drives/${d._id}/interviews/${id}`;
+    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'confirm' })).body.status).toBe('Confirmed');
+    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'complete' })).body.status).toBe('Completed');
+    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' })).body.status).toBe('Cancelled');
+  });
+
+  it('reschedule re-validates and resets status to Scheduled; set-interviewers replaces', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await granted(emp, d, s._id);
+    const s2 = await seeker(inst._id, { email: 's2@x.test' }); await granted(emp, d, s2._id);
+    const sl = await slot(emp, d);
+    const app = createApp(); const tok = tokenFor(emp);
+    const id = (await schedule(emp, d, s._id, sl._id, '10:30')).body.id;
+    await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`).send({ action: 'confirm' });
+    // second interview holds 11:00
+    await schedule(emp, d, s2._id, sl._id, '11:00');
+    // reschedule s to a taken time → slot_time_taken
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`)
+      .send({ action: 'reschedule', slotId: String(sl._id), time: '11:00' })).body.error.code).toBe('slot_time_taken');
+    // reschedule to a free time → status back to Scheduled at the new time
+    const ok = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`)
+      .send({ action: 'reschedule', slotId: String(sl._id), time: '11:30' });
+    expect(ok.body.status).toBe('Scheduled');
+    expect(ok.body.time).toBe('11:30');
+    // set-interviewers
+    const iv = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`)
+      .send({ action: 'set-interviewers', interviewers: ['A B', 'C D'] });
+    expect(iv.body.interviewers).toEqual(['A B', 'C D']);
+  });
+
+  it('404 for a foreign/unknown interview id; 400 on a bad action', async () => {
+    const a = await employer(); const b = await employer({ email: 'b@b.test' });
+    const d = await drive(); await approve(a, d); await approve(b, d); const inst = await institute();
+    const s = await seeker(inst._id); await granted(a, d, s._id); const sl = await slot(a, d);
+    const id = (await schedule(a, d, s._id, sl._id, '10:30')).body.id;
+    const app = createApp();
+    // employer B cannot act on A's interview → 404 (no oracle)
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(b)}`).send({ action: 'confirm' })).status).toBe(404);
+    // unknown id → 404
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${new Types.ObjectId()}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'confirm' })).status).toBe(404);
+    // bad action → 400
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'nope' })).status).toBe(400);
+  });
+});
