@@ -107,3 +107,47 @@ describe('POST .../candidates/bulk-decision', () => {
     expect((await Application.findOne({ employerId: b._id, driveId: d._id, jobseekerId: s._id }).lean())?.decision).toBe('Rejected');
   });
 });
+
+describe('GET .../shortlist/pack', () => {
+  it('returns only Shortlisted pool candidates, fully redacted, with notes + consentStatus', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const a = await seeker(inst._id); const b = await seeker(inst._id, { email: 'b@x.test' }); const c = await seeker(inst._id, { email: 'c@x.test' });
+    const now = new Date();
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: a._id, decision: 'Shortlisted',
+      notes: [{ text: 'great SQL', by: 'Jane', at: now }], consent: { status: 'granted', requestedAt: now, expiresAt: now, respondedAt: now } });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: b._id, decision: 'Shortlisted' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: c._id, decision: 'Rejected' }); // excluded
+    const res = await request(createApp()).get(`/api/me/employer/drives/${d._id}/shortlist/pack`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(200);
+    expect(res.body.driveName).toBe('D');
+    expect(res.body.items).toHaveLength(2);                 // only the 2 Shortlisted
+    const item = res.body.items.find((i: { notes: string[] }) => i.notes.length > 0);
+    expect(item.code).toMatch(/^C-/);
+    expect(item.consentStatus).toBe('granted');
+    expect(item.notes).toEqual(['great SQL']);
+    const other = res.body.items.find((i: { notes: string[] }) => i.notes.length === 0);
+    expect(other.consentStatus).toBe('none');
+    // fully redacted — no identity anywhere in the payload
+    const raw = JSON.stringify(res.body);
+    for (const pii of ['Real Name', 'real@x.test', 'b@x.test', 'Secret College', 'Hyderabad']) expect(raw).not.toContain(pii);
+    res.body.items.forEach((i: Record<string, unknown>) => { expect(i).not.toHaveProperty('name'); expect(i).not.toHaveProperty('email'); });
+  });
+
+  it('derives expired consentStatus and returns [] when nothing is shortlisted; gated; 401/403', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const a = await seeker(inst._id);
+    const past = new Date(Date.now() - 3600_000);
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: a._id, decision: 'Shortlisted',
+      consent: { status: 'requested', requestedAt: past, expiresAt: past } });
+    const res = await request(createApp()).get(`/api/me/employer/drives/${d._id}/shortlist/pack`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.body.items[0].consentStatus).toBe('expired');
+
+    const d2 = await drive({ name: 'Empty' }); await approve(emp, d2);
+    const empty = await request(createApp()).get(`/api/me/employer/drives/${d2._id}/shortlist/pack`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(empty.body.items).toEqual([]);
+
+    const app = createApp();
+    expect((await request(app).get(`/api/me/employer/drives/${d._id}/shortlist/pack`)).status).toBe(401);
+    expect((await request(app).get(`/api/me/employer/drives/${d._id}/shortlist/pack`).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`)).status).toBe(403);
+  });
+});
