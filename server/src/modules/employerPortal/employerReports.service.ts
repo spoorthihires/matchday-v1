@@ -45,6 +45,8 @@ async function accumulate(employerId: string, driveId: string, acc: Acc): Promis
   );
   acc.recommended += pool.length;
   acc.interviewsScheduled += interviewed.size;
+  acc.offersSent += await Application.countDocuments({ employerId, driveId, 'offer.status': { $in: OFFER_SENT } });
+  acc.offersAccepted += await Application.countDocuments({ employerId, driveId, 'offer.status': { $in: OFFER_ACCEPTED } });
   for (const s of pool) {
     const app = appByJs.get(String(s._id));
     const stage = (app?.stage as KanbanStage | null | undefined) ?? deriveStage(app?.decision, app?.consent?.status, interviewed.has(String(s._id)), app?.offer?.status);
@@ -53,9 +55,6 @@ async function accumulate(employerId: string, driveId: string, acc: Acc): Promis
       if (f.threshold === null || (flowIdx >= 0 && flowIdx >= KANBAN_ORDER.indexOf(f.threshold))) acc.reached[i] += 1;
     });
     acc.scoreSum += candidateScore(s.cgpa, s.evaluationStatus, s.stage).matchScore;
-    const os = app?.offer?.status;
-    if (os && OFFER_SENT.includes(os)) acc.offersSent += 1;
-    if (os && OFFER_ACCEPTED.includes(os)) acc.offersAccepted += 1;
   }
 }
 
@@ -85,7 +84,7 @@ export async function getReport(employerId: string, driveIdParam?: string) {
     interviewsScheduled: acc.interviewsScheduled,
     offersSent: acc.offersSent,
     offersAccepted: acc.offersAccepted,
-    dropOffPct: shortlisted > 0 ? Math.round(((shortlisted - acc.offersAccepted) / shortlisted) * 100) : 0,
+    dropOffPct: shortlisted > 0 ? Math.max(0, Math.min(100, Math.round(((shortlisted - acc.offersAccepted) / shortlisted) * 100))) : 0,
     avgMatchScore: acc.recommended > 0 ? Math.round(acc.scoreSum / acc.recommended) : 0,
   };
   return { scope, drives, funnel, kpis };

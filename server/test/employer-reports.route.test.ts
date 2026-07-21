@@ -91,6 +91,43 @@ describe('GET /api/me/employer/reports', () => {
     expect(rep.body.drives).toHaveLength(2);
   });
 
+  it('counts offers scope-wide, including an offer to a candidate who has dropped out of the Match-Ready pool', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    // normal pool candidate with an accepted offer
+    const inPool = await seeker(inst._id, { email: 'inpool@x.test' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: inPool._id, decision: 'Shortlisted', offer: { status: 'Accepted', response: 'Accepted', ctc: 10, mode: 'Hybrid' } });
+    // out-of-pool candidate (global stage not in MATCH_READY_STAGES) with an Application offer on the same employer+drive
+    const droppedOut = await seeker(inst._id, { email: 'dropped@x.test', stage: 'Applied' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: droppedOut._id, offer: { status: 'Accepted', response: 'Accepted', ctc: 12, mode: 'On-site' } });
+
+    const rep = await request(createApp()).get(`/api/me/employer/reports?driveId=${d._id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(rep.status).toBe(200);
+    // funnel only reflects the pool (1 candidate) — the dropped-out jobseeker never enters it
+    expect(fstage(rep.body.funnel, 'Recommended').count).toBe(1);
+    // but the offer KPIs are scope-wide: both offers count
+    expect(rep.body.kpis.offersSent).toBe(2);
+    expect(rep.body.kpis.offersAccepted).toBe(2);
+  });
+
+  it('clamps dropOffPct to 0 when scope-wide offersAccepted exceeds the pool-based shortlisted count', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    // one in-pool Shortlisted candidate (no offer) → shortlisted = 1
+    const short = await seeker(inst._id, { email: 'short3@x.test' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: short._id, decision: 'Shortlisted' });
+    // two out-of-pool candidates (dropped out of Match-Ready) still carrying Accepted offers from before dropping out
+    const droppedOut1 = await seeker(inst._id, { email: 'dropped2@x.test', stage: 'Applied' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: droppedOut1._id, offer: { status: 'Accepted', response: 'Accepted', ctc: 12, mode: 'On-site' } });
+    const droppedOut2 = await seeker(inst._id, { email: 'dropped3@x.test', stage: 'Applied' });
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: droppedOut2._id, offer: { status: 'Accepted', response: 'Accepted', ctc: 12, mode: 'On-site' } });
+
+    const rep = await request(createApp()).get(`/api/me/employer/reports?driveId=${d._id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(rep.status).toBe(200);
+    // shortlisted = 1 while offersAccepted = 2 → (1-2)/1*100 = -100 unclamped, must clamp to 0
+    expect(fstage(rep.body.funnel, 'Shortlisted').count).toBe(1);
+    expect(rep.body.kpis.offersAccepted).toBe(2);
+    expect(rep.body.kpis.dropOffPct).toBe(0);
+  });
+
   it('gates: non-approved drive → 400; unknown/invalid → 404; employer-scoped; 401/403', async () => {
     const a = await employer(); const b = await employer({ email: 'b@b.test', name: 'Beta' });
     const d = await drive(); const inst = await institute();
