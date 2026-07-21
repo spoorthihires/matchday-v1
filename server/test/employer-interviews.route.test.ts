@@ -207,3 +207,39 @@ describe('PATCH .../interviews/:interviewId (actions)', () => {
     expect(badActionRes.body.error.code).toBe('validation');
   });
 });
+
+describe('Cancelled interview: reuse on reschedule-via-schedule + blocked transitions', () => {
+  it('schedule -> cancel -> schedule the same candidate again reactivates the interview (not already_scheduled)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await granted(emp, d, s._id); const sl = await slot(emp, d);
+    const app = createApp(); const tok = tokenFor(emp);
+    const first = await schedule(emp, d, s._id, sl._id, '10:30');
+    expect(first.status).toBe(201);
+    const id = first.body.id;
+    const cancelRes = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' });
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.status).toBe('Cancelled');
+    // re-schedule the SAME candidate -- must reuse the Cancelled row, not hit already_scheduled/E11000
+    const second = await schedule(emp, d, s._id, sl._id, '11:00');
+    expect(second.status).toBe(201);
+    expect(second.body.status).toBe('Scheduled');
+    expect(second.body.id).toBe(id); // reactivated the same document
+    expect(second.body.time).toBe('11:00');
+    expect(await Interview.countDocuments({ employerId: emp._id, driveId: d._id, jobseekerId: s._id })).toBe(1);
+  });
+
+  it('PATCH confirm on a Cancelled interview -> 400 invalid_transition; cancel itself stays idempotent', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await granted(emp, d, s._id); const sl = await slot(emp, d);
+    const app = createApp(); const tok = tokenFor(emp);
+    const id = (await schedule(emp, d, s._id, sl._id, '10:30')).body.id;
+    const url = `/api/me/employer/drives/${d._id}/interviews/${id}`;
+    await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' });
+    const confirmRes = await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'confirm' });
+    expect(confirmRes.status).toBe(400);
+    expect(confirmRes.body.error.code).toBe('invalid_transition');
+    const cancelAgain = await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' });
+    expect(cancelAgain.status).toBe(200);
+    expect(cancelAgain.body.status).toBe('Cancelled');
+  });
+});

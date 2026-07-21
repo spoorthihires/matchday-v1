@@ -74,8 +74,21 @@ export async function scheduleInterview(employerId: string, driveId: string, inp
   if ((app?.consent as { status?: string } | undefined)?.status !== 'granted')
     throw new HttpError(400, 'The candidate must consent to reveal their identity before an interview can be scheduled', 'consent_required');
   const slot = await validateSlot(employerId, driveId, input.slotId, input.time, null);
-  if (await Interview.findOne({ employerId, driveId, jobseekerId: input.jobseekerId }))
+  const existing = await Interview.findOne({ employerId, driveId, jobseekerId: input.jobseekerId });
+  if (existing && existing.status !== 'Cancelled') {
     throw new HttpError(400, 'This candidate already has an interview for this drive', 'already_scheduled');
+  }
+  if (existing) {
+    // Reuse the Cancelled row instead of creating a new one — the unique
+    // (employerId, driveId, jobseekerId) index would otherwise permanently
+    // trap this candidate once their interview is cancelled.
+    existing.slotId = slot._id;
+    existing.time = input.time;
+    existing.interviewers = input.interviewers ?? [];
+    existing.status = 'Scheduled';
+    await existing.save();
+    return projectOne(existing.toObject() as unknown as InterviewLean);
+  }
   let created;
   try {
     created = await Interview.create({ employerId, driveId, jobseekerId: input.jobseekerId, slotId: slot._id, time: input.time, interviewers: input.interviewers ?? [] });
@@ -93,6 +106,9 @@ export async function interviewAction(employerId: string, driveId: string, inter
   if (!Types.ObjectId.isValid(interviewId)) throw new HttpError(404, 'Interview not found', 'not_found');
   const iv = await Interview.findOne({ _id: interviewId, employerId, driveId });
   if (!iv) throw new HttpError(404, 'Interview not found', 'not_found');
+  if (iv.status === 'Cancelled' && payload.action !== 'cancel') {
+    throw new HttpError(400, 'This interview has been cancelled; schedule a new one instead', 'invalid_transition');
+  }
   switch (payload.action) {
     case 'confirm': iv.status = 'Confirmed'; break;
     case 'complete': iv.status = 'Completed'; break;

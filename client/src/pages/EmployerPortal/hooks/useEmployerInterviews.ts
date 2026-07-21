@@ -14,8 +14,9 @@ export function useEmployerInterviews(driveId: string) {
 }
 
 // POST .../interviews (Task 1) -- schedule a consent-granted candidate into one of the
-// employer's slots. Invalidates the agenda + the employer-portal aggregate (dashboard KPIs
-// read upcomingInterviews), same fan-out convention as useEmployerSlots.ts's mutations.
+// employer's slots. Invalidates the agenda + the employer-portal aggregate, so the dashboard's
+// upcomingInterviews KPI (a live count of Scheduled/Confirmed Interview docs, not a slot count)
+// refreshes too -- same fan-out convention as useEmployerSlots.ts's mutations.
 export function useScheduleInterview(driveId: string) {
   const { token } = useAuth();
   const qc = useQueryClient();
