@@ -89,3 +89,43 @@ describe('GET .../board', () => {
     expect((await request(app).get(`/api/me/employer/drives/${d._id}/board`).set('Authorization', `Bearer ${signToken({ sub: String(a._id), role: 'admin' })}`)).status).toBe(403);
   });
 });
+
+describe('PATCH .../candidates/:jobseekerId/stage', () => {
+  it('pins the stage on an existing Application without touching decision', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: s._id, decision: 'Shortlisted' });
+    const res = await request(createApp()).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`)
+      .set('Authorization', `Bearer ${tokenFor(emp)}`).send({ stage: 'L2' });
+    expect(res.status).toBe(200);
+    expect(res.body.stage).toBe('L2');
+    expect(res.body.decision).toBe('Shortlisted'); // decision untouched
+    const app = await Application.findOne({ employerId: emp._id, driveId: d._id, jobseekerId: s._id }).lean();
+    expect(app?.stage).toBe('L2');
+    expect(app?.decision).toBe('Shortlisted');
+  });
+
+  it('creates an Application (decision null) for a pure-pool candidate then pins the stage', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    expect(await Application.findOne({ employerId: emp._id, driveId: d._id, jobseekerId: s._id })).toBeNull();
+    const res = await request(createApp()).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`)
+      .set('Authorization', `Bearer ${tokenFor(emp)}`).send({ stage: 'Shortlisted' });
+    expect(res.status).toBe(200);
+    expect(res.body.stage).toBe('Shortlisted');
+    const app = await Application.findOne({ employerId: emp._id, driveId: d._id, jobseekerId: s._id }).lean();
+    expect(app?.stage).toBe('Shortlisted');
+    expect(app?.decision ?? null).toBeNull(); // decision NOT set by a stage move
+  });
+
+  it('rejects an invalid stage (400); out-of-pool → 404; 401/403', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    const applied = await seeker(inst._id, { email: 'ap@x.test', stage: 'Applied' }); // out of pool
+    const app = createApp(); const tok = tokenFor(emp);
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`).set('Authorization', `Bearer ${tok}`).send({ stage: 'Nope' })).status).toBe(400);
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${applied._id}/stage`).set('Authorization', `Bearer ${tok}`).send({ stage: 'L1' })).status).toBe(404);
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`).send({ stage: 'L1' })).status).toBe(401);
+    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`).send({ stage: 'L1' })).status).toBe(403);
+  });
+});

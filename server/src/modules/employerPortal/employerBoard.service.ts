@@ -5,7 +5,7 @@ import { Jobseeker } from '../../models/Jobseeker.js';
 import { Application } from '../../models/Application.js';
 import { Interview } from '../../models/Interview.js';
 import { hasApprovedRegistration } from './employerPortal.service.js';
-import { poolSeekers, candidateScore } from './employerCandidates.service.js';
+import { poolSeekers, candidateScore, requirePoolMember } from './employerCandidates.service.js';
 import { codeFor } from '../jobseekers/jobseekers.service.js';
 import { consentBlock } from '../../constants/consent.js';
 import { deriveStage, type KanbanStage } from '../../constants/kanban.js';
@@ -50,6 +50,21 @@ async function revealMapFor(apps: AppLean[]): Promise<Map<string, RevealedIdenti
     for (const r of revealed) map.set(String(r._id), { name: r.name, email: r.email ?? '' });
   }
   return map;
+}
+
+export async function setStage(employerId: string, driveId: string, jobseekerId: string, stage: KanbanStage): Promise<BoardCard> {
+  const { seeker } = await requirePoolMember(employerId, driveId, jobseekerId);
+  await Application.findOneAndUpdate(
+    { employerId, driveId, jobseekerId },
+    { $set: { stage }, $setOnInsert: { employerId, driveId, jobseekerId } },
+    { upsert: true, new: true },
+  );
+  const app = await Application.findOne({ employerId, driveId, jobseekerId }).lean<AppLean>();
+  const hasInterview = !!(await Interview.findOne({ employerId, driveId, jobseekerId, status: { $ne: 'Cancelled' } }));
+  const reveal = app?.consent?.status === 'granted'
+    ? await Jobseeker.findById(jobseekerId).select('name email').lean<{ name: string; email?: string }>().then((r) => ({ name: r?.name ?? '—', email: r?.email ?? '' }))
+    : null;
+  return boardCard(seeker as unknown as SeekerLean, app ?? undefined, hasInterview, reveal);
 }
 
 export async function getBoard(employerId: string, driveId: string) {
