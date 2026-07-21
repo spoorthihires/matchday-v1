@@ -16,6 +16,7 @@ import { upsertOfferController, offersController } from './employerOffers.contro
 import { reportsController } from './employerReports.controller.js';
 import { notificationsController, markNotificationsReadController } from './employerNotifications.controller.js';
 import { createSupportController, supportListController } from './employerSupport.controller.js';
+import { teamListController, addTeamMemberController, updateTeamMemberController, removeTeamMemberController } from './employerTeam.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -54,4 +55,8 @@ employerPortalRoutes.get('/employer/notifications', asyncHandler(notificationsCo
 employerPortalRoutes.post('/employer/notifications/read', asyncHandler(markNotificationsReadController));
 employerPortalRoutes.get('/employer/support', asyncHandler(supportListController));
 employerPortalRoutes.post('/employer/support', asyncHandler(createSupportController));
+employerPortalRoutes.get('/employer/team', asyncHandler(teamListController));
+employerPortalRoutes.post('/employer/team', asyncHandler(addTeamMemberController));
+employerPortalRoutes.patch('/employer/team/:memberId', asyncHandler(updateTeamMemberController));
+employerPortalRoutes.delete('/employer/team/:memberId', asyncHandler(removeTeamMemberController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));
