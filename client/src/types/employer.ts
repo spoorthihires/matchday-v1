@@ -219,3 +219,14 @@ export interface CandidatePassport extends EmployerCandidate {
   factors: CandidatePassportFactors;
   notes: CandidateNote[];
 }
+
+// Mirrors server/src/modules/employerPortal/employerShortlist.service.ts's ShortlistPackItem /
+// shortlistPack return shape exactly (Slice 6 Tasks 1-2) -- the redacted, downloadable CSV pack
+// this task's EmployerShortlist page builds client-side from.
+export interface ShortlistPackItem {
+  code: string; matchScore: number; evalPill: 'Strong' | 'Qualified';
+  branch: string; gradYear: number; cgpaBand: string; instituteCategory: string; stage: string;
+  consentStatus: 'requested' | 'granted' | 'declined' | 'expired' | 'none';
+  notes: string[];
+}
+export interface ShortlistPack { driveName: string; generatedAt: string; items: ShortlistPackItem[]; }
