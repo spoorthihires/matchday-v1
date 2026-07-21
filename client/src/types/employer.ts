@@ -246,3 +246,21 @@ export type InterviewAction =
   | { action: 'confirm' } | { action: 'complete' } | { action: 'cancel' }
   | { action: 'reschedule'; slotId: string; time: string }
   | { action: 'set-interviewers'; interviewers: string[] };
+
+// Mirrors server/src/constants/kanban.ts's KANBAN_STAGES/KANBAN_ORDER/KANBAN_TERMINAL and
+// server/src/modules/employerPortal/employerBoard.service.ts's BoardCard shape exactly
+// (Slice 8 Tasks 1-2) -- the pipeline board this task's EmployerKanban page renders.
+export type BoardStage =
+  | 'Recommended' | 'Shortlisted' | 'Candidate Confirmed' | 'Scheduled'
+  | 'L1' | 'L2' | 'L3' | 'HR' | 'Offer Sent' | 'Offer Accepted' | 'Joined'
+  | 'Rejected' | 'Withdrawn';
+export const KANBAN_ORDER: BoardStage[] = ['Recommended', 'Shortlisted', 'Candidate Confirmed', 'Scheduled', 'L1', 'L2', 'L3', 'HR', 'Offer Sent', 'Offer Accepted', 'Joined'];
+export const KANBAN_TERMINAL: BoardStage[] = ['Rejected', 'Withdrawn'];
+export const KANBAN_ALL: BoardStage[] = [...KANBAN_ORDER, ...KANBAN_TERMINAL];
+export interface BoardCard {
+  jobseekerId: string; code: string; branch: string; matchScore: number; evalPill: 'Strong' | 'Qualified';
+  stage: BoardStage; decision: 'Shortlisted' | 'Hold' | 'Rejected' | null;
+  consentStatus: 'requested' | 'granted' | 'declined' | 'expired' | 'none';
+  revealed: { name: string; email: string } | null;
+}
+export interface EmployerBoardResponse { items: BoardCard[]; }
