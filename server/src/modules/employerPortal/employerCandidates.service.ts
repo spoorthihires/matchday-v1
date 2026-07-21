@@ -56,7 +56,7 @@ function redactCandidate(s: SeekerLean, instituteCategory: string, app?: { decis
   };
 }
 
-async function poolSeekers(drive: DriveLean): Promise<SeekerLean[]> {
+export async function poolSeekers(drive: DriveLean): Promise<SeekerLean[]> {
   const seekers = await Jobseeker.find({ stage: { $in: MATCH_READY_STAGES } })
     .select('instituteId branch gradYear cgpa source evaluationStatus stage').lean<SeekerLean[]>();
   return seekers.filter((s) => isEligible(drive.eligibility, { branch: s.branch, gradYear: s.gradYear, source: s.source }));

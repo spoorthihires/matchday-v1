@@ -9,6 +9,7 @@ import {
 } from './employerPortal.controller.js';
 import { candidatesController, passportController, decisionController, noteController } from './employerCandidates.controller.js';
 import { requestRevealController, remindRevealController, withdrawRevealController } from './employerConsent.controller.js';
+import { bulkDecisionController, shortlistPackController } from './employerShortlist.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -33,4 +34,6 @@ employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/notes', 
 employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/reveal-request', asyncHandler(requestRevealController));
 employerPortalRoutes.post('/employer/drives/:id/candidates/:jobseekerId/reveal-request/remind', asyncHandler(remindRevealController));
 employerPortalRoutes.delete('/employer/drives/:id/candidates/:jobseekerId/reveal-request', asyncHandler(withdrawRevealController));
+employerPortalRoutes.post('/employer/drives/:id/candidates/bulk-decision', asyncHandler(bulkDecisionController));
+employerPortalRoutes.get('/employer/drives/:id/shortlist/pack', asyncHandler(shortlistPackController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));
