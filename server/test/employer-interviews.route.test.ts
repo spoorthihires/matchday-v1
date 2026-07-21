@@ -145,9 +145,15 @@ describe('PATCH .../interviews/:interviewId (actions)', () => {
     const s = await seeker(inst._id); await granted(emp, d, s._id); const sl = await slot(emp, d);
     const id = (await schedule(emp, d, s._id, sl._id, '10:30')).body.id;
     const app = createApp(); const tok = tokenFor(emp); const url = `/api/me/employer/drives/${d._id}/interviews/${id}`;
-    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'confirm' })).body.status).toBe('Confirmed');
-    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'complete' })).body.status).toBe('Completed');
-    expect((await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' })).body.status).toBe('Cancelled');
+    const confirmRes = await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'confirm' });
+    expect(confirmRes.status).toBe(200);
+    expect(confirmRes.body.status).toBe('Confirmed');
+    const completeRes = await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'complete' });
+    expect(completeRes.status).toBe(200);
+    expect(completeRes.body.status).toBe('Completed');
+    const cancelRes = await request(app).patch(url).set('Authorization', `Bearer ${tok}`).send({ action: 'cancel' });
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.status).toBe('Cancelled');
   });
 
   it('reschedule re-validates and resets status to Scheduled; set-interviewers replaces', async () => {
@@ -168,6 +174,13 @@ describe('PATCH .../interviews/:interviewId (actions)', () => {
       .send({ action: 'reschedule', slotId: String(sl._id), time: '11:30' });
     expect(ok.body.status).toBe('Scheduled');
     expect(ok.body.time).toBe('11:30');
+    // reschedule to its OWN currently-held time must succeed (excludeIvId self-exclusion) — a regression
+    // that dropped excludeIvId from the clash filter would wrongly return slot_time_taken here.
+    const self = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`)
+      .send({ action: 'reschedule', slotId: String(sl._id), time: '11:30' });
+    expect(self.status).toBe(200);
+    expect(self.body.status).toBe('Scheduled');
+    expect(self.body.time).toBe('11:30');
     // set-interviewers
     const iv = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tok}`)
       .send({ action: 'set-interviewers', interviewers: ['A B', 'C D'] });
@@ -181,10 +194,16 @@ describe('PATCH .../interviews/:interviewId (actions)', () => {
     const id = (await schedule(a, d, s._id, sl._id, '10:30')).body.id;
     const app = createApp();
     // employer B cannot act on A's interview → 404 (no oracle)
-    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(b)}`).send({ action: 'confirm' })).status).toBe(404);
-    // unknown id → 404
-    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${new Types.ObjectId()}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'confirm' })).status).toBe(404);
+    const foreignRes = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(b)}`).send({ action: 'confirm' });
+    expect(foreignRes.status).toBe(404);
+    expect(foreignRes.body.error.code).toBe('not_found');
+    // unknown id → 404 (same body shape as the foreign-employer case — no oracle)
+    const unknownRes = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${new Types.ObjectId()}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'confirm' });
+    expect(unknownRes.status).toBe(404);
+    expect(unknownRes.body.error.code).toBe('not_found');
     // bad action → 400
-    expect((await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'nope' })).status).toBe(400);
+    const badActionRes = await request(app).patch(`/api/me/employer/drives/${d._id}/interviews/${id}`).set('Authorization', `Bearer ${tokenFor(a)}`).send({ action: 'nope' });
+    expect(badActionRes.status).toBe(400);
+    expect(badActionRes.body.error.code).toBe('validation');
   });
 });
