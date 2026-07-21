@@ -128,4 +128,22 @@ describe('PATCH .../candidates/:jobseekerId/stage', () => {
     expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`).send({ stage: 'L1' })).status).toBe(401);
     expect((await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`).send({ stage: 'L1' })).status).toBe(403);
   });
+
+  it('clearing the decision on a pinned card preserves the stage (does not delete the row)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    const app = createApp(); const tok = tokenFor(emp);
+    const pin = await request(app).patch(`/api/me/employer/drives/${d._id}/candidates/${s._id}/stage`)
+      .set('Authorization', `Bearer ${tok}`).send({ stage: 'L2' });
+    expect(pin.status).toBe(200);
+    expect(pin.body.decision).toBeNull();
+    const cleared = await request(app).put(`/api/me/employer/drives/${d._id}/candidates/${s._id}/decision`)
+      .set('Authorization', `Bearer ${tok}`).send({ decision: null });
+    expect(cleared.status).toBe(200);
+    const savedApp = await Application.findOne({ employerId: emp._id, driveId: d._id, jobseekerId: s._id }).lean();
+    expect(savedApp).not.toBeNull();
+    expect(savedApp?.stage).toBe('L2');
+    const board = await request(app).get(`/api/me/employer/drives/${d._id}/board`).set('Authorization', `Bearer ${tok}`);
+    expect(stageOf(board.body.items, s._id)).toBe('L2');
+  });
 });

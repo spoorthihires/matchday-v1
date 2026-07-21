@@ -150,7 +150,9 @@ export async function setDecision(employerId: string, driveId: string, jobseeker
     // Atomic so a concurrent addNote can't be lost: delete the row only if it has
     // no notes; if the delete matched nothing (notes exist, or no row), just clear
     // the decision. A read-then-write here could drop a note landing between the two.
-    const { deletedCount } = await Application.deleteOne({ employerId, driveId, jobseekerId, notes: { $size: 0 }, consent: { $exists: false } });
+    // `stage: null` (matches null or missing) guards a pinned kanban card (Slice 8)
+    // from being deleted out from under the board.
+    const { deletedCount } = await Application.deleteOne({ employerId, driveId, jobseekerId, notes: { $size: 0 }, consent: { $exists: false }, stage: null });
     if (deletedCount === 0) await Application.updateOne({ employerId, driveId, jobseekerId }, { $set: { decision: null } });
   } else {
     await Application.findOneAndUpdate(

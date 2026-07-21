@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
+import { KANBAN_STAGES } from '../constants/kanban.js';
 
 const noteSchema = new Schema({
   text: { type: String, required: true },
@@ -29,7 +30,7 @@ const applicationSchema = new Schema({
   consent: { type: consentSchema, default: undefined },
   stage: {
     type: String,
-    enum: ['Recommended', 'Shortlisted', 'Candidate Confirmed', 'Scheduled', 'L1', 'L2', 'L3', 'HR', 'Offer Sent', 'Offer Accepted', 'Joined', 'Rejected', 'Withdrawn'],
+    enum: [...KANBAN_STAGES],
     default: null,
   },
 }, { timestamps: true });
