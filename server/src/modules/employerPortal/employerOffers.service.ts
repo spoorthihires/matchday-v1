@@ -1,8 +1,10 @@
 import { Types } from 'mongoose';
 import { HttpError } from '../../middleware/errorHandler.js';
+import { Drive } from '../../models/Drive.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Application } from '../../models/Application.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
+import { hasApprovedRegistration } from './employerPortal.service.js';
 import { requirePoolMember, candidateScore } from './employerCandidates.service.js';
 import { codeFor } from '../jobseekers/jobseekers.service.js';
 import type { UpsertOfferPayload } from './employerOffers.schemas.js';
@@ -13,6 +15,22 @@ interface OfferLean { status: string; response: string; ctc: number; location: s
 export interface OfferRow {
   jobseekerId: string; code: string; matchScore: number; revealed: { name: string; email: string };
   status: string; response: string; ctc: number; location: string; mode: string; joinDate: string | null; declineReason: string;
+}
+
+// NOTE (tracked in .superpowers/sdd/progress.md): duplicates the same
+// gate-check pattern (drive validity → approved registration → drive
+// existence) that already exists ~6x across employerPortal services
+// (e.g. `gateAndDrive` in employerBoard.service.ts, the inline checks in
+// employerCandidates.service.ts). Flagged for a future shared-helper
+// extraction rather than fixed here, to keep this task's diff scoped to the
+// offer feature. `upsertOffer` below relies on `requirePoolMember` (which
+// already gates + checks pool membership) rather than this helper directly.
+async function gate(employerId: string, driveId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(driveId)) throw new HttpError(404, 'Drive not found', 'not_found');
+  if (!(await hasApprovedRegistration(employerId, driveId)))
+    throw new HttpError(400, 'You need an approved registration for this drive', 'registration_not_approved');
+  const drive = await Drive.findById(driveId).lean();
+  if (!drive) throw new HttpError(404, 'Drive not found', 'not_found');
 }
 
 export function offerRow(seeker: SeekerLean, ident: { name?: string; email?: string } | null, offer: OfferLean): OfferRow {
