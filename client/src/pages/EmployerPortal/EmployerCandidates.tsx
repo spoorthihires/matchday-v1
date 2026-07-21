@@ -42,6 +42,10 @@ export function EmployerCandidates() {
       <div className="card">
         <h2>Candidates — {drive.data?.name ?? '…'}</h2>
         <p className="cand-privacy hint">Names, contact details and resumes stay hidden. Identity is only revealed after a shortlisted candidate confirms interest.</p>
+        <div style={{ marginTop: 10 }}>
+          <button type="button" className="btn btn-ghost" disabled={!items.some((c) => c.decision === 'Shortlisted')}
+            onClick={() => navigate(`/employer/drives/${driveId}/consent`)}>Consent status</button>
+        </div>
       </div>
 
       <div className="card" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
