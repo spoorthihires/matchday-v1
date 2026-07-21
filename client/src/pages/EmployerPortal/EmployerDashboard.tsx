@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom';
 import { useEmployerPortal } from './hooks/useEmployerPortal.js';
+import { formatRelativeTime } from './hooks/useEmployerNotifications.js';
 import type { EmployerCalendarEntry } from '../../types/employer.js';
 import './employerBase.js';
+
+const NOTIF_TINT: Record<string, string> = { registration: 'ni-ok', candidate: 'ni-cand', slot: 'ni-warn' };
 
 // Ported from the prototype Matchday_Employer.html lines ~2705-2790 (view-app's
 // #page-dashboard: .dash-greet header, .kpi-grid, and the .dash-cols two-column card
@@ -149,6 +153,33 @@ export function EmployerDashboard() {
                         <div>
                           <div className="dn">{formatCalendarEntry(entry)}</div>
                           <div className="dm">Drive {entry.driveId}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <h3>
+                    <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></svg>
+                    Recent notifications
+                  </h3>
+                  <Link to="/employer/notifications" style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: 'var(--indigo)' }}>See all</Link>
+                </div>
+                <div className="card-body">
+                  {data.dashboard.notifications.length === 0 ? (
+                    <p className="hint">No notifications yet.</p>
+                  ) : (
+                    data.dashboard.notifications.map((n) => (
+                      <div className="notif-row" key={n.id}>
+                        <span className={`notif-ic ${NOTIF_TINT[n.category] ?? 'ni-cand'}`}>
+                          <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" /></svg>
+                        </span>
+                        <div>
+                          <div className="nt">{n.title} — {n.body}</div>
+                          <div className="ntime">{formatRelativeTime(n.at)}</div>
                         </div>
                       </div>
                     ))

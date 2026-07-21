@@ -21,11 +21,29 @@ export interface EmployerCalendarEntry {
   driveId: string;
 }
 
+export type EmployerNotificationCategory = 'registration' | 'candidate' | 'slot';
+export interface EmployerNotification {
+  id: string;
+  category: EmployerNotificationCategory;
+  title: string;
+  body: string;
+  at: string;
+  link: string;
+  read: boolean;
+}
+export interface EmployerNotificationsResponse {
+  items: EmployerNotification[];
+  unreadCount: number;
+  lastReadAt: string | null;
+}
+
 export interface EmployerDashboard {
   kpis: { activeDrives: number; upcomingInterviews: number; totalSlots: number };
   calendar: EmployerCalendarEntry[];
   registrations: unknown[];
   shortlist: unknown[];
+  notifications: EmployerNotification[];
+  notificationsUnread: number;
 }
 
 export interface EmployerPortalResponse {

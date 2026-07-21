@@ -138,6 +138,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
   const profile = data?.profile;
   const companyName = profile?.name ?? '';
   const contactName = profile?.spoc ?? '';
+  const notificationsUnread = data?.dashboard?.notificationsUnread ?? 0;
 
   function goTo(item: NavItem) {
     navigate(item.path);
@@ -217,6 +218,15 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
               <input placeholder="Search drives, candidates, IDs…" aria-label="Search" />
             </div>
             <div className="tb-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Notifications"
+                onClick={() => navigate('/employer/notifications')}
+              >
+                <svg className="ic" viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></svg>
+                {notificationsUnread > 0 && <span className="ndot" />}
+              </button>
               <div
                 className="tb-user"
                 role="button"
