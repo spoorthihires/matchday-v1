@@ -69,6 +69,7 @@ export function EmployerKanban() {
         <p className="hint">
           Private to your team. Identities appear once a candidate consents.{' '}
           <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/interviews`)}>Interviews</button>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/offers`)}>Offer management</button>
         </p>
       </div>
       {move.isError && <p className="otp-err" role="alert">{errMsg(move.error)}</p>}

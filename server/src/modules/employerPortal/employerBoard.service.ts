@@ -11,7 +11,7 @@ import { consentBlock } from '../../constants/consent.js';
 import { deriveStage, type KanbanStage } from '../../constants/kanban.js';
 
 interface SeekerLean { _id: Types.ObjectId; instituteId: Types.ObjectId; branch: string; gradYear: number; cgpa: number; source: string; evaluationStatus: string; stage: string }
-interface AppLean { jobseekerId: Types.ObjectId; decision?: string | null; consent?: { status?: string } | null; stage?: KanbanStage | null }
+interface AppLean { jobseekerId: Types.ObjectId; decision?: string | null; consent?: { status?: string } | null; stage?: KanbanStage | null; offer?: { status?: string } | null }
 export interface RevealedIdentity { name: string; email: string; }
 export interface BoardCard {
   jobseekerId: string; code: string; branch: string; matchScore: number; evalPill: 'Strong' | 'Qualified';
@@ -34,7 +34,7 @@ export function boardCard(s: SeekerLean, app: AppLean | undefined, hasInterview:
   const { matchScore } = candidateScore(s.cgpa, s.evaluationStatus, s.stage);
   const cb = consentBlock(app?.consent as Parameters<typeof consentBlock>[0]);
   const consentStatus = (cb ? (cb.expired ? 'expired' : cb.status) : 'none') as BoardCard['consentStatus'];
-  const stage = (app?.stage as KanbanStage | null | undefined) ?? deriveStage(app?.decision, app?.consent?.status, hasInterview);
+  const stage = (app?.stage as KanbanStage | null | undefined) ?? deriveStage(app?.decision, app?.consent?.status, hasInterview, app?.offer?.status);
   return {
     jobseekerId: String(s._id), code: codeFor(s._id), branch: s.branch,
     matchScore, evalPill: matchScore >= 80 ? 'Strong' : 'Qualified',
