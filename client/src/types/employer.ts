@@ -299,6 +299,20 @@ export interface OfferInput {
   status: OfferStatus; response?: OfferResponse; ctc?: number; location?: string; mode?: OfferMode; joinDate?: string; declineReason?: string;
 }
 
+// Mirrors server/src/modules/employerPortal/employerSupport.service.ts's project()/
+// listSupportRequests return shape exactly (Task 1) -- the FAQ + request form + my-requests
+// list this task's EmployerSupport page renders.
+export const SUPPORT_CATEGORIES = [
+  'More candidates', 'Slot change', 'Candidate replacement', 'No-show',
+  'Profile/data issue', 'Resume access', 'Commercial/billing', 'Other',
+] as const;
+export type SupportCategory = typeof SUPPORT_CATEGORIES[number];
+export interface SupportRequestItem {
+  id: string; ref: string; category: SupportCategory; subject: string; message: string;
+  priority: 'Low' | 'Normal' | 'High'; status: 'Open' | 'In progress' | 'Resolved'; createdAt: string;
+}
+export interface SupportListResponse { items: SupportRequestItem[]; }
+
 export interface ReportFunnelStage { stage: string; count: number; conversionPct: number; }
 export interface EmployerReport {
   scope: string;

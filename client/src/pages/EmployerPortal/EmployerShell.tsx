@@ -221,6 +221,14 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
               <button
                 type="button"
                 className="icon-btn"
+                aria-label="Help"
+                onClick={() => navigate('/employer/support')}
+              >
+                <svg className="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 013.9-1.6c1.1.7 1.1 2 .1 2.8-.7.5-1.5.9-1.5 1.8" /><path d="M12 17h.01" /></svg>
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
                 aria-label="Notifications"
                 onClick={() => navigate('/employer/notifications')}
               >
