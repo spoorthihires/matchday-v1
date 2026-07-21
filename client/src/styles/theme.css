@@ -116,9 +116,10 @@
   #auth-screen .field .hint a:hover{text-decoration:underline}
   #auth-screen .inp{position:relative;display:flex;align-items:center;background:var(--indigo-050);border:1px solid var(--line);border-radius:var(--r-sm);transition:border-color .15s,box-shadow .15s,background .15s}
   #auth-screen .inp i.lead{padding:0 10px 0 13px;color:var(--muted);font-size:18px}
-  #auth-screen .inp input{flex:1;border:0;background:transparent;padding:12px 12px 12px 0;font-size:14.5px;color:var(--ink);font-family:inherit;outline:none;min-width:0}
+  #auth-screen .inp input{flex:1;border:0;background:transparent;padding:12px 14px;font-size:14.5px;color:var(--ink);font-family:inherit;outline:none;min-width:0;min-height:20px}
+  #auth-screen .inp i.lead + input{padding-left:0}
   #auth-screen .inp input::placeholder{color:#a4aac0}
-  #auth-screen .inp .toggle{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:0 12px;display:grid;place-items:center;font-size:18px}
+  #auth-screen .inp .toggle{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:0 14px;display:grid;place-items:center;font-size:18px}
   #auth-screen .inp .toggle:hover{color:var(--ink-2)}
   #auth-screen .inp:focus-within{border-color:var(--indigo);background:var(--white);box-shadow:var(--focus)}
   #auth-screen .field.invalid .inp{border-color:var(--danger);background:var(--danger-bg)}
@@ -939,20 +940,37 @@
   .cal-title{font-size:16px;font-weight:700;min-width:190px;text-align:center}
   .cal-month{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--white);box-shadow:var(--shadow-sm)}
   .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg);border-bottom:1px solid var(--line)}
-  .cal-dow div{padding:10px;font-size:11px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.06em}
+  .cal-dow div{padding:9px 8px;font-size:11px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.06em}
   /* Month-view grid/cells scoped under `.cal-month` — `.cal-grid`/`.cal-cell` are also used by the
-     dashboard mini-calendar (scoped under `.cal` above); unscoped, both rule sets applied at once. */
+     dashboard mini-calendar (scoped under `.cal` above); unscoped, both rule sets applied at once.
+     Cells use a fixed `height` (not min-height) so every row in the grid is exactly the same
+     height regardless of how many events a given day has — MAX_CHIPS in MonthView.tsx caps
+     rendered chips so content never exceeds this height. */
   .cal-month .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
-  .cal-month .cal-cell{min-height:108px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;cursor:pointer}
+  .cal-month .cal-cell{
+    height:128px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding:5px 5px 4px;cursor:pointer;display:flex;flex-direction:column;gap:2px;
+    background:var(--white);position:relative;overflow:hidden;transition:background .12s ease;
+  }
+  .cal-month .cal-cell:hover{background:var(--wash-cool)}
   .cal-month .cal-cell:nth-child(7n){border-right:0}
-  .cal-month .cal-cell.dim{background:var(--wash-dim)}.cal-month .cal-cell.dim .dnum{color:var(--faint)}
-  .cal-month .cal-cell.event{background:var(--wash-blue)}
-  .cal-month .cal-cell .dnum{font-size:12.5px;font-weight:600;color:var(--ink-2)}
-  .cal-month .cal-cell.today .dnum{background:var(--indigo);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-grid;place-items:center}
-  .cal-chip{display:block;margin-top:4px;font-size:10.5px;padding:3px 6px;border-radius:6px;background:var(--indigo-050);color:var(--indigo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--indigo)}
+  .cal-month .cal-cell.dim{background:var(--wash-dim)}
+  .cal-month .cal-cell.dim:hover{background:var(--wash-dim)}
+  .cal-month .cal-cell.dim .dnum,.cal-month .cal-cell.dim .cal-events{opacity:.5}
+  .cal-month .cal-cell.dim .dnum{color:var(--ink-2);font-weight:500}
+  .cal-month .cal-cell.today{background:var(--indigo-050);box-shadow:inset 3px 0 0 var(--indigo)}
+  .cal-month .cal-cell.today:hover{background:var(--indigo-050)}
+  .cal-month .cal-cell .dnum{
+    flex:0 0 auto;font-size:12px;font-weight:600;color:var(--ink-2);
+    width:22px;height:22px;display:inline-grid;place-items:center;border-radius:50%;
+  }
+  .cal-month .cal-cell.today .dnum{background:var(--indigo);color:#fff;font-weight:700}
+  .cal-month .cal-cell .cal-events{display:flex;flex-direction:column;gap:2px;overflow:hidden;min-height:0}
+  .cal-chip{display:block;font-size:10.5px;line-height:16px;padding:1px 6px;border-radius:5px;background:var(--indigo-050);color:var(--indigo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--indigo);flex:0 0 auto}
   .cal-chip.done{background:var(--success-bg);color:var(--success-text-strong);border-left-color:var(--success)}
   .cal-chip.cancel{background:var(--muted-wash);color:var(--muted);border-left-color:var(--muted);text-decoration:line-through}
-  .cal-more{font-size:10.5px;color:var(--muted);margin-top:3px;cursor:pointer;font-weight:600}
+  .cal-more{font-size:10.5px;color:var(--indigo);cursor:pointer;font-weight:600;padding:1px 6px;flex:0 0 auto}
+  .cal-more:hover{text-decoration:underline}
   .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
   .cal-wcol{border:1px solid var(--line);border-radius:12px;background:var(--white);overflow:hidden;min-height:280px;box-shadow:var(--shadow-sm)}
   .cal-wcol .wh{padding:9px;text-align:center;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;cursor:pointer}
