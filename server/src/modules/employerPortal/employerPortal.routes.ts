@@ -12,7 +12,7 @@ import { requestRevealController, remindRevealController, withdrawRevealControll
 import { bulkDecisionController, shortlistPackController } from './employerShortlist.controller.js';
 import { interviewsController, scheduleInterviewController, interviewActionController } from './employerInterviews.controller.js';
 import { boardController, setStageController } from './employerBoard.controller.js';
-import { upsertOfferController } from './employerOffers.controller.js';
+import { upsertOfferController, offersController } from './employerOffers.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -44,5 +44,6 @@ employerPortalRoutes.post('/employer/drives/:id/interviews', asyncHandler(schedu
 employerPortalRoutes.patch('/employer/drives/:id/interviews/:interviewId', asyncHandler(interviewActionController));
 employerPortalRoutes.get('/employer/drives/:id/board', asyncHandler(boardController));
 employerPortalRoutes.patch('/employer/drives/:id/candidates/:jobseekerId/stage', asyncHandler(setStageController));
+employerPortalRoutes.get('/employer/drives/:id/offers', asyncHandler(offersController));
 employerPortalRoutes.put('/employer/drives/:id/candidates/:jobseekerId/offer', asyncHandler(upsertOfferController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));

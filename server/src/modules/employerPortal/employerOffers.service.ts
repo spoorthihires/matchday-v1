@@ -73,3 +73,24 @@ export async function upsertOffer(employerId: string, driveId: string, jobseeker
   const ident = await Jobseeker.findById(jobseekerId).select('name email').lean<{ name: string; email?: string }>();
   return offerRow(seeker as unknown as SeekerLean, ident, offer as OfferLean);
 }
+
+const OFFER_STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined', 'Joined'];
+
+export async function listOffers(employerId: string, driveId: string) {
+  await gate(employerId, driveId);
+  const apps = await Application.find({ employerId, driveId, offer: { $exists: true } }).lean();
+  const seekers = await Jobseeker.find({ _id: { $in: apps.map((a) => a.jobseekerId) } })
+    .select('name email cgpa evaluationStatus stage').lean<(SeekerLean & { name: string; email?: string })[]>();
+  const byId = new Map(seekers.map((s) => [String(s._id), s]));
+  const items = apps
+    .map((a) => {
+      const s = byId.get(String(a.jobseekerId));
+      if (!s) return null;
+      return offerRow(s, { name: s.name, email: s.email }, a.offer as OfferLean);
+    })
+    .filter((r): r is OfferRow => r !== null)
+    .sort((x, y) => y.matchScore - x.matchScore);
+  const counts: Record<string, number> = Object.fromEntries(OFFER_STATUSES.map((st) => [st, 0]));
+  for (const it of items) counts[it.status] = (counts[it.status] ?? 0) + 1;
+  return { items, counts };
+}

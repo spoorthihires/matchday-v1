@@ -95,3 +95,31 @@ describe('PUT .../offer', () => {
     expect((await request(app).put(offerUrl(d, s._id)).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`).send({ status: 'Sent' })).status).toBe(403);
   });
 });
+
+describe('GET .../offers', () => {
+  it('lists candidates with an offer (revealed) + KPI counts; employer-scoped', async () => {
+    const a = await employer(); const b = await employer({ email: 'b@b.test', name: 'Beta' });
+    const d = await drive(); await approve(a, d); await approve(b, d); const inst = await institute();
+    const s1 = await seeker(inst._id); await granted(a, d, s1._id);
+    const s2 = await seeker(inst._id, { email: 's2@x.test' }); await granted(a, d, s2._id);
+    const noOffer = await seeker(inst._id, { email: 'n@x.test' }); await granted(a, d, noOffer._id); // granted but no offer → excluded
+    const app = createApp(); const tok = tokenFor(a);
+    await request(app).put(offerUrl(d, s1._id)).set('Authorization', `Bearer ${tok}`).send({ status: 'Sent' });
+    await request(app).put(offerUrl(d, s2._id)).set('Authorization', `Bearer ${tok}`).send({ status: 'Accepted' });
+    const res = await request(app).get(`/api/me/employer/drives/${d._id}/offers`).set('Authorization', `Bearer ${tok}`);
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(2);                       // only the two with offers
+    expect(res.body.counts).toMatchObject({ Sent: 1, Accepted: 1 });
+    expect(res.body.items.every((i: { revealed: { name: string } }) => i.revealed.name === 'Real Name')).toBe(true);
+    // employer B sees none of A's offers
+    const bRes = await request(app).get(`/api/me/employer/drives/${d._id}/offers`).set('Authorization', `Bearer ${tokenFor(b)}`);
+    expect(bRes.body.items).toHaveLength(0);
+  });
+
+  it('401 without a token, 403 for an admin token', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const app = createApp();
+    expect((await request(app).get(`/api/me/employer/drives/${d._id}/offers`)).status).toBe(401);
+    expect((await request(app).get(`/api/me/employer/drives/${d._id}/offers`).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`)).status).toBe(403);
+  });
+});
