@@ -48,6 +48,8 @@ export function EmployerCandidates() {
             onClick={() => navigate(`/employer/drives/${driveId}/shortlist`)}>Shortlist workspace</button>
           <button type="button" className="btn btn-ghost" disabled={!(shortlisted.data?.items?.length)}
             onClick={() => navigate(`/employer/drives/${driveId}/consent`)}>Consent status</button>
+          <button type="button" className="btn btn-ghost" style={{ marginLeft: 6 }}
+            onClick={() => navigate(`/employer/drives/${driveId}/interviews`)}>Interviews</button>
         </div>
       </div>
 
