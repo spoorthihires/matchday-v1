@@ -30,6 +30,17 @@ function mockFetch() {
   vi.stubGlobal('fetch', fetchMock);
   return { bulk, packFn };
 }
+function mockFetchPackError() {
+  const fetchMock = vi.fn(async (url: string, opts: { method?: string; body?: string } = {}) => {
+    const method = opts.method ?? 'GET';
+    if (url.includes('/candidates/bulk-decision') && method === 'POST') return { ok: true, status: 200, json: async () => ({ updated: 1 }) };
+    if (url.includes('/shortlist/pack')) return { ok: false, status: 500, json: async () => ({ error: { message: 'boom', code: 'server_error' } }) };
+    if (url.includes('/candidates')) return { ok: true, status: 200, json: async () => ({ items: [C1, C2] }) };
+    if (url.match(/\/drives\/[^/]+$/)) return { ok: true, status: 200, json: async () => ({ id: 'd1', name: 'Aug Drive', primaryEventDate: '2026-09-01T00:00:00.000Z', eventDates: ['2026-09-01T00:00:00.000Z'] }) };
+    return { ok: false, status: 404, json: async () => ({ error: { message: 'no', code: 'not_found' } }) };
+  });
+  vi.stubGlobal('fetch', fetchMock);
+}
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -69,5 +80,14 @@ describe('EmployerShortlist', () => {
     fireEvent.click(screen.getByRole('button', { name: /Download shortlist pack/i }));
     await waitFor(() => expect(packFn).toHaveBeenCalled());
     expect(packFn.mock.calls[0][0]).toMatch(/\/shortlist\/pack$/);
+  });
+
+  it('surfaces an error and re-enables the button when the pack download fails', async () => {
+    seedAuth(); mockFetchPackError(); renderPage();
+    await waitFor(() => expect(screen.getByText('C-AAA111')).toBeInTheDocument());
+    const btn = screen.getByRole('button', { name: /Download shortlist pack/i });
+    fireEvent.click(btn);
+    await waitFor(() => expect(screen.getByText(/boom/i)).toBeInTheDocument());
+    expect(btn).not.toBeDisabled();
   });
 });

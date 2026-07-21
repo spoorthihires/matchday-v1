@@ -46,6 +46,7 @@ export function EmployerShortlist() {
   const [evalf, setEvalf] = useState('');
   const [dec, setDec] = useState('all');
   const [downloading, setDownloading] = useState(false);
+  const [packErr, setPackErr] = useState<string | null>(null);
 
   const all = candidates.data?.items ?? [];
   const counts = useMemo(() => {
@@ -76,6 +77,7 @@ export function EmployerShortlist() {
 
   const downloadPack = async () => {
     setDownloading(true);
+    setPackErr(null);
     try {
       const pack = await fetchShortlistPack(driveId, token);
       const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -84,7 +86,7 @@ export function EmployerShortlist() {
       const csv = [`MatchDay Shortlist Pack — ${pack.driveName} — identities redacted`, head.map(esc).join(','), ...lines].join('\n');
       const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
       const a = document.createElement('a'); a.href = url; a.download = `shortlist-pack-${driveId}.csv`; a.click(); URL.revokeObjectURL(url);
-    } finally { setDownloading(false); }
+    } catch (e) { setPackErr(errMsg(e)); } finally { setDownloading(false); }
   };
 
   const dl = deadlineInfo(drive.data?.primaryEventDate);
@@ -120,6 +122,7 @@ export function EmployerShortlist() {
         <button type="button" className="btn btn-ghost" disabled={downloading} onClick={downloadPack}>Download shortlist pack</button>
         <button type="button" className="btn btn-primary" onClick={() => navigate(`/employer/drives/${driveId}/consent`)}>Consent status</button>
       </div>
+      {packErr && <p className="otp-err" role="alert">{packErr}</p>}
 
       <div className="cand-summary" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '4px 0' }}>
         {CHIPS.map((ch) => (
