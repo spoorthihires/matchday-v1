@@ -48,6 +48,8 @@ export async function upsertOffer(employerId: string, driveId: string, jobseeker
   const app = await Application.findOne({ employerId, driveId, jobseekerId });
   if (app?.consent?.status !== 'granted')
     throw new HttpError(400, 'The candidate must consent to reveal their identity before an offer can be made', 'offer_requires_consent');
+  if (input.joinDate && Number.isNaN(Date.parse(input.joinDate)))
+    throw new HttpError(400, 'Invalid joining date', 'validation');
   const existing = app.offer as OfferLean | undefined;
   let dCtc = 0; let dLoc = ''; let dMode = 'Hybrid';
   if (!existing) {

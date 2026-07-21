@@ -94,6 +94,20 @@ describe('PUT .../offer', () => {
     expect((await request(app).put(offerUrl(d, s._id)).send({ status: 'Sent' })).status).toBe(401);
     expect((await request(app).put(offerUrl(d, s._id)).set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'admin' })}`).send({ status: 'Sent' })).status).toBe(403);
   });
+
+  it('rejects a malformed joinDate (400) and correctly sets/clears a valid one', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d);
+    const inst = await institute(); const s = await seeker(inst._id); await granted(emp, d, s._id);
+    const app = createApp(); const tok = tokenFor(emp);
+    const bad = await request(app).put(offerUrl(d, s._id)).set('Authorization', `Bearer ${tok}`).send({ status: 'Sent', joinDate: 'garbage' });
+    expect(bad.status).toBe(400);
+    const set = await request(app).put(offerUrl(d, s._id)).set('Authorization', `Bearer ${tok}`).send({ status: 'Sent', joinDate: '2026-09-01' });
+    expect(set.status).toBe(200);
+    expect(set.body.joinDate).not.toBeNull();
+    const cleared = await request(app).put(offerUrl(d, s._id)).set('Authorization', `Bearer ${tok}`).send({ status: 'Sent', joinDate: '' });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.joinDate).toBeNull();
+  });
 });
 
 describe('GET .../offers', () => {
