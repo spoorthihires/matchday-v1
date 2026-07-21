@@ -51,6 +51,7 @@ describe('EmployerTeam', () => {
     expect(screen.getByText('bob@acme.test')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Full name/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add member/i })).toBeInTheDocument();
+    expect(screen.getByText(/fine-grained per-action permissions/i)).toBeInTheDocument();
   });
 
   it('adds a member (POST with entered fields)', async () => {

@@ -56,14 +56,16 @@ export function EmployerTeam() {
                     <span className="member-av">{initials(m.name)}</span>
                     <div className="member-info"><div className="mn">{m.name}</div><div className="me">{m.email}</div></div>
                     {canManage && m.id !== selfId
-                      ? <select className="select" value={m.role} aria-label={`Role for ${m.name}`} onChange={(e) => update.mutate({ id: m.id, role: e.target.value })}>{TEAM_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
+                      ? <select className="select" value={m.role} aria-label={`Role for ${m.name}`} onChange={(e) => { setErr(''); update.mutate({ id: m.id, role: e.target.value }, { onError: (e2) => setErr(errMsg(e2)) }); }}>{TEAM_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
                       : <span className="role-badge">{m.role}</span>}
                     <span className={`status-pill ${m.status === 'Active' ? 'st-approved' : 'st-cancelled'}`}>{m.status}</span>
                     {canManage && m.id !== selfId && (
-                      <button type="button" className="member-x" aria-label={`Remove ${m.name}`} onClick={() => remove.mutate(m.id)}>✕</button>
+                      <button type="button" className="member-x" aria-label={`Remove ${m.name}`} onClick={() => { setErr(''); remove.mutate(m.id, { onError: (e2) => setErr(errMsg(e2)) }); }}>✕</button>
                     )}
                   </div>
                 ))}
+
+                <p className="hint" style={{ marginTop: 14 }}>Roles currently govern who can manage team access. Fine-grained per-action permissions are coming soon. Disabling or removing a member takes effect at their next sign-in.</p>
 
                 {canManage ? (
                   <form className="add-row" onSubmit={submit} style={{ marginTop: 14 }}>
