@@ -22,6 +22,7 @@ const employerSchema = new Schema({
   phone: { type: String, default: '' },
   billingContact: { type: String, default: '' },
   gstNumber: { type: String, default: '' },
+  notificationsReadAt: { type: Date, default: undefined },
 });
 
 // Never serialize passwordHash out of this model -- covers current AND future endpoints
