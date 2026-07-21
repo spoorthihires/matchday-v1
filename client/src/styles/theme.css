@@ -91,13 +91,13 @@
   #auth-screen .panel h1{font-size:40px;line-height:1.08;font-weight:700;letter-spacing:-.025em;margin:0 0 18px;max-width:12ch}
   #auth-screen .panel h1 em{font-style:normal;color:#c2cceb}
   #auth-screen .panel p.lede{color:rgba(255,255,255,.78);font-size:15.5px;max-width:40ch;margin:0}
-  #auth-screen .rail{margin:40px 0 8px;display:flex;gap:10px}
-  #auth-screen .rail .day{flex:1;border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:14px 10px 12px;text-align:center;background:rgba(255,255,255,.04);position:relative}
-  #auth-screen .rail .day .dow{font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.6);text-transform:uppercase}
-  #auth-screen .rail .day .num{font-size:20px;font-weight:700;margin-top:4px;color:rgba(255,255,255,.72)}
-  #auth-screen .rail .day.wed{background:#fff;border-color:#fff;color:var(--indigo);box-shadow:var(--shadow-md);transform:translateY(-6px)}
-  #auth-screen .rail .day.wed .dow,#auth-screen .rail .day.wed .num{color:var(--indigo)}
-  #auth-screen .rail .day.wed .tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--indigo);color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:999px;text-transform:uppercase;white-space:nowrap}
+  #auth-screen .rail{margin:44px 0 8px;display:flex;gap:14px}
+  #auth-screen .rail .day{flex:1;border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:22px 12px;text-align:center;background:rgba(255,255,255,.04);position:relative;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  #auth-screen .rail .day .dow{font-size:12.5px;letter-spacing:.1em;color:rgba(255,255,255,.65);text-transform:uppercase;font-weight:700}
+  #auth-screen .rail .day.wed{background:#fff;border-color:#fff;color:var(--indigo);box-shadow:var(--shadow-md);transform:translateY(-8px)}
+  #auth-screen .rail .day.wed .dow{color:var(--indigo);font-size:13px}
+  #auth-screen .rail .day.wed .mark{width:34px;height:34px;margin-bottom:8px}
+  #auth-screen .rail .day.wed .tag{margin-top:6px;background:var(--indigo);color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;text-transform:uppercase;white-space:nowrap}
   #auth-screen .metrics{display:flex;gap:34px;margin-top:auto;padding-top:40px}
   #auth-screen .metrics .m .v{font-size:26px;font-weight:700;letter-spacing:-.02em}
   #auth-screen .metrics .m .k{font-size:12px;color:rgba(255,255,255,.62);margin-top:2px}
