@@ -313,6 +313,14 @@ export interface SupportRequestItem {
 }
 export interface SupportListResponse { items: SupportRequestItem[]; }
 
+// Mirrors server/src/modules/employerPortal/employerTeam.service.ts's project()/listTeam
+// return shape exactly (Slice 13 Task 1) -- the members list + admin-gated add/edit/remove
+// controls this task's EmployerTeam page renders.
+export const TEAM_ROLES = ['Admin', 'Recruiter', 'Interviewer', 'Viewer'] as const;
+export type TeamRole = typeof TEAM_ROLES[number];
+export interface TeamMemberItem { id: string; name: string; email: string; role: TeamRole; status: 'Active' | 'Disabled'; createdAt: string; }
+export interface EmployerTeamResponse { members: TeamMemberItem[]; canManage: boolean; actingRole: string; selfId: string | null; }
+
 export interface ReportFunnelStage { stage: string; count: number; conversionPct: number; }
 export interface EmployerReport {
   scope: string;

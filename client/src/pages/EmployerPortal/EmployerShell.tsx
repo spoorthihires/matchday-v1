@@ -110,7 +110,7 @@ const NAV_SECTIONS: NavSection[] = [
 const SETTINGS_ITEM: NavItem = {
   slug: 'settings',
   label: 'Settings',
-  path: '/employer/coming-soon/settings',
+  path: '/employer/team',
   icon: (
     <svg className="ic" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
