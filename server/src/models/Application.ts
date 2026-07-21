@@ -27,6 +27,11 @@ const applicationSchema = new Schema({
   decision: { type: String, enum: ['Shortlisted', 'Hold', 'Rejected'], default: null },
   notes: { type: [noteSchema], default: [] },
   consent: { type: consentSchema, default: undefined },
+  stage: {
+    type: String,
+    enum: ['Recommended', 'Shortlisted', 'Candidate Confirmed', 'Scheduled', 'L1', 'L2', 'L3', 'HR', 'Offer Sent', 'Offer Accepted', 'Joined', 'Rejected', 'Withdrawn'],
+    default: null,
+  },
 }, { timestamps: true });
 
 applicationSchema.index({ employerId: 1, driveId: 1, jobseekerId: 1 }, { unique: true });
