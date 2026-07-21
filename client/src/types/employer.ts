@@ -264,3 +264,19 @@ export interface BoardCard {
   revealed: { name: string; email: string } | null;
 }
 export interface EmployerBoardResponse { items: BoardCard[]; }
+
+// Mirrors server/src/modules/employerPortal/employerOffers.service.ts's OfferProjection /
+// listOffers return shape exactly (Slice 9 Tasks 1-2) -- the offer-management dashboard this
+// task's EmployerOffers page renders (KPI row + per-row update + new-offer picker).
+export type OfferStatus = 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Joined';
+export type OfferResponse = 'Pending' | 'Negotiating' | 'Accepted' | 'Declined';
+export type OfferMode = 'On-site' | 'Hybrid' | 'Remote';
+export interface EmployerOffer {
+  jobseekerId: string; code: string; matchScore: number; revealed: { name: string; email: string };
+  status: OfferStatus; response: OfferResponse; ctc: number; location: string; mode: OfferMode;
+  joinDate: string | null; declineReason: string;
+}
+export interface EmployerOffersResponse { items: EmployerOffer[]; counts: Record<OfferStatus, number>; }
+export interface OfferInput {
+  status: OfferStatus; response?: OfferResponse; ctc?: number; location?: string; mode?: OfferMode; joinDate?: string; declineReason?: string;
+}
