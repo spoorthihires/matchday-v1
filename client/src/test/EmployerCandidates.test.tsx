@@ -13,7 +13,12 @@ const CAND = {
   instituteCategory: 'Tier-1', evaluationStatus: 'completed', evaluationLabel: 'Completed', stage: 'MatchReady',
   matchScore: 82, evalPill: 'Strong', decision: null, noteCount: 0,
 };
-function mockFetch(items: unknown[]) {
+// Query-aware: `items` is returned for calls WITHOUT a decision=Shortlisted filter (i.e. the
+// page's own filtered list), while `shortlistedItems` (defaulting to `items`) is returned for
+// calls whose querystring asks for decision=Shortlisted (the dedicated CTA-gating query added
+// by the merge-blocker fix). This lets tests exercise "filtered list empty, but a shortlisted
+// candidate exists" independently of the visible list.
+function mockFetch(items: unknown[], shortlistedItems: unknown[] = items) {
   const put = vi.fn();
   const fetchMock = vi.fn(async (url: string, opts: { method?: string; body?: string } = {}) => {
     const method = opts.method ?? 'GET';
@@ -21,7 +26,10 @@ function mockFetch(items: unknown[]) {
       put(url, JSON.parse(opts.body as string));
       return { ok: true, status: 200, json: async () => ({ ...CAND, decision: 'Shortlisted' }) };
     }
-    if (url.includes('/candidates')) return { ok: true, status: 200, json: async () => ({ items }) };
+    if (url.includes('/candidates')) {
+      const isShortlistedQuery = url.includes('decision=Shortlisted');
+      return { ok: true, status: 200, json: async () => ({ items: isShortlistedQuery ? shortlistedItems : items }) };
+    }
     return { ok: false, status: 404, json: async () => ({ error: { message: 'no', code: 'not_found' } }) };
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -61,5 +69,17 @@ describe('EmployerCandidates', () => {
   it('shows the empty state', async () => {
     seedAuth(); mockFetch([]); renderPage();
     await waitFor(() => expect(screen.getByText(/No candidates/i)).toBeInTheDocument());
+  });
+
+  it('keeps "Consent status" enabled when filtered to Rejected (empty visible list) but a shortlisted candidate exists', async () => {
+    seedAuth();
+    const SHORTLISTED = { ...CAND, jobseekerId: 'j2', code: 'C-SHORT01', decision: 'Shortlisted' as const };
+    mockFetch([], [SHORTLISTED]); // visible/filtered list is empty; dedicated shortlisted query has one
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/No candidates/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Rejected' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rejected' })).toHaveClass('on'));
+    expect(screen.getByText(/No candidates/i)).toBeInTheDocument(); // still empty under the Rejected filter
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Consent status' })).not.toBeDisabled());
   });
 });

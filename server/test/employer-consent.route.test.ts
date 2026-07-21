@@ -75,6 +75,18 @@ describe('reveal gating (read side)', () => {
     expect(raw).not.toContain('Real Name');
     expect(raw).not.toContain('s2@x.test');
   });
+
+  it('derives expired:true for a requested consent past its expiresAt (still not revealed)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id);
+    const past = new Date(Date.now() - 3600_000);
+    await Application.create({ employerId: emp._id, driveId: d._id, jobseekerId: s._id, decision: 'Shortlisted',
+      consent: { status: 'requested', requestedAt: past, expiresAt: past } });
+    const pp = await request(createApp()).get(`/api/me/employer/drives/${d._id}/candidates/${s._id}`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(pp.body.consent.status).toBe('requested');
+    expect(pp.body.consent.expired).toBe(true);
+    expect(pp.body.revealed).toBeNull();
+  });
 });
 
 async function shortlisted(emp: { _id: unknown }, d: { _id: unknown }, jsId: unknown, over: Record<string, unknown> = {}) {
@@ -140,5 +152,13 @@ describe('POST .../reveal-request (+ remind, withdraw)', () => {
     const bPass = await request(createApp()).get(`/api/me/employer/drives/${d._id}/candidates/${s._id}`).set('Authorization', `Bearer ${tokenFor(b)}`);
     expect(bPass.body.consent).toBeNull();
     expect(bPass.body.revealed).toBeNull();
+  });
+
+  it('rejects withdraw when there is no consent sub-doc at all (not_withdrawable)', async () => {
+    const emp = await employer(); const d = await drive(); await approve(emp, d); const inst = await institute();
+    const s = await seeker(inst._id); await shortlisted(emp, d, s._id); // no consent sub-doc
+    const res = await request(createApp()).delete(`/api/me/employer/drives/${d._id}/candidates/${s._id}/reveal-request`).set('Authorization', `Bearer ${tokenFor(emp)}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('not_withdrawable');
   });
 });
