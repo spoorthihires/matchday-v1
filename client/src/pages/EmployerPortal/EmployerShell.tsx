@@ -98,7 +98,7 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'reports',
         label: 'Reports',
-        path: '/employer/coming-soon/reports',
+        path: '/employer/reports',
         icon: (
           <svg className="ic" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M7 14l3-4 3 3 5-6" /></svg>
         ),

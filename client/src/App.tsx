@@ -22,6 +22,7 @@ import { EmployerMfa } from './pages/EmployerPortal/EmployerMfa.js';
 import { EmployerOffers } from './pages/EmployerPortal/EmployerOffers.js';
 import { EmployerRegister } from './pages/EmployerPortal/EmployerRegister.js';
 import { EmployerRegistrations } from './pages/EmployerPortal/EmployerRegistrations.js';
+import { EmployerReports } from './pages/EmployerPortal/EmployerReports.js';
 import { EmployerShell } from './pages/EmployerPortal/EmployerShell.js';
 import { EmployerShortlist } from './pages/EmployerPortal/EmployerShortlist.js';
 import { EmployerSignup } from './pages/EmployerPortal/EmployerSignup.js';
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/employer/drives/:id/board" element={<RoleRoute role="employer"><EmployerShell><EmployerKanban /></EmployerShell></RoleRoute>} />
         <Route path="/employer/drives/:id/offers" element={<RoleRoute role="employer"><EmployerShell><EmployerOffers /></EmployerShell></RoleRoute>} />
         <Route path="/employer/registrations" element={<RoleRoute role="employer"><EmployerShell><EmployerRegistrations /></EmployerShell></RoleRoute>} />
+        <Route path="/employer/reports" element={<RoleRoute role="employer"><EmployerShell><EmployerReports /></EmployerShell></RoleRoute>} />
         <Route path="/employer/coming-soon/:slug" element={<RoleRoute role="employer"><EmployerComingSoon /></RoleRoute>} />
         <Route path="/coming-soon/:slug" element={<RoleRoute role="admin"><ComingSoon /></RoleRoute>} />
         <Route path="/drives" element={<RoleRoute role="admin"><DrivesPage /></RoleRoute>} />

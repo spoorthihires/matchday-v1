@@ -280,3 +280,14 @@ export interface EmployerOffersResponse { items: EmployerOffer[]; counts: Record
 export interface OfferInput {
   status: OfferStatus; response?: OfferResponse; ctc?: number; location?: string; mode?: OfferMode; joinDate?: string; declineReason?: string;
 }
+
+export interface ReportFunnelStage { stage: string; count: number; conversionPct: number; }
+export interface EmployerReport {
+  scope: string;
+  drives: { id: string; name: string }[];
+  funnel: ReportFunnelStage[];
+  kpis: {
+    recommended: number; shortlisted: number; interviewsScheduled: number;
+    offersSent: number; offersAccepted: number; dropOffPct: number; avgMatchScore: number;
+  };
+}
