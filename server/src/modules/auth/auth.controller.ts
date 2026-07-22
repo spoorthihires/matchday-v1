@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { login, employerSignup } from './auth.service.js';
+import { login, employerSignup, jobseekerSignup, listPublicInstitutes } from './auth.service.js';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -25,4 +25,19 @@ const employerSignupSchema = z.object({
 export async function employerSignupController(req: Request, res: Response) {
   const parsed = employerSignupSchema.parse(req.body);
   res.status(201).json(await employerSignup(parsed));
+}
+
+const jobseekerSignupSchema = z.object({
+  name: z.string().trim().min(1), email: z.string().email(), password: z.string().min(8),
+  instituteId: z.string().min(1), branch: z.string().trim().min(1), gradYear: z.number().int(),
+  source: z.string().trim().min(1), cgpa: z.number().min(0).max(10),
+});
+
+export async function jobseekerSignupController(req: Request, res: Response) {
+  const parsed = jobseekerSignupSchema.parse(req.body);
+  res.json(await jobseekerSignup(parsed));
+}
+
+export async function institutesController(_req: Request, res: Response) {
+  res.json(await listPublicInstitutes());
 }

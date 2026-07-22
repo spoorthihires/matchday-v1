@@ -30,3 +30,13 @@
 .tag.progress { background: var(--warn-bg); color: var(--warn); }
 .tag.closed { background: var(--danger-bg); color: var(--danger); }
 .portal-empty { text-align: center; color: var(--muted); padding: 30px; }
+
+/* Account page: .fld is the shared modal field class (theme.css) — here it stacks full-width
+   since these forms aren't inside a grid. .acct-static renders the read-only fields (email,
+   institute, gradYear, cgpa) to match the .fld input's look without being editable. */
+.portal .fld { margin-bottom: 14px; max-width: 360px; }
+.portal .acct-static { padding: 10px 12px; color: var(--ink); font-size: 13.5px; }
+
+/* Offers: decline-reason input, styled to match the shared .fld input look (theme.css). */
+.portal .offer-reason-input { flex: 1; min-width: 160px; border: 1px solid var(--line); background: var(--indigo-050); border-radius: 9px; padding: 10px 12px; font-family: inherit; font-size: 13.5px; color: var(--ink); outline: none; }
+.portal .offer-reason-input:focus { border-color: var(--indigo); background: var(--white); box-shadow: var(--focus); }

@@ -5,9 +5,13 @@ import { Employer } from '../../models/Employer.js';
 import { Institute } from '../../models/Institute.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Slot } from '../../models/Slot.js';
+import { SlotBooking } from '../../models/SlotBooking.js';
 import { Application } from '../../models/Application.js';
+import { Interview } from '../../models/Interview.js';
 import { isExpired } from '../../constants/consent.js';
 import { codeFor, evaluationLabel, matchReadinessPct, offerStatus } from '../jobseekers/jobseekers.service.js';
+import { hashPassword, verifyPassword } from '../auth/auth.service.js';
+import { createBooking } from '../slotBookings/slotBookings.service.js';
 
 // The positive pipeline shown to the seeker (DroppedOff is a separate terminal state).
 export const JOURNEY_STAGES = ['Applied', 'Screened', 'Evaluated', 'MatchReady', 'Shortlisted', 'Offer', 'Joined'] as const;
@@ -51,6 +55,7 @@ interface DriveLean {
   _id: Types.ObjectId;
   name?: string;
   domain?: string;
+  status?: string;
   eventDates?: Date[];
   eligibility?: EligibilityLike;
 }
@@ -148,4 +153,168 @@ export async function respondReveal(jobseekerId: string, applicationId: string, 
   app.set('consent.respondedAt', new Date());
   await app.save();
   return { status: app.consent?.status };
+}
+
+const OFFER_SENT_STATES = ['Sent', 'Accepted', 'Declined', 'Joined'];
+
+async function nameMaps(employerIds: string[], driveIds: string[]) {
+  const [emps, drives] = await Promise.all([
+    Employer.find({ _id: { $in: [...new Set(employerIds)] } }).select('name').lean(),
+    Drive.find({ _id: { $in: [...new Set(driveIds)] } }).select('name').lean<{ _id: Types.ObjectId; name?: string }[]>(),
+  ]);
+  return {
+    emp: new Map(emps.map((e) => [String(e._id), e.name as string])),
+    drive: new Map(drives.map((d) => [String(d._id), d.name ?? '—'])),
+  };
+}
+
+export async function listInterviews(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const rows = await Interview.find({ jobseekerId }).lean();
+  const slots = await Slot.find({ _id: { $in: [...new Set(rows.map((r) => String(r.slotId)))] } })
+    .select('date start end link').lean<{ _id: Types.ObjectId; date: Date; start: string; end: string; link?: string }[]>();
+  const slotMap = new Map(slots.map((s) => [String(s._id), s]));
+  const { emp, drive } = await nameMaps(rows.map((r) => String(r.employerId)), rows.map((r) => String(r.driveId)));
+  const items = rows.map((r) => {
+    const s = slotMap.get(String(r.slotId));
+    return {
+      interviewId: String(r._id),
+      company: emp.get(String(r.employerId)) ?? '—',
+      driveName: drive.get(String(r.driveId)) ?? '—',
+      date: s?.date ? new Date(s.date).toISOString() : null,
+      start: s?.start ?? '', end: s?.end ?? '', time: r.time,
+      status: r.status, interviewers: r.interviewers ?? [], link: s?.link ?? '',
+    };
+  });
+  items.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.time.localeCompare(b.time));
+  return { items };
+}
+
+export async function listOffers(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const apps = await Application.find({ jobseekerId, 'offer.status': { $in: OFFER_SENT_STATES } }).lean();
+  const { emp, drive } = await nameMaps(apps.map((a) => String(a.employerId)), apps.map((a) => String(a.driveId)));
+  const items = apps.map((a) => {
+    const o = (a.offer ?? {}) as { status?: string; response?: string; ctc?: number; location?: string; mode?: string; joinDate?: Date | null; declineReason?: string };
+    return {
+      applicationId: String(a._id),
+      company: emp.get(String(a.employerId)) ?? '—',
+      driveName: drive.get(String(a.driveId)) ?? '—',
+      status: o.status ?? '', response: o.response ?? 'Pending',
+      ctc: o.ctc ?? 0, location: o.location ?? '', mode: o.mode ?? '',
+      joinDate: o.joinDate ? new Date(o.joinDate).toISOString() : null,
+      declineReason: o.declineReason ?? '',
+    };
+  });
+  return { items };
+}
+
+export async function respondOffer(jobseekerId: string, applicationId: string, input: { response: 'Accepted' | 'Declined'; declineReason?: string }) {
+  if (!Types.ObjectId.isValid(applicationId)) throw new HttpError(404, 'Offer not found', 'not_found');
+  const app = await Application.findOne({ _id: applicationId, jobseekerId });
+  const status = (app?.offer as { status?: string } | undefined)?.status;
+  if (!app || !status) throw new HttpError(404, 'Offer not found', 'not_found');
+  if (status !== 'Sent') throw new HttpError(400, 'This offer is not awaiting your response', 'offer_not_actionable');
+  app.set('offer.response', input.response);
+  if (input.response === 'Declined' && input.declineReason) app.set('offer.declineReason', input.declineReason);
+  await app.save();
+  return { response: (app.offer as { response?: string }).response };
+}
+
+export async function getAccount(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const s = await Jobseeker.findById(jobseekerId).lean();
+  if (!s) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const inst = await Institute.findById(s.instituteId).select('name').lean();
+  return { name: s.name, email: s.email ?? '', branch: s.branch, gradYear: s.gradYear, source: s.source, cgpa: s.cgpa, institute: inst?.name ?? '—', hasPassword: !!s.passwordHash };
+}
+
+export async function updateAccount(jobseekerId: string, input: { name?: string; branch?: string; source?: string }) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const s = await Jobseeker.findById(jobseekerId);
+  if (!s) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  if (input.name !== undefined) s.name = input.name;
+  if (input.branch !== undefined) s.branch = input.branch;
+  if (input.source !== undefined) s.source = input.source;
+  await s.save();
+  return getAccount(jobseekerId);
+}
+
+export async function changePassword(jobseekerId: string, input: { currentPassword: string; newPassword: string }) {
+  const s = await Jobseeker.findById(jobseekerId);
+  if (!s || !s.passwordHash) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  if (!(await verifyPassword(input.currentPassword, s.passwordHash))) throw new HttpError(400, 'Your current password is incorrect', 'invalid_password');
+  s.passwordHash = await hashPassword(input.newPassword);
+  await s.save();
+  return { ok: true as const };
+}
+
+const OPEN_DRIVE_STATUSES = new Set(['Active', 'Published']);
+
+// Loads the seeker + drive and 404s (no oracle) unless the drive is open AND
+// this seeker is eligible for it — cross-drive / ineligible access must be
+// indistinguishable from a missing drive.
+async function eligibleDriveOr404(jobseekerId: string, driveId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId) || !Types.ObjectId.isValid(driveId)) {
+    throw new HttpError(404, 'Drive not found', 'not_found');
+  }
+  const seeker = await Jobseeker.findById(jobseekerId).lean();
+  const drive = await Drive.findById(driveId).lean<DriveLean | null>();
+  if (
+    !seeker || !drive
+    || !OPEN_DRIVE_STATUSES.has(drive.status ?? '')
+    || !isEligible(drive.eligibility, { branch: seeker.branch, gradYear: seeker.gradYear, source: seeker.source })
+  ) {
+    throw new HttpError(404, 'Drive not found', 'not_found');
+  }
+  return { seeker, drive };
+}
+
+export interface PortalSlot {
+  id: string; date: string; start: string; end: string;
+  capacity: number; booked: number; mine: boolean;
+}
+
+export async function listDriveSlots(jobseekerId: string, driveId: string): Promise<{ items: PortalSlot[] }> {
+  await eligibleDriveOr404(jobseekerId, driveId);
+  const slots = await Slot.find({ driveId, status: { $ne: 'Cancelled' } }).sort({ date: 1, start: 1 }).lean();
+  const slotIds = slots.map((s) => s._id);
+
+  const counts = await SlotBooking.aggregate<{ _id: Types.ObjectId; count: number }>([
+    { $match: { slotId: { $in: slotIds } } },
+    { $group: { _id: '$slotId', count: { $sum: 1 } } },
+  ]);
+  const bookedMap = new Map(counts.map((c) => [String(c._id), c.count]));
+
+  const mine = await SlotBooking.find({ slotId: { $in: slotIds }, jobseekerId }).select('slotId').lean();
+  const mineSet = new Set(mine.map((b) => String(b.slotId)));
+
+  return {
+    items: slots.map((s) => ({
+      id: String(s._id),
+      date: new Date(s.date).toISOString(),
+      start: s.start,
+      end: s.end,
+      capacity: s.capacity ?? 0,
+      booked: bookedMap.get(String(s._id)) ?? 0,
+      mine: mineSet.has(String(s._id)),
+    })),
+  };
+}
+
+export async function bookSlot(jobseekerId: string, slotId: string) {
+  if (!Types.ObjectId.isValid(slotId)) throw new HttpError(404, 'Slot not found', 'not_found');
+  const slot = await Slot.findById(slotId).lean();
+  if (!slot || slot.status === 'Cancelled') throw new HttpError(404, 'Slot not found', 'not_found');
+  // Confirms the seeker is eligible for THIS slot's drive (cross-drive/ineligible → 404, no oracle)
+  // before delegating to createBooking, which re-validates Match-Ready/eligibility/capacity/duplicates.
+  await eligibleDriveOr404(jobseekerId, String(slot.driveId));
+  return createBooking(slotId, jobseekerId, 'Booked');
+}
+
+export async function cancelBooking(jobseekerId: string, slotId: string) {
+  if (!Types.ObjectId.isValid(slotId)) throw new HttpError(404, 'Booking not found', 'not_found');
+  const r = await SlotBooking.deleteOne({ slotId, jobseekerId });
+  if (r.deletedCount === 0) throw new HttpError(404, 'Booking not found', 'not_found');
+  return { ok: true as const };
 }
