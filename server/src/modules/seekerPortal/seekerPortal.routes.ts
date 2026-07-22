@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../../middleware/asyncHandler.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
-import { interviewsController, offersController, portalController, respondOfferController, revealRequestsController, respondRevealController } from './seekerPortal.controller.js';
+import { accountController, changePasswordController, interviewsController, offersController, portalController, respondOfferController, revealRequestsController, respondRevealController, updateAccountController } from './seekerPortal.controller.js';
 
 export const seekerPortalRoutes = Router();
 seekerPortalRoutes.use(requireAuth);
@@ -13,3 +13,6 @@ seekerPortalRoutes.post('/portal/reveal-requests/:applicationId/respond', asyncH
 seekerPortalRoutes.get('/portal/interviews', asyncHandler(interviewsController));
 seekerPortalRoutes.get('/portal/offers', asyncHandler(offersController));
 seekerPortalRoutes.post('/portal/offers/:applicationId/respond', asyncHandler(respondOfferController));
+seekerPortalRoutes.get('/portal/account', asyncHandler(accountController));
+seekerPortalRoutes.patch('/portal/account', asyncHandler(updateAccountController));
+seekerPortalRoutes.post('/portal/account/password', asyncHandler(changePasswordController));

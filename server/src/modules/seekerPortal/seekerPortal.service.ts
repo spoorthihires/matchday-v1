@@ -9,6 +9,7 @@ import { Application } from '../../models/Application.js';
 import { Interview } from '../../models/Interview.js';
 import { isExpired } from '../../constants/consent.js';
 import { codeFor, evaluationLabel, matchReadinessPct, offerStatus } from '../jobseekers/jobseekers.service.js';
+import { hashPassword, verifyPassword } from '../auth/auth.service.js';
 
 // The positive pipeline shown to the seeker (DroppedOff is a separate terminal state).
 export const JOURNEY_STAGES = ['Applied', 'Screened', 'Evaluated', 'MatchReady', 'Shortlisted', 'Offer', 'Joined'] as const;
@@ -215,4 +216,32 @@ export async function respondOffer(jobseekerId: string, applicationId: string, i
   if (input.response === 'Declined' && input.declineReason) app.set('offer.declineReason', input.declineReason);
   await app.save();
   return { response: (app.offer as { response?: string }).response };
+}
+
+export async function getAccount(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const s = await Jobseeker.findById(jobseekerId).lean();
+  if (!s) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const inst = await Institute.findById(s.instituteId).select('name').lean();
+  return { name: s.name, email: s.email ?? '', branch: s.branch, gradYear: s.gradYear, source: s.source, cgpa: s.cgpa, institute: inst?.name ?? '—', hasPassword: !!s.passwordHash };
+}
+
+export async function updateAccount(jobseekerId: string, input: { name?: string; branch?: string; source?: string }) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const s = await Jobseeker.findById(jobseekerId);
+  if (!s) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  if (input.name !== undefined) s.name = input.name;
+  if (input.branch !== undefined) s.branch = input.branch;
+  if (input.source !== undefined) s.source = input.source;
+  await s.save();
+  return getAccount(jobseekerId);
+}
+
+export async function changePassword(jobseekerId: string, input: { currentPassword: string; newPassword: string }) {
+  const s = await Jobseeker.findById(jobseekerId);
+  if (!s || !s.passwordHash) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  if (!(await verifyPassword(input.currentPassword, s.passwordHash))) throw new HttpError(400, 'Your current password is incorrect', 'invalid_password');
+  s.passwordHash = await hashPassword(input.newPassword);
+  await s.save();
+  return { ok: true as const };
 }
