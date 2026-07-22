@@ -2,8 +2,10 @@ import type { SlotItem } from '../../types/slots.js';
 import { DOW, monthGridStart, slotDayKey, to12, ymd } from './calendarUtils.js';
 
 // Ported from matchday-admin-app_23.html lines 3584-3596 (renderCalMonth): `.cal-month` wrapping
-// `.cal-dow` (7 headers) + a `.cal-grid` of 42 `.cal-cell`s, each with `dim`/`event`/`today`
-// modifier classes, a `.dnum`, up to MAX_CHIPS `.cal-chip`s (done/cancel) and a `.cal-more`.
+// `.cal-dow` (7 headers) + a `.cal-grid` of 42 `.cal-cell`s, each with `dim`/`today` modifier
+// classes, a `.dnum`, up to MAX_CHIPS `.cal-chip`s (done/cancel) and a `.cal-more`. The prototype's
+// weekday-based `.event` wash (Wed/Sat, unrelated to whether the day actually has slots) was
+// dropped in the Google-Calendar-style redesign — it read as decorative noise, not signal.
 // NOTE on theme.css: `.cal-grid`/`.cal-cell` are also used by the dashboard's mini-calendar
 // (ScheduleSection.tsx). Both widgets' rules were originally bare selectors, so the cascade merged
 // the two (mostly disjoint) rule sets onto whichever calendar was mounted — e.g. the dashboard's
@@ -34,7 +36,6 @@ export function MonthView({ refDate, slots, onChipClick, onMoreClick, onCellClic
     d.setDate(start.getDate() + i);
     const dateKey = ymd(d);
     const inMonth = d.getMonth() === month;
-    const dow = d.getDay();
     const isToday = dateKey === todayKey;
     const list = slots
       .filter((s) => slotDayKey(s.date) === dateKey)
@@ -42,25 +43,27 @@ export function MonthView({ refDate, slots, onChipClick, onMoreClick, onCellClic
     const shown = list.slice(0, MAX_CHIPS);
     const extra = list.length - MAX_CHIPS;
 
-    const cls = `cal-cell${!inMonth ? ' dim' : ''}${(dow === 3 || dow === 6) && inMonth ? ' event' : ''}${isToday ? ' today' : ''}`;
+    const cls = `cal-cell${!inMonth ? ' dim' : ''}${isToday ? ' today' : ''}`;
 
     cells.push(
       <div key={dateKey} className={cls} onClick={() => { if (inMonth) onCellClick(dateKey); }}>
         <div className="dnum">{d.getDate()}</div>
-        {shown.map((s) => (
-          <span
-            key={s.id}
-            className={`cal-chip${chipClass(s.status)}`}
-            onClick={(e) => { e.stopPropagation(); onChipClick(s); }}
-          >
-            {to12(s.start)} · {s.employerName.split(' ')[0]}
-          </span>
-        ))}
-        {extra > 0 && (
-          <div className="cal-more" onClick={(e) => { e.stopPropagation(); onMoreClick(dateKey); }}>
-            +{extra} more
-          </div>
-        )}
+        <div className="cal-events">
+          {shown.map((s) => (
+            <span
+              key={s.id}
+              className={`cal-chip${chipClass(s.status)}`}
+              onClick={(e) => { e.stopPropagation(); onChipClick(s); }}
+            >
+              {to12(s.start)} · {s.employerName.split(' ')[0]}
+            </span>
+          ))}
+          {extra > 0 && (
+            <div className="cal-more" onClick={(e) => { e.stopPropagation(); onMoreClick(dateKey); }}>
+              +{extra} more
+            </div>
+          )}
+        </div>
       </div>,
     );
   }

@@ -56,12 +56,26 @@ export const draftDriveSchema = createDriveSchema.extend({
 
 export const updateDriveSchema = createDriveSchema.partial();
 
+// Splits a CSV query param into a trimmed, non-empty string array (multi-select column filters,
+// backward-compatible with a lone single value — see jobseekers.schemas.ts's identical helper).
+function csv() {
+  return z.string().transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean));
+}
+
 export const listQuerySchema = z.object({
   q: z.string().optional(),
-  status: z.string().optional(),
+  status: csv().optional(),
   month: z.string().regex(/^\d{4}-\d{2}$/).optional(),
-  stream: z.string().optional(),
-  domain: z.string().optional(),
+  monthFrom: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+  monthTo: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+  stream: csv().optional(),
+  domain: csv().optional(),
+  candCapFrom: z.coerce.number().int().min(0).optional(),
+  candCapTo: z.coerce.number().int().min(0).optional(),
+  empCapFrom: z.coerce.number().int().min(0).optional(),
+  empCapTo: z.coerce.number().int().min(0).optional(),
+  slotCapFrom: z.coerce.number().int().min(0).optional(),
+  slotCapTo: z.coerce.number().int().min(0).optional(),
   sort: z.enum(['name', 'domain', 'stream', 'month', 'candCap', 'empCap', 'slotCap', 'status']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
   page: z.coerce.number().int().min(1).default(1),

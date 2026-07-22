@@ -16,6 +16,11 @@ export interface EmployerListResponse {
 
 export interface EmployerListParams {
   q?: string; industry?: string; status?: string; sort?: string; order?: 'asc' | 'desc'; page?: number; limit?: number;
+  drivesFrom?: string; drivesTo?: string;
+  viewedFrom?: string; viewedTo?: string;
+  shortlistFrom?: string; shortlistTo?: string;
+  offerFrom?: string; offerTo?: string;
+  respHoursFrom?: string; respHoursTo?: string;
 }
 
 export interface EmployerInput {

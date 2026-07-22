@@ -36,8 +36,8 @@ describe('streams.service', () => {
     await createStream(input({ name: 'Alpha', parent: 'Engineering', cutoff: 60 }));
     await createStream(input({ name: 'Beta', parent: 'Business', cutoff: 80, status: 'Disabled' }));
     expect((await listStreams({})).items).toHaveLength(2);
-    expect((await listStreams({ parent: 'Business' })).items).toHaveLength(1);
-    expect((await listStreams({ status: 'Disabled' })).items).toHaveLength(1);
+    expect((await listStreams({ parent: ['Business'] })).items).toHaveLength(1);
+    expect((await listStreams({ status: ['Disabled'] })).items).toHaveLength(1);
     expect((await listStreams({ q: 'alpha' })).items).toHaveLength(1);
     const byCutoffDesc = await listStreams({ sort: 'cutoff', order: 'desc' });
     expect(byCutoffDesc.items[0].name).toBe('Beta');   // cutoff 80 first

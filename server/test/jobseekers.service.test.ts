@@ -47,23 +47,57 @@ describe('jobseekers.service', () => {
 
   it('filters by offer status (derived → stage)', async () => {
     await seed();
-    expect((await listJobseekers({ offer: 'Joined' })).total).toBe(1);           // Ananya
-    expect((await listJobseekers({ offer: 'None' })).total).toBe(2);             // MatchReady(Aarav) + Applied(Rohan)
-    expect((await listJobseekers({ offer: 'Rejected' })).total).toBe(1);         // Meera
+    expect((await listJobseekers({ offer: ['Joined'] })).total).toBe(1);           // Ananya
+    expect((await listJobseekers({ offer: ['None'] })).total).toBe(2);             // MatchReady(Aarav) + Applied(Rohan)
+    expect((await listJobseekers({ offer: ['Rejected'] })).total).toBe(1);         // Meera
   });
 
   it('filters by matchBucket, consent, and institute', async () => {
     await seed();
-    expect((await listJobseekers({ matchBucket: 'high' })).total).toBe(4);       // MatchReady/Shortlisted/Offer/Joined
-    expect((await listJobseekers({ matchBucket: 'low' })).total).toBe(2);        // Applied + DroppedOff
-    expect((await listJobseekers({ consent: 'Pending' })).total).toBe(1);        // Vihaan
-    expect((await listJobseekers({ instituteId: instId })).total).toBe(6);
+    expect((await listJobseekers({ matchBucket: ['high'] })).total).toBe(4);       // MatchReady/Shortlisted/Offer/Joined
+    expect((await listJobseekers({ matchBucket: ['low'] })).total).toBe(2);        // Applied + DroppedOff
+    expect((await listJobseekers({ consent: ['Pending'] })).total).toBe(1);        // Vihaan
+    expect((await listJobseekers({ instituteId: [instId] })).total).toBe(6);
   });
 
   it('sorts by matchReady descending (stage ordinal)', async () => {
     await seed();
     const res = await listJobseekers({ sort: 'matchReady', order: 'desc' });
     expect(res.items[0].name).toBe('Ananya');   // Joined = 100
+  });
+
+  it('sorts by the newly-added derived/stored sort keys', async () => {
+    await seed();
+    const byOffer = await listJobseekers({ sort: 'offerStatus', order: 'asc', limit: 10 });
+    // 'Joined' < 'None' < 'Offer sent' < 'Rejected' < 'Shortlisted' alphabetically
+    expect(byOffer.items[0].offerStatus).toBe('Joined');
+    // dupRisk sorts on the underlying boolean `_dup` field (false=Low, true=High), not the label string.
+    const byDup = await listJobseekers({ sort: 'dupRisk', order: 'asc', limit: 10 });
+    expect(byDup.items[0].dupRisk).toBe('Low'); // false sorts before true ascending
+    const byDupDesc = await listJobseekers({ sort: 'dupRisk', order: 'desc', limit: 10 });
+    expect(byDupDesc.items[0].dupRisk).toBe('High');
+    const byConsent = await listJobseekers({ sort: 'consent', order: 'asc', limit: 10 });
+    expect(byConsent.items[0].consent).toBe('Granted'); // 'Granted' < 'Pending' alphabetically
+  });
+
+  it('filters by dupRisk (computed via aggregation, not a stored field)', async () => {
+    await seed();
+    const high = await listJobseekers({ dupRisk: 'High' });
+    expect(high.total).toBe(2); // Aarav + Diya share dup@x.edu
+    expect(high.items.every((x) => x.dupRisk === 'High')).toBe(true);
+    const low = await listJobseekers({ dupRisk: 'Low' });
+    expect(low.total).toBe(4);
+    expect(low.items.every((x) => x.dupRisk === 'Low')).toBe(true);
+  });
+
+  it('CSV multi-value filters accept more than one selected option ($in)', async () => {
+    await seed();
+    // Every seeded jobseeker defaults to consent 'Granted' except Vihaan ('Pending'), so this
+    // two-value $in covers everyone — a narrower single-value equivalent is covered above.
+    const res = await listJobseekers({ consent: ['Granted', 'Pending'] });
+    expect(res.total).toBe(6);
+    const onlyPending = await listJobseekers({ consent: ['Pending'] });
+    expect(onlyPending.total).toBe(1);
   });
 
   it('sorts by name case-insensitively (collation)', async () => {

@@ -451,12 +451,15 @@ async function run() {
     await Drive.updateOne({ _id: drives[i]._id }, { $set: { templateId: createdTemplates[i % createdTemplates.length]._id } });
   }
 
-  // ---- Evaluation configs (4, verbatim from the prototype's evConfigs array) ----
+  // ---- Evaluation configs (4 verbatim from the prototype's evConfigs array, + 1 extra so every
+  // assessment type has at least one Active default — the drive wizard's per-stage config pickers
+  // only offer Active configs, and the prototype's Assignments entry is Inactive) ----
   const evalConfigDocs = [
     { name: 'Standard MCQ round', type: 'MCQ', enabled: true, passing: 60, attempts: 2, retake: 'After cooldown', cooldown: 2, validity: 90, autoQual: true, threshold: 70, updatedAt: daysAgo(2), createdAt: daysAgo(40) },
     { name: 'Coding challenge', type: 'Coding', enabled: true, passing: 65, attempts: 1, retake: 'Admin approval', cooldown: 3, validity: 120, autoQual: true, threshold: 75, updatedAt: daysAgo(5), createdAt: daysAgo(45) },
     { name: 'TARA AI interview', type: 'TARA', enabled: true, passing: 55, attempts: 1, retake: 'Not allowed', cooldown: 0, validity: 60, autoQual: false, threshold: 70, updatedAt: daysAgo(1), createdAt: daysAgo(30) },
     { name: 'Take-home assignment', type: 'Assignments', enabled: false, passing: 50, attempts: 2, retake: 'Unlimited', cooldown: 1, validity: 45, autoQual: false, threshold: 70, updatedAt: daysAgo(14), createdAt: daysAgo(20) },
+    { name: 'Standard assignment review', type: 'Assignments', enabled: true, passing: 50, attempts: 2, retake: 'After cooldown', cooldown: 2, validity: 90, autoQual: false, threshold: 70, updatedAt: daysAgo(7), createdAt: daysAgo(18) },
   ];
   const createdEvalConfigs = await EvalConfig.insertMany(evalConfigDocs);
 

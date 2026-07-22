@@ -1,3 +1,5 @@
+import { ThemeToggle } from '../theme/ThemeToggle.js';
+
 // Ported from matchday-admin-app_23.html lines ~1122-1129.
 // The search box and notification/help/menu icon buttons are static (non-functional),
 // matching the prototype's un-wired markup.
@@ -16,6 +18,7 @@ export function Topbar({ crumb, title }: { crumb: string; title: string }) {
         <i className="ti ti-search" />
         <input placeholder="Search drives, employers, candidates…" aria-label="Search" />
       </div>
+      <ThemeToggle />
       <button className="icon-btn" aria-label="Notifications">
         <i className="ti ti-bell" />
         <span className="dot" />

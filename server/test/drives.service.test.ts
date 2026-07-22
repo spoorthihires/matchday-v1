@@ -49,8 +49,8 @@ describe('drives.service', () => {
 
   it('filters by status, domain, and search q', async () => {
     await seedThree();
-    expect((await listDrives({ status: 'Draft' }, NOW)).total).toBe(1);
-    expect((await listDrives({ domain: 'Backend' }, NOW)).total).toBe(1);
+    expect((await listDrives({ status: ['Draft'] }, NOW)).total).toBe(1);
+    expect((await listDrives({ domain: ['Backend'] }, NOW)).total).toBe(1);
     expect((await listDrives({ q: 'front' }, NOW)).total).toBe(1); // case-insensitive on name/domain/stream
   });
 
@@ -58,6 +58,28 @@ describe('drives.service', () => {
     await seedThree();
     expect((await listDrives({ month: '2026-08' }, NOW)).total).toBe(1); // only Beta (Aug)
     expect((await listDrives({ month: '2026-07' }, NOW)).total).toBe(2); // Alpha + Gamma (Jul)
+  });
+
+  it('filters by monthFrom/monthTo as an inclusive-of-both-ends month range', async () => {
+    await seedThree();
+    expect((await listDrives({ monthFrom: '2026-08' }, NOW)).total).toBe(1); // only Beta (Aug)
+    expect((await listDrives({ monthTo: '2026-07' }, NOW)).total).toBe(2); // Alpha + Gamma (Jul)
+    expect((await listDrives({ monthFrom: '2026-07', monthTo: '2026-08' }, NOW)).total).toBe(3); // all three
+  });
+
+  it('CSV multi-value status/domain/stream filters accept more than one selected option', async () => {
+    await seedThree();
+    const res = await listDrives({ status: ['Draft', 'Active'] }, NOW);
+    expect(res.total).toBe(2); // Beta (Draft) + Gamma (Active)
+  });
+
+  it('filters candCap/empCap/slotCap by range', async () => {
+    await createDrive({ ...baseInput(), name: 'Small', candCap: 50, empCap: 2, slotCap: 20 }, 'Admin');
+    await createDrive({ ...baseInput(), name: 'Medium', candCap: 200, empCap: 5, slotCap: 100 }, 'Admin');
+    await createDrive({ ...baseInput(), name: 'Large', candCap: 800, empCap: 15, slotCap: 500 }, 'Admin');
+    expect((await listDrives({ candCapFrom: 100, candCapTo: 300 }, NOW)).total).toBe(1); // Medium
+    expect((await listDrives({ empCapFrom: 5 }, NOW)).total).toBe(2); // Medium + Large
+    expect((await listDrives({ slotCapTo: 100 }, NOW)).total).toBe(2); // Small + Medium
   });
 
   it('sorts by name ascending', async () => {

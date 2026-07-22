@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell.js';
+import { useTableSort } from '../../hooks/useTableSort.js';
+import { useColumnFilters } from '../../hooks/useColumnFilters.js';
 import type { InstituteListItem, InstituteListParams } from '../../types/institutes.js';
 import { BulkAssignDrivesModal } from './BulkAssignDrivesModal.js';
 import { BulkBar } from './BulkBar.js';
@@ -28,30 +30,32 @@ function csvEscape(v: string | number): string {
 export function InstitutesPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [sort, setSort] = useState<InstituteSortKey | undefined>(undefined);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
+  const { sort, order, onSort } = useTableSort<InstituteSortKey>(undefined, () => setPage(1));
+  const columnFilters = useColumnFilters(
+    {
+      type: [] as string[], status: [] as string[],
+      uploaded: {} as { from?: string; to?: string },
+      signup: {} as { from?: string; to?: string },
+      completion: {} as { from?: string; to?: string },
+      matchReady: {} as { from?: string; to?: string },
+      shortlist: {} as { from?: string; to?: string },
+      offer: {} as { from?: string; to?: string },
+      joined: {} as { from?: string; to?: string },
+    },
+    () => setPage(1),
+  );
   const [limit, setLimit] = useState(8);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
 
-  const params: InstituteListParams = { ...filters, sort, order, page, limit };
+  const params: InstituteListParams = { ...filters, sort, order, page, limit, ...columnFilters.toQueryParams() };
   const { data, isLoading, isError, error } = useInstitutes(params);
   const { bulk, setStatus } = useInstituteMutations();
 
   function updateFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((f) => ({ ...f, [key]: value }));
-    setPage(1);
-  }
-
-  function handleSort(key: InstituteSortKey) {
-    if (sort === key) {
-      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSort(key);
-      setOrder('asc');
-    }
     setPage(1);
   }
 
@@ -185,11 +189,14 @@ export function InstitutesPage() {
             selectedIds={selectedIds}
             onToggle={toggle}
             onToggleAll={toggleAll}
-            onSort={handleSort}
+            onSort={onSort}
             sort={sort}
             order={order}
             onRowAction={handleRowAction}
             isLoading={isLoading}
+            filters={columnFilters.filters}
+            onFilterChange={columnFilters.setFilter}
+            onFilterClear={columnFilters.clearFilter}
           />
           <div className="dm-pager">
             <div className="pinfo">

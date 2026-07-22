@@ -2,7 +2,7 @@
 .portal-top { display: flex; align-items: center; gap: 12px; padding: 14px 24px; background: var(--white); border-bottom: 1px solid var(--line); }
 .portal-top .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .portal-top .brand small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; }
-.portal-top .glyph { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: var(--r-sm); background: var(--ink); color: var(--white); }
+.portal-top .brand-logo { height: 32px; width: auto; display: block; }
 .portal-top .grow { flex: 1; }
 .portal-user { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; }
 .portal-body { max-width: 960px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }

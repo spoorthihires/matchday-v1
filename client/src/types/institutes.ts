@@ -10,6 +10,13 @@ export interface Overview { total: number; pending: number; uploaded: number; av
 export interface InstituteListResponse { items: InstituteListItem[]; total: number; page: number; limit: number; overview: Overview; }
 export interface InstituteListParams {
   q?: string; type?: string; status?: string; sort?: string; order?: 'asc' | 'desc'; page?: number; limit?: number;
+  uploadedFrom?: string; uploadedTo?: string;
+  signupFrom?: string; signupTo?: string;
+  completionFrom?: string; completionTo?: string;
+  matchReadyFrom?: string; matchReadyTo?: string;
+  shortlistFrom?: string; shortlistTo?: string;
+  offerFrom?: string; offerTo?: string;
+  joinedFrom?: string; joinedTo?: string;
 }
 export interface InstituteInput {
   name: string; type: string; city: string; owner: string; email: string; status?: string;

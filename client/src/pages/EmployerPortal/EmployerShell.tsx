@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.js';
 import { useEmployerPortal } from './hooks/useEmployerPortal.js';
+import { ThemeToggle } from '../../theme/ThemeToggle.js';
 import './employerBase.js';
 
 // Ported from the prototype Matchday_Employer.html lines ~2630-2704 (view-app's sidebar +
@@ -235,6 +236,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
                 <svg className="ic" viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></svg>
                 {notificationsUnread > 0 && <span className="ndot" />}
               </button>
+              <ThemeToggle variant="svg" />
               <div
                 className="tb-user"
                 role="button"

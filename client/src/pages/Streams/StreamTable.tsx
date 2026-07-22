@@ -1,16 +1,26 @@
 import { useState } from 'react';
 import type { StreamItem } from '../../types/streams.js';
+import { PARENTS } from '../../types/streams.js';
+import { SortableHeader } from '../../components/table/SortableHeader.js';
+import { EnumFilter, FilterPopover, RangeFilter, formatRangeSummary, type RangeValue } from '../../components/table/filters/index.js';
 
 export type StreamAction = 'edit' | 'version' | 'toggle';
-const COLS: { key: 'name' | 'parent' | 'cutoff'; label: string }[] = [
-  { key: 'name', label: 'Stream' }, { key: 'parent', label: 'Parent Category' }, { key: 'cutoff', label: 'Cutoff' },
-];
+export type StreamSortKey = 'name' | 'parent' | 'cutoff' | 'status';
+
+export interface StreamColumnFilters {
+  parent: string[];
+  status: string[];
+  cutoff: RangeValue;
+}
 
 export interface StreamTableProps {
   items: StreamItem[];
-  sort: string; order: string;
-  onSort: (key: 'name' | 'parent' | 'cutoff') => void;
+  sort: string | undefined; order: 'asc' | 'desc';
+  onSort: (key: StreamSortKey) => void;
   onAction: (action: StreamAction, s: StreamItem) => void;
+  filters: StreamColumnFilters;
+  onFilterChange: <K extends keyof StreamColumnFilters>(key: K, value: StreamColumnFilters[K]) => void;
+  onFilterClear: (key: keyof StreamColumnFilters) => void;
 }
 
 function RowKebab({ s, onAction }: { s: StreamItem; onAction: StreamTableProps['onAction'] }) {
@@ -32,24 +42,34 @@ function RowKebab({ s, onAction }: { s: StreamItem; onAction: StreamTableProps['
   );
 }
 
-function sortIcon(active: boolean, order: string): string {
-  if (!active) return 'ti-arrows-sort';
-  return order === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending';
-}
-
-export function StreamTable({ items, sort, order, onSort, onAction }: StreamTableProps) {
+export function StreamTable({
+  items, sort, order, onSort, onAction, filters, onFilterChange, onFilterClear,
+}: StreamTableProps) {
   return (
     <div className="dm-table-wrap">
       <div className="dm-scroll">
         <table className="dm" style={{ minWidth: 1080 }}>
           <thead>
             <tr>
-              {COLS.map((c) => (
-                <th key={c.key} className={`sortable${sort === c.key ? ' sorted' : ''}`} onClick={() => onSort(c.key)} style={c.key === 'cutoff' ? { textAlign: 'right' } : undefined}>
-                  {c.label} <i className={`ti ${sortIcon(sort === c.key, order)} sa`} />
-                </th>
-              ))}
-              <th>Skills Required</th><th>Evaluation Flow</th><th>Branches</th><th>Employer Label</th><th>Version</th><th>Drives</th><th>Status</th><th className="r">Actions</th>
+              <SortableHeader label="Stream" sortKey="name" sort={sort} order={order} onSort={onSort} />
+              <SortableHeader
+                label="Parent Category" sortKey="parent" sort={sort} order={order} onSort={onSort}
+                filter={<EnumFilter options={PARENTS.map((p) => ({ value: p, label: p }))} value={filters.parent} onChange={(v) => onFilterChange('parent', v)} />}
+              />
+              <SortableHeader
+                label="Cutoff" sortKey="cutoff" className="r" sort={sort} order={order} onSort={onSort}
+                filter={
+                  <FilterPopover summary={formatRangeSummary(filters.cutoff, 'Select range')} active={!!(filters.cutoff.from || filters.cutoff.to)}>
+                    {(close) => <RangeFilter type="number" value={filters.cutoff} onChange={(v) => onFilterChange('cutoff', v)} onClear={() => onFilterClear('cutoff')} close={close} />}
+                  </FilterPopover>
+                }
+              />
+              <th>Skills Required</th><th>Evaluation Flow</th><th>Branches</th><th>Employer Label</th><th>Version</th><th>Drives</th>
+              <SortableHeader
+                label="Status" sortKey="status" sort={sort} order={order} onSort={onSort}
+                filter={<EnumFilter options={[{ value: 'Active', label: 'Active' }, { value: 'Disabled', label: 'Disabled' }]} value={filters.status} onChange={(v) => onFilterChange('status', v)} />}
+              />
+              <th className="r">Actions</th>
             </tr>
           </thead>
           <tbody>

@@ -84,8 +84,8 @@ export async function listInstitutes(params: ListParams) {
     const rx = new RegExp(params.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     match.$or = [{ name: rx }, { type: rx }, { city: rx }];
   }
-  if (params.type) match.type = params.type;
-  if (params.status) match.status = params.status;
+  if (params.type?.length) match.type = { $in: params.type };
+  if (params.status?.length) match.status = { $in: params.status };
 
   const filtered = await Institute.find(match).lean();
   let items: InstituteListItem[] = filtered.map((i) => ({
@@ -93,6 +93,24 @@ export async function listInstitutes(params: ListParams) {
     status: i.status as string, owner: (i.owner as string) ?? '', email: (i.email as string) ?? '',
     ...toFunnel(counts.get(String(i._id))),
   }));
+
+  // Funnel/rate columns are computed above (not stored fields), so range-filtering them happens
+  // here in JS, in the same post-processing step as the sort below — reusing SORT_KEY as the
+  // filter-field lookup too rather than a second parallel map.
+  const RANGE_NAMES = ['uploaded', 'signup', 'completion', 'matchReady', 'shortlist', 'offer', 'joined'] as const;
+  const rangeParams = params as unknown as Record<string, number | undefined>;
+  for (const name of RANGE_NAMES) {
+    const from = rangeParams[`${name}From`];
+    const to = rangeParams[`${name}To`];
+    if (from === undefined && to === undefined) continue;
+    const field = SORT_KEY[name];
+    items = items.filter((it) => {
+      const v = it[field] as number;
+      if (from !== undefined && v < from) return false;
+      if (to !== undefined && v > to) return false;
+      return true;
+    });
+  }
 
   const key = params.sort ? SORT_KEY[params.sort] : null;
   const dir = (params.order ?? (params.sort ? 'asc' : 'asc')) === 'desc' ? -1 : 1;
