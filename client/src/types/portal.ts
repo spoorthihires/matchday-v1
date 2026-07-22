@@ -24,3 +24,8 @@ export interface AccountData {
   name: string; email: string; branch: string; gradYear: number;
   source: string; cgpa: number; institute: string; hasPassword: boolean;
 }
+export interface PortalSlot {
+  id: string; date: string; start: string; end: string;
+  capacity: number; booked: number; mine: boolean;
+}
+export interface PortalSlotsData { items: PortalSlot[]; }
