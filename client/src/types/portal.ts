@@ -14,3 +14,5 @@ export interface PortalDrive {
 export interface PortalData {
   profile: PortalProfile; journey: PortalJourney; drives: PortalDrive[];
 }
+export interface RevealRequestItem { applicationId: string; company: string; driveName: string; status: 'requested' | 'granted' | 'declined'; expired: boolean; requestedAt: string | null; expiresAt: string | null; respondedAt: string | null; }
+export interface RevealRequestsData { items: RevealRequestItem[]; }
