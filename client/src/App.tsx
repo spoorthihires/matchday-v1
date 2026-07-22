@@ -39,6 +39,7 @@ import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
 import { OwnershipManagementPage } from './pages/Institutes/ownership/OwnershipManagementPage.js';
 import { JobseekerLanding } from './pages/JobseekerLanding/JobseekerLanding.js';
+import { JobseekerSignup } from './pages/JobseekerLanding/JobseekerSignup.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
 import { Portal } from './pages/Portal/index.js';
 import { SlotsPage } from './pages/Slots/index.js';
@@ -64,6 +65,11 @@ export default function App() {
             employer convention: public landing "/employer" (singular) vs. admin list
             "/employers" (plural). */}
         <Route path="/jobseeker" element={<JobseekerLanding />} />
+        {/* Public jobseeker signup, linked from the landing page's "Join free"/"Register" CTAs.
+            "/jobseekers/signup" is a distinct sub-path of the admin "/jobseekers" exact route
+            below (RoleRoute role="admin") -- react-router only treats identical literal paths
+            as colliding, so this doesn't shadow or get shadowed by that route. */}
+        <Route path="/jobseekers/signup" element={<JobseekerSignup />} />
         <Route path="/employer" element={<EmployerLanding />} />
         <Route path="/employer/signup" element={<EmployerSignup />} />
         <Route path="/employer/verify" element={<EmployerVerify />} />
