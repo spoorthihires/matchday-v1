@@ -105,11 +105,18 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/coming-soon/interviews when a not-built nav item is clicked', async () => {
+  it('navigates to /employer/drives when the Interviews nav item is clicked (interviews are viewed per-drive)', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
     await userEvent.click(sidebar.getByRole('button', { name: /Interviews/ }));
-    expect(await screen.findByText('COMING SOON PAGE')).toBeInTheDocument();
+    expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
+  });
+
+  it('navigates to /employer/drives when the Kanban nav item is clicked (the board is per-drive)', async () => {
+    const { container } = renderShell();
+    const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
+    await userEvent.click(sidebar.getByRole('button', { name: /Kanban/ }));
+    expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
   });
 
   it('clears the auth session when the user menu Log out control is clicked', async () => {
