@@ -62,20 +62,21 @@ export function Offers() {
                   <span className={tagClass(o.response)}>{o.response}</span>
                   {actionable && decliningId !== o.applicationId && (
                     <>
-                      <button type="button" className="btn" onClick={() => accept(o.applicationId)}>Accept</button>
-                      <button type="button" className="btn" onClick={() => startDecline(o.applicationId)}>Decline</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => accept(o.applicationId)}>Accept</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => startDecline(o.applicationId)}>Decline</button>
                     </>
                   )}
                   {actionable && decliningId === o.applicationId && (
                     <>
                       <input
                         type="text"
+                        className="offer-reason-input"
                         placeholder="Reason (optional)"
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                       />
-                      <button type="button" className="btn" onClick={() => submitDecline(o.applicationId)}>Confirm decline</button>
-                      <button type="button" className="btn" onClick={() => setDecliningId(null)}>Cancel</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => submitDecline(o.applicationId)}>Confirm decline</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => setDecliningId(null)}>Cancel</button>
                     </>
                   )}
                 </div>

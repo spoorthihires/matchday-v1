@@ -34,15 +34,15 @@ export function RevealRequests() {
                   <span className={tagClass(r)}>{label(r)}</span>
                   {actionable && confirmId !== r.applicationId && (
                     <>
-                      <button type="button" className="btn" onClick={() => setConfirmId(r.applicationId)}>Grant</button>
-                      <button type="button" className="btn" onClick={() => respond.mutate({ applicationId: r.applicationId, decision: 'deny' })}>Deny</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => setConfirmId(r.applicationId)}>Grant</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => respond.mutate({ applicationId: r.applicationId, decision: 'deny' })}>Deny</button>
                     </>
                   )}
                   {actionable && confirmId === r.applicationId && (
                     <>
                       <span style={{ fontSize: 12 }}>Share your name &amp; contact with {r.company}?</span>
-                      <button type="button" className="btn btn-primary" onClick={() => { respond.mutate({ applicationId: r.applicationId, decision: 'grant' }); setConfirmId(null); }}>Confirm</button>
-                      <button type="button" className="btn" onClick={() => setConfirmId(null)}>Cancel</button>
+                      <button type="button" className="btn btn-primary" disabled={respond.isPending} onClick={() => { respond.mutate({ applicationId: r.applicationId, decision: 'grant' }); setConfirmId(null); }}>Confirm</button>
+                      <button type="button" className="btn" disabled={respond.isPending} onClick={() => setConfirmId(null)}>Cancel</button>
                     </>
                   )}
                 </div>

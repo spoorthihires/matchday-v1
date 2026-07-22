@@ -77,7 +77,7 @@ export async function employerSignup(input: {
 }
 
 export async function listPublicInstitutes() {
-  const rows = await Institute.find().select('name').sort({ name: 1 }).lean<{ _id: unknown; name?: string }[]>();
+  const rows = await Institute.find({ status: 'Active' }).select('name').sort({ name: 1 }).lean<{ _id: unknown; name?: string }[]>();
   return { items: rows.map((i) => ({ id: String(i._id), name: i.name ?? '—' })) };
 }
 
@@ -87,7 +87,7 @@ export async function jobseekerSignup(input: {
 }) {
   const email = input.email.toLowerCase().trim();
   if (await Jobseeker.findOne({ email })) throw new HttpError(400, 'An account with this email already exists', 'validation');
-  if (!Types.ObjectId.isValid(input.instituteId) || !(await Institute.findById(input.instituteId)))
+  if (!Types.ObjectId.isValid(input.instituteId) || !(await Institute.findOne({ _id: input.instituteId, status: 'Active' })))
     throw new HttpError(400, 'Please choose a valid institute', 'validation');
   const passwordHash = await hashPassword(input.password);
   const js = await Jobseeker.create({
