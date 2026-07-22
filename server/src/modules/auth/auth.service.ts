@@ -1,9 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { Types } from 'mongoose';
 import { env } from '../../config/env.js';
 import { HttpError } from '../../middleware/errorHandler.js';
 import { User } from '../../models/User.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
+import { Institute } from '../../models/Institute.js';
 import { Employer } from '../../models/Employer.js';
 import { TeamMember } from '../../models/TeamMember.js';
 
@@ -72,4 +74,27 @@ export async function employerSignup(input: {
   });
   const token = signToken({ sub: String(emp._id), role: 'employer' });
   return { token, user: { id: String(emp._id), name: emp.name, email, role: 'employer' as const } };
+}
+
+export async function listPublicInstitutes() {
+  const rows = await Institute.find().select('name').sort({ name: 1 }).lean<{ _id: unknown; name?: string }[]>();
+  return { items: rows.map((i) => ({ id: String(i._id), name: i.name ?? '—' })) };
+}
+
+export async function jobseekerSignup(input: {
+  name: string; email: string; password: string; instituteId: string;
+  branch: string; gradYear: number; source: string; cgpa: number;
+}) {
+  const email = input.email.toLowerCase().trim();
+  if (await Jobseeker.findOne({ email })) throw new HttpError(400, 'An account with this email already exists', 'validation');
+  if (!Types.ObjectId.isValid(input.instituteId) || !(await Institute.findById(input.instituteId)))
+    throw new HttpError(400, 'Please choose a valid institute', 'validation');
+  const passwordHash = await hashPassword(input.password);
+  const js = await Jobseeker.create({
+    name: input.name, email, instituteId: input.instituteId, branch: input.branch,
+    gradYear: input.gradYear, cgpa: input.cgpa, source: input.source,
+    passwordHash, stage: 'Applied', profileCompleted: false, evaluationStatus: 'na',
+  });
+  const token = signToken({ sub: String(js._id), role: 'jobseeker' });
+  return { token, user: { id: String(js._id), name: js.name, email, role: 'jobseeker' as const } };
 }
