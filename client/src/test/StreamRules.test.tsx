@@ -6,10 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { StreamRulesPage } from '../pages/Streams/rules/StreamRulesPage.js';
 import { SR_DEFAULTS } from '../pages/Streams/rules/streamRulesUtils.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<MemoryRouter><QueryClientProvider client={qc}><AuthProvider><StreamRulesPage /></AuthProvider></QueryClientProvider></MemoryRouter>);
+  return render(<ThemeProvider><MemoryRouter><QueryClientProvider client={qc}><AuthProvider><StreamRulesPage /></AuthProvider></QueryClientProvider></MemoryRouter></ThemeProvider>);
 }
 
 describe('StreamRulesPage', () => {

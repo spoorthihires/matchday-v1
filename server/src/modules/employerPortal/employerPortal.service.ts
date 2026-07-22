@@ -6,6 +6,7 @@ import { SlotBooking } from '../../models/SlotBooking.js';
 import { Drive } from '../../models/Drive.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
 import { Interview } from '../../models/Interview.js';
+import { notificationsSummary } from './employerNotifications.service.js';
 import type { RegistrationInput, SlotInput, SlotPatch } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
@@ -28,6 +29,7 @@ export async function getEmployerPortal(employerId: string) {
   const registrations = regRows.map((r) => ({ id: String(r._id), driveName: r.driveName ?? '', role: r.role, status: r.status }));
   // derived: count of live (not cancelled) interviews still to happen, not a slot count
   const upcomingInterviews = await Interview.countDocuments({ employerId, status: { $in: ['Scheduled', 'Confirmed'] } });
+  const { unreadCount, recent } = await notificationsSummary(employerId);
   return {
     profile: {
       id: String(emp._id), name: emp.name, email: emp.email ?? '', industry: emp.industry,
@@ -38,6 +40,8 @@ export async function getEmployerPortal(employerId: string) {
       calendar,
       registrations,
       shortlist: [] as unknown[],       // placeholder — filled by Slice 6
+      notifications: recent,
+      notificationsUnread: unreadCount,
     },
   };
 }

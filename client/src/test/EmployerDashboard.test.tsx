@@ -25,6 +25,8 @@ function mockPortalFetch(status: 'Pending' | 'Active') {
         calendar: [],
         registrations: [],
         shortlist: [],
+        notifications: [],
+        notificationsUnread: 0,
       },
     }),
   }));

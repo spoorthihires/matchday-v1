@@ -11,6 +11,12 @@ import { candidatesController, passportController, decisionController, noteContr
 import { requestRevealController, remindRevealController, withdrawRevealController } from './employerConsent.controller.js';
 import { bulkDecisionController, shortlistPackController } from './employerShortlist.controller.js';
 import { interviewsController, scheduleInterviewController, interviewActionController } from './employerInterviews.controller.js';
+import { boardController, setStageController } from './employerBoard.controller.js';
+import { upsertOfferController, offersController } from './employerOffers.controller.js';
+import { reportsController } from './employerReports.controller.js';
+import { notificationsController, markNotificationsReadController } from './employerNotifications.controller.js';
+import { createSupportController, supportListController } from './employerSupport.controller.js';
+import { teamListController, addTeamMemberController, updateTeamMemberController, removeTeamMemberController } from './employerTeam.controller.js';
 
 // Scoped to the '/employer' path (not a bare `.use()`) because this router
 // shares the '/api/me' mount prefix with seekerPortalRoutes, which gates
@@ -40,4 +46,17 @@ employerPortalRoutes.get('/employer/drives/:id/shortlist/pack', asyncHandler(sho
 employerPortalRoutes.get('/employer/drives/:id/interviews', asyncHandler(interviewsController));
 employerPortalRoutes.post('/employer/drives/:id/interviews', asyncHandler(scheduleInterviewController));
 employerPortalRoutes.patch('/employer/drives/:id/interviews/:interviewId', asyncHandler(interviewActionController));
+employerPortalRoutes.get('/employer/drives/:id/board', asyncHandler(boardController));
+employerPortalRoutes.patch('/employer/drives/:id/candidates/:jobseekerId/stage', asyncHandler(setStageController));
+employerPortalRoutes.get('/employer/drives/:id/offers', asyncHandler(offersController));
+employerPortalRoutes.put('/employer/drives/:id/candidates/:jobseekerId/offer', asyncHandler(upsertOfferController));
+employerPortalRoutes.get('/employer/reports', asyncHandler(reportsController));
+employerPortalRoutes.get('/employer/notifications', asyncHandler(notificationsController));
+employerPortalRoutes.post('/employer/notifications/read', asyncHandler(markNotificationsReadController));
+employerPortalRoutes.get('/employer/support', asyncHandler(supportListController));
+employerPortalRoutes.post('/employer/support', asyncHandler(createSupportController));
+employerPortalRoutes.get('/employer/team', asyncHandler(teamListController));
+employerPortalRoutes.post('/employer/team', asyncHandler(addTeamMemberController));
+employerPortalRoutes.patch('/employer/team/:memberId', asyncHandler(updateTeamMemberController));
+employerPortalRoutes.delete('/employer/team/:memberId', asyncHandler(removeTeamMemberController));
 employerPortalRoutes.get('/employer', asyncHandler(employerPortalController));

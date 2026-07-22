@@ -99,7 +99,7 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'reports',
         label: 'Reports',
-        path: '/employer/coming-soon/reports',
+        path: '/employer/reports',
         icon: (
           <svg className="ic" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M7 14l3-4 3 3 5-6" /></svg>
         ),
@@ -111,7 +111,7 @@ const NAV_SECTIONS: NavSection[] = [
 const SETTINGS_ITEM: NavItem = {
   slug: 'settings',
   label: 'Settings',
-  path: '/employer/coming-soon/settings',
+  path: '/employer/team',
   icon: (
     <svg className="ic" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
@@ -139,6 +139,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
   const profile = data?.profile;
   const companyName = profile?.name ?? '';
   const contactName = profile?.spoc ?? '';
+  const notificationsUnread = data?.dashboard?.notificationsUnread ?? 0;
 
   function goTo(item: NavItem) {
     navigate(item.path);
@@ -218,6 +219,23 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
               <input placeholder="Search drives, candidates, IDs…" aria-label="Search" />
             </div>
             <div className="tb-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Help"
+                onClick={() => navigate('/employer/support')}
+              >
+                <svg className="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 013.9-1.6c1.1.7 1.1 2 .1 2.8-.7.5-1.5.9-1.5 1.8" /><path d="M12 17h.01" /></svg>
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Notifications"
+                onClick={() => navigate('/employer/notifications')}
+              >
+                <svg className="ic" viewBox="0 0 24 24"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></svg>
+                {notificationsUnread > 0 && <span className="ndot" />}
+              </button>
               <ThemeToggle variant="svg" />
               <div
                 className="tb-user"

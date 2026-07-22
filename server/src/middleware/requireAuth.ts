@@ -6,7 +6,7 @@ import { HttpError } from './errorHandler.js';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
-    interface Request { userId?: string; userRole?: string; }
+    interface Request { userId?: string; userRole?: string; memberId?: string; }
   }
 }
 
@@ -17,9 +17,10 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
     return next(new HttpError(401, 'Missing or invalid token', 'auth'));
   }
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET) as { sub: string; role: string };
+    const payload = jwt.verify(token, env.JWT_SECRET) as { sub: string; role: string; mid?: string };
     req.userId = payload.sub;
     req.userRole = payload.role;
+    req.memberId = payload.mid;
     return next();
   } catch {
     return next(new HttpError(401, 'Missing or invalid token', 'auth'));

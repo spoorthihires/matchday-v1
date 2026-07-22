@@ -4,13 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { SlotsPage } from '../pages/Slots/index.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 
 function renderAt(url: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter initialEntries={[url]}>
-      <QueryClientProvider client={qc}><AuthProvider><SlotsPage /></AuthProvider></QueryClientProvider>
-    </MemoryRouter>,
+    <ThemeProvider>
+      <MemoryRouter initialEntries={[url]}>
+        <QueryClientProvider client={qc}><AuthProvider><SlotsPage /></AuthProvider></QueryClientProvider>
+      </MemoryRouter>
+    </ThemeProvider>,
   );
 }
 

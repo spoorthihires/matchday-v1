@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
+import { KANBAN_STAGES } from '../constants/kanban.js';
 
 const noteSchema = new Schema({
   text: { type: String, required: true },
@@ -17,6 +18,18 @@ const consentSchema = new Schema({
   remindedAt: { type: Date, default: null },
 }, { _id: false });
 
+// Per-(employer × drive × candidate) offer (Slice 9). Absent until the
+// employer records a first offer action.
+const offerSchema = new Schema({
+  status: { type: String, enum: ['Draft', 'Sent', 'Accepted', 'Declined', 'Joined'], required: true },
+  response: { type: String, enum: ['Pending', 'Negotiating', 'Accepted', 'Declined'], default: 'Pending' },
+  ctc: { type: Number, default: 0 },
+  location: { type: String, default: '' },
+  mode: { type: String, enum: ['On-site', 'Hybrid', 'Remote'], default: 'Hybrid' },
+  joinDate: { type: Date, default: null },
+  declineReason: { type: String, default: '' },
+}, { _id: false });
+
 // Net-new per-(employer × drive × candidate) join. Sparse: a row exists only
 // once the employer acts on a candidate (a decision or a note). Later slices
 // extend this same doc (consent sub-state → 5b, kanban stage → 8, offer → 9).
@@ -27,6 +40,12 @@ const applicationSchema = new Schema({
   decision: { type: String, enum: ['Shortlisted', 'Hold', 'Rejected'], default: null },
   notes: { type: [noteSchema], default: [] },
   consent: { type: consentSchema, default: undefined },
+  stage: {
+    type: String,
+    enum: [...KANBAN_STAGES],
+    default: null,
+  },
+  offer: { type: offerSchema, default: undefined },
 }, { timestamps: true });
 
 applicationSchema.index({ employerId: 1, driveId: 1, jobseekerId: 1 }, { unique: true });

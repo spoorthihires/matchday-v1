@@ -50,6 +50,10 @@ export function EmployerCandidates() {
             onClick={() => navigate(`/employer/drives/${driveId}/consent`)}>Consent status</button>
           <button type="button" className="btn btn-ghost" style={{ marginLeft: 6 }}
             onClick={() => navigate(`/employer/drives/${driveId}/interviews`)}>Interviews</button>
+          <button type="button" className="btn btn-ghost" style={{ marginLeft: 6 }}
+            onClick={() => navigate(`/employer/drives/${driveId}/board`)}>Pipeline board</button>
+          <button type="button" className="btn btn-ghost" style={{ marginLeft: 6 }}
+            onClick={() => navigate(`/employer/drives/${driveId}/offers`)}>Offers</button>
         </div>
       </div>
 

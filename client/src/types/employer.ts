@@ -21,11 +21,29 @@ export interface EmployerCalendarEntry {
   driveId: string;
 }
 
+export type EmployerNotificationCategory = 'registration' | 'candidate' | 'slot';
+export interface EmployerNotification {
+  id: string;
+  category: EmployerNotificationCategory;
+  title: string;
+  body: string;
+  at: string;
+  link: string;
+  read: boolean;
+}
+export interface EmployerNotificationsResponse {
+  items: EmployerNotification[];
+  unreadCount: number;
+  lastReadAt: string | null;
+}
+
 export interface EmployerDashboard {
   kpis: { activeDrives: number; upcomingInterviews: number; totalSlots: number };
   calendar: EmployerCalendarEntry[];
   registrations: unknown[];
   shortlist: unknown[];
+  notifications: EmployerNotification[];
+  notificationsUnread: number;
 }
 
 export interface EmployerPortalResponse {
@@ -246,3 +264,70 @@ export type InterviewAction =
   | { action: 'confirm' } | { action: 'complete' } | { action: 'cancel' }
   | { action: 'reschedule'; slotId: string; time: string }
   | { action: 'set-interviewers'; interviewers: string[] };
+
+// Mirrors server/src/constants/kanban.ts's KANBAN_STAGES/KANBAN_ORDER/KANBAN_TERMINAL and
+// server/src/modules/employerPortal/employerBoard.service.ts's BoardCard shape exactly
+// (Slice 8 Tasks 1-2) -- the pipeline board this task's EmployerKanban page renders.
+export type BoardStage =
+  | 'Recommended' | 'Shortlisted' | 'Candidate Confirmed' | 'Scheduled'
+  | 'L1' | 'L2' | 'L3' | 'HR' | 'Offer Sent' | 'Offer Accepted' | 'Joined'
+  | 'Rejected' | 'Withdrawn';
+export const KANBAN_ORDER: BoardStage[] = ['Recommended', 'Shortlisted', 'Candidate Confirmed', 'Scheduled', 'L1', 'L2', 'L3', 'HR', 'Offer Sent', 'Offer Accepted', 'Joined'];
+export const KANBAN_TERMINAL: BoardStage[] = ['Rejected', 'Withdrawn'];
+export const KANBAN_ALL: BoardStage[] = [...KANBAN_ORDER, ...KANBAN_TERMINAL];
+export interface BoardCard {
+  jobseekerId: string; code: string; branch: string; matchScore: number; evalPill: 'Strong' | 'Qualified';
+  stage: BoardStage; decision: 'Shortlisted' | 'Hold' | 'Rejected' | null;
+  consentStatus: 'requested' | 'granted' | 'declined' | 'expired' | 'none';
+  revealed: { name: string; email: string } | null;
+}
+export interface EmployerBoardResponse { items: BoardCard[]; }
+
+// Mirrors server/src/modules/employerPortal/employerOffers.service.ts's OfferProjection /
+// listOffers return shape exactly (Slice 9 Tasks 1-2) -- the offer-management dashboard this
+// task's EmployerOffers page renders (KPI row + per-row update + new-offer picker).
+export type OfferStatus = 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Joined';
+export type OfferResponse = 'Pending' | 'Negotiating' | 'Accepted' | 'Declined';
+export type OfferMode = 'On-site' | 'Hybrid' | 'Remote';
+export interface EmployerOffer {
+  jobseekerId: string; code: string; matchScore: number; revealed: { name: string; email: string };
+  status: OfferStatus; response: OfferResponse; ctc: number; location: string; mode: OfferMode;
+  joinDate: string | null; declineReason: string;
+}
+export interface EmployerOffersResponse { items: EmployerOffer[]; counts: Record<OfferStatus, number>; }
+export interface OfferInput {
+  status: OfferStatus; response?: OfferResponse; ctc?: number; location?: string; mode?: OfferMode; joinDate?: string; declineReason?: string;
+}
+
+// Mirrors server/src/modules/employerPortal/employerSupport.service.ts's project()/
+// listSupportRequests return shape exactly (Task 1) -- the FAQ + request form + my-requests
+// list this task's EmployerSupport page renders.
+export const SUPPORT_CATEGORIES = [
+  'More candidates', 'Slot change', 'Candidate replacement', 'No-show',
+  'Profile/data issue', 'Resume access', 'Commercial/billing', 'Other',
+] as const;
+export type SupportCategory = typeof SUPPORT_CATEGORIES[number];
+export interface SupportRequestItem {
+  id: string; ref: string; category: SupportCategory; subject: string; message: string;
+  priority: 'Low' | 'Normal' | 'High'; status: 'Open' | 'In progress' | 'Resolved'; createdAt: string;
+}
+export interface SupportListResponse { items: SupportRequestItem[]; }
+
+// Mirrors server/src/modules/employerPortal/employerTeam.service.ts's project()/listTeam
+// return shape exactly (Slice 13 Task 1) -- the members list + admin-gated add/edit/remove
+// controls this task's EmployerTeam page renders.
+export const TEAM_ROLES = ['Admin', 'Recruiter', 'Interviewer', 'Viewer'] as const;
+export type TeamRole = typeof TEAM_ROLES[number];
+export interface TeamMemberItem { id: string; name: string; email: string; role: TeamRole; status: 'Active' | 'Disabled'; createdAt: string; }
+export interface EmployerTeamResponse { members: TeamMemberItem[]; canManage: boolean; actingRole: string; selfId: string | null; }
+
+export interface ReportFunnelStage { stage: string; count: number; conversionPct: number; }
+export interface EmployerReport {
+  scope: string;
+  drives: { id: string; name: string }[];
+  funnel: ReportFunnelStage[];
+  kpis: {
+    recommended: number; shortlisted: number; interviewsScheduled: number;
+    offersSent: number; offersAccepted: number; dropOffPct: number; avgMatchScore: number;
+  };
+}

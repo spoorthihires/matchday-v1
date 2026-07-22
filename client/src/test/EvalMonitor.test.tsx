@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { EvalMonitorPage } from '../pages/Evaluations/monitor/EvalMonitorPage.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 import type { MonitorResponse } from '../types/evaluations.js';
 
 const PAYLOAD: MonitorResponse = {
@@ -19,7 +20,7 @@ const PAYLOAD: MonitorResponse = {
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter><QueryClientProvider client={qc}><AuthProvider><EvalMonitorPage /></AuthProvider></QueryClientProvider></MemoryRouter>,
+    <ThemeProvider><MemoryRouter><QueryClientProvider client={qc}><AuthProvider><EvalMonitorPage /></AuthProvider></QueryClientProvider></MemoryRouter></ThemeProvider>,
   );
 }
 

@@ -5,6 +5,7 @@ import { HttpError } from '../../middleware/errorHandler.js';
 import { User } from '../../models/User.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Employer } from '../../models/Employer.js';
+import { TeamMember } from '../../models/TeamMember.js';
 
 export function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10);
@@ -14,7 +15,7 @@ export function verifyPassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
 }
 
-export function signToken(payload: { sub: string; role: string }): string {
+export function signToken(payload: { sub: string; role: string; mid?: string }): string {
   return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES as jwt.SignOptions['expiresIn'] });
 }
 
@@ -43,6 +44,14 @@ export async function login(email: string, password: string) {
     if (!ok) throw new HttpError(401, 'Invalid credentials', 'auth');
     const token = signToken({ sub: String(employer._id), role: 'employer' });
     return { token, user: { id: String(employer._id), name: employer.name, email: employer.email ?? '', role: 'employer' } };
+  }
+
+  const member = await TeamMember.findOne({ email: normalized });
+  if (member && member.passwordHash && member.status === 'Active') {
+    const ok = await verifyPassword(password, member.passwordHash);
+    if (!ok) throw new HttpError(401, 'Invalid credentials', 'auth');
+    const token = signToken({ sub: String(member.employerId), role: 'employer', mid: String(member._id) });
+    return { token, user: { id: String(member.employerId), name: member.name, email: member.email, role: 'employer' } };
   }
 
   throw new HttpError(401, 'Invalid credentials', 'auth');
