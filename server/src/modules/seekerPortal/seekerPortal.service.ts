@@ -6,6 +6,7 @@ import { Institute } from '../../models/Institute.js';
 import { Jobseeker } from '../../models/Jobseeker.js';
 import { Slot } from '../../models/Slot.js';
 import { Application } from '../../models/Application.js';
+import { Interview } from '../../models/Interview.js';
 import { isExpired } from '../../constants/consent.js';
 import { codeFor, evaluationLabel, matchReadinessPct, offerStatus } from '../jobseekers/jobseekers.service.js';
 
@@ -148,4 +149,70 @@ export async function respondReveal(jobseekerId: string, applicationId: string, 
   app.set('consent.respondedAt', new Date());
   await app.save();
   return { status: app.consent?.status };
+}
+
+const OFFER_SENT_STATES = ['Sent', 'Accepted', 'Declined', 'Joined'];
+
+async function nameMaps(employerIds: string[], driveIds: string[]) {
+  const [emps, drives] = await Promise.all([
+    Employer.find({ _id: { $in: [...new Set(employerIds)] } }).select('name').lean(),
+    Drive.find({ _id: { $in: [...new Set(driveIds)] } }).select('name').lean<{ _id: Types.ObjectId; name?: string }[]>(),
+  ]);
+  return {
+    emp: new Map(emps.map((e) => [String(e._id), e.name as string])),
+    drive: new Map(drives.map((d) => [String(d._id), d.name ?? '—'])),
+  };
+}
+
+export async function listInterviews(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const rows = await Interview.find({ jobseekerId }).lean();
+  const slots = await Slot.find({ _id: { $in: [...new Set(rows.map((r) => String(r.slotId)))] } })
+    .select('date start end link').lean<{ _id: Types.ObjectId; date: Date; start: string; end: string; link?: string }[]>();
+  const slotMap = new Map(slots.map((s) => [String(s._id), s]));
+  const { emp, drive } = await nameMaps(rows.map((r) => String(r.employerId)), rows.map((r) => String(r.driveId)));
+  const items = rows.map((r) => {
+    const s = slotMap.get(String(r.slotId));
+    return {
+      interviewId: String(r._id),
+      company: emp.get(String(r.employerId)) ?? '—',
+      driveName: drive.get(String(r.driveId)) ?? '—',
+      date: s?.date ? new Date(s.date).toISOString() : null,
+      start: s?.start ?? '', end: s?.end ?? '', time: r.time,
+      status: r.status, interviewers: r.interviewers ?? [], link: s?.link ?? '',
+    };
+  });
+  items.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.time.localeCompare(b.time));
+  return { items };
+}
+
+export async function listOffers(jobseekerId: string) {
+  if (!Types.ObjectId.isValid(jobseekerId)) throw new HttpError(404, 'Jobseeker not found', 'not_found');
+  const apps = await Application.find({ jobseekerId, 'offer.status': { $in: OFFER_SENT_STATES } }).lean();
+  const { emp, drive } = await nameMaps(apps.map((a) => String(a.employerId)), apps.map((a) => String(a.driveId)));
+  const items = apps.map((a) => {
+    const o = (a.offer ?? {}) as { status?: string; response?: string; ctc?: number; location?: string; mode?: string; joinDate?: Date | null; declineReason?: string };
+    return {
+      applicationId: String(a._id),
+      company: emp.get(String(a.employerId)) ?? '—',
+      driveName: drive.get(String(a.driveId)) ?? '—',
+      status: o.status ?? '', response: o.response ?? 'Pending',
+      ctc: o.ctc ?? 0, location: o.location ?? '', mode: o.mode ?? '',
+      joinDate: o.joinDate ? new Date(o.joinDate).toISOString() : null,
+      declineReason: o.declineReason ?? '',
+    };
+  });
+  return { items };
+}
+
+export async function respondOffer(jobseekerId: string, applicationId: string, input: { response: 'Accepted' | 'Declined'; declineReason?: string }) {
+  if (!Types.ObjectId.isValid(applicationId)) throw new HttpError(404, 'Offer not found', 'not_found');
+  const app = await Application.findOne({ _id: applicationId, jobseekerId });
+  const status = (app?.offer as { status?: string } | undefined)?.status;
+  if (!app || !status) throw new HttpError(404, 'Offer not found', 'not_found');
+  if (status !== 'Sent') throw new HttpError(400, 'This offer is not awaiting your response', 'offer_not_actionable');
+  app.set('offer.response', input.response);
+  if (input.response === 'Declined' && input.declineReason) app.set('offer.declineReason', input.declineReason);
+  await app.save();
+  return { response: (app.offer as { response?: string }).response };
 }
