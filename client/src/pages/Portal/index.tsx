@@ -1,7 +1,9 @@
 import { useAuth } from '../../auth/AuthContext.js';
 import { usePortal } from '../../hooks/usePortal.js';
 import { DrivesList } from './DrivesList.js';
+import { Interviews } from './Interviews.js';
 import { JourneyPipeline } from './JourneyPipeline.js';
+import { Offers } from './Offers.js';
 import { PortalShell } from './PortalShell.js';
 import { RevealRequests } from './RevealRequests.js';
 import { StatusCards } from './StatusCards.js';
@@ -29,6 +31,8 @@ export function Portal() {
           <JourneyPipeline journey={data.journey} />
           <StatusCards journey={data.journey} />
           <RevealRequests />
+          <Interviews />
+          <Offers />
           <div>
             <h2 style={{ fontSize: 16, margin: '0 0 12px' }}>My Drives</h2>
             <DrivesList drives={data.drives} />

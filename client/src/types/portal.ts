@@ -16,3 +16,7 @@ export interface PortalData {
 }
 export interface RevealRequestItem { applicationId: string; company: string; driveName: string; status: 'requested' | 'granted' | 'declined'; expired: boolean; requestedAt: string | null; expiresAt: string | null; respondedAt: string | null; }
 export interface RevealRequestsData { items: RevealRequestItem[]; }
+export interface InterviewItem { interviewId: string; company: string; driveName: string; date: string | null; start: string; end: string; time: string; status: string; interviewers: string[]; link: string; }
+export interface OfferItem { applicationId: string; company: string; driveName: string; status: string; response: string; ctc: number; location: string; mode: string; joinDate: string | null; declineReason: string; }
+export interface InterviewsData { items: InterviewItem[]; }
+export interface OffersData { items: OfferItem[]; }
