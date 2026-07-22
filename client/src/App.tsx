@@ -41,6 +41,7 @@ import { OwnershipManagementPage } from './pages/Institutes/ownership/OwnershipM
 import { JobseekerLanding } from './pages/JobseekerLanding/JobseekerLanding.js';
 import { JobseekerSignup } from './pages/JobseekerLanding/JobseekerSignup.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
+import { Account } from './pages/Portal/Account.js';
 import { Portal } from './pages/Portal/index.js';
 import { SlotsPage } from './pages/Slots/index.js';
 import { StreamRulesPage } from './pages/Streams/rules/StreamRulesPage.js';
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/mfa" element={<MfaStub />} />
         <Route path="/forgot" element={<ForgotStub />} />
         <Route path="/portal" element={<RoleRoute role="jobseeker"><Portal /></RoleRoute>} />
+        <Route path="/portal/account" element={<RoleRoute role="jobseeker"><Account /></RoleRoute>} />
         {/* Public jobseeker marketing landing. NOTE: routed at singular "/jobseeker" (not
             "/jobseekers") — that plural path is already the admin JobseekersPage route
             below (RoleRoute role="admin"), linked from the admin Sidebar. Duplicating the

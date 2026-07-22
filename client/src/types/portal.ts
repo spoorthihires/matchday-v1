@@ -20,3 +20,7 @@ export interface InterviewItem { interviewId: string; company: string; driveName
 export interface OfferItem { applicationId: string; company: string; driveName: string; status: string; response: string; ctc: number; location: string; mode: string; joinDate: string | null; declineReason: string; }
 export interface InterviewsData { items: InterviewItem[]; }
 export interface OffersData { items: OfferItem[]; }
+export interface AccountData {
+  name: string; email: string; branch: string; gradYear: number;
+  source: string; cgpa: number; institute: string; hasPassword: boolean;
+}
