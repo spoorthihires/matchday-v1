@@ -38,6 +38,7 @@ import { EvalMonitorPage } from './pages/Evaluations/monitor/EvalMonitorPage.js'
 import { InstituteDetail } from './pages/Institutes/detail/InstituteDetail.js';
 import { InstitutesPage } from './pages/Institutes/index.js';
 import { OwnershipManagementPage } from './pages/Institutes/ownership/OwnershipManagementPage.js';
+import { JobseekerLanding } from './pages/JobseekerLanding/JobseekerLanding.js';
 import { JobseekersPage } from './pages/Jobseekers/index.js';
 import { Portal } from './pages/Portal/index.js';
 import { SlotsPage } from './pages/Slots/index.js';
@@ -55,6 +56,14 @@ export default function App() {
         <Route path="/mfa" element={<MfaStub />} />
         <Route path="/forgot" element={<ForgotStub />} />
         <Route path="/portal" element={<RoleRoute role="jobseeker"><Portal /></RoleRoute>} />
+        {/* Public jobseeker marketing landing. NOTE: routed at singular "/jobseeker" (not
+            "/jobseekers") — that plural path is already the admin JobseekersPage route
+            below (RoleRoute role="admin"), linked from the admin Sidebar. Duplicating the
+            literal path here would make one of the two routes unreachable (react-router
+            picks a single winner among identical-score branches). This mirrors the existing
+            employer convention: public landing "/employer" (singular) vs. admin list
+            "/employers" (plural). */}
+        <Route path="/jobseeker" element={<JobseekerLanding />} />
         <Route path="/employer" element={<EmployerLanding />} />
         <Route path="/employer/signup" element={<EmployerSignup />} />
         <Route path="/employer/verify" element={<EmployerVerify />} />
