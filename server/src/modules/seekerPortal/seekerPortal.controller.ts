@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { changePassword, getAccount, getPortal, listInterviews, listOffers, listRevealRequests, respondOffer, respondReveal, updateAccount } from './seekerPortal.service.js';
+import { bookSlot, cancelBooking, changePassword, getAccount, getPortal, listDriveSlots, listInterviews, listOffers, listRevealRequests, respondOffer, respondReveal, updateAccount } from './seekerPortal.service.js';
 import { changePasswordSchema, respondOfferSchema, respondSchema, updateAccountSchema } from './seekerPortal.schemas.js';
 
 export async function portalController(req: Request, res: Response) {
@@ -34,4 +34,16 @@ export async function updateAccountController(req: Request, res: Response) {
 export async function changePasswordController(req: Request, res: Response) {
   const input = changePasswordSchema.parse(req.body);
   res.json(await changePassword(req.userId as string, input));
+}
+
+export async function driveSlotsController(req: Request, res: Response) {
+  res.json(await listDriveSlots(req.userId as string, req.params.driveId));
+}
+
+export async function bookSlotController(req: Request, res: Response) {
+  res.status(201).json(await bookSlot(req.userId as string, req.params.slotId));
+}
+
+export async function cancelBookingController(req: Request, res: Response) {
+  res.json(await cancelBooking(req.userId as string, req.params.slotId));
 }

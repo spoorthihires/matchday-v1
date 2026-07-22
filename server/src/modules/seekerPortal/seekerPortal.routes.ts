@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../../middleware/asyncHandler.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
-import { accountController, changePasswordController, interviewsController, offersController, portalController, respondOfferController, revealRequestsController, respondRevealController, updateAccountController } from './seekerPortal.controller.js';
+import { accountController, bookSlotController, cancelBookingController, changePasswordController, driveSlotsController, interviewsController, offersController, portalController, respondOfferController, revealRequestsController, respondRevealController, updateAccountController } from './seekerPortal.controller.js';
 
 export const seekerPortalRoutes = Router();
 seekerPortalRoutes.use(requireAuth);
@@ -16,3 +16,6 @@ seekerPortalRoutes.post('/portal/offers/:applicationId/respond', asyncHandler(re
 seekerPortalRoutes.get('/portal/account', asyncHandler(accountController));
 seekerPortalRoutes.patch('/portal/account', asyncHandler(updateAccountController));
 seekerPortalRoutes.post('/portal/account/password', asyncHandler(changePasswordController));
+seekerPortalRoutes.get('/portal/drives/:driveId/slots', asyncHandler(driveSlotsController));
+seekerPortalRoutes.post('/portal/slots/:slotId/book', asyncHandler(bookSlotController));
+seekerPortalRoutes.delete('/portal/slots/:slotId/book', asyncHandler(cancelBookingController));
