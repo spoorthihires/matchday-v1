@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { InstituteDetail } from '../pages/Institutes/detail/InstituteDetail.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 import type { InstituteDetailResponse } from '../types/institutes.js';
 
 const DETAIL: InstituteDetailResponse = {
@@ -31,15 +32,17 @@ const DETAIL: InstituteDetailResponse = {
 function renderDetail() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/institutes/abc']}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/institutes/:id" element={<InstituteDetail />} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/institutes/abc']}>
+          <AuthProvider>
+            <Routes>
+              <Route path="/institutes/:id" element={<InstituteDetail />} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 

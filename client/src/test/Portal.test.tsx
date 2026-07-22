@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { Portal } from '../pages/Portal/index.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 
 const PAYLOAD = {
   profile: { id: '1', code: 'C-ABC123', name: 'Aarav Kumar', email: 'a@b.c', institute: 'CBIT', branch: 'CSE', gradYear: 2026, cgpa: 8.5 },
@@ -14,9 +15,11 @@ const PAYLOAD = {
 function renderPortal() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter><AuthProvider><Portal /></AuthProvider></MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter><AuthProvider><Portal /></AuthProvider></MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 

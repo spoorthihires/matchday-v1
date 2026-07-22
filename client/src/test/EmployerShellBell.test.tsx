@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { EmployerShell } from '../pages/EmployerPortal/EmployerShell.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 
 function seedAuth() {
   localStorage.setItem('matchday.auth', JSON.stringify({ token: 't', user: { id: 'e1', name: 'Acme', email: 'e@c.com', role: 'employer' } }));
@@ -17,11 +18,13 @@ function mockAggregate(notificationsUnread: number) {
 function renderShell() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/employer/dashboard']}>
-        <AuthProvider><EmployerShell><div>content</div></EmployerShell></AuthProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/employer/dashboard']}>
+          <AuthProvider><EmployerShell><div>content</div></EmployerShell></AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 

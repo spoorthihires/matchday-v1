@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { ApprovalsPage } from '../pages/Employers/approvals/ApprovalsPage.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 import type { Registration, RegistrationListResponse } from '../types/employers.js';
 
 const REG_1: Registration = {
@@ -64,15 +65,17 @@ const UPDATED_LIST_RESPONSE: RegistrationListResponse = {
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/employers/approvals']}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/employers/approvals" element={<ApprovalsPage />} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/employers/approvals']}>
+          <AuthProvider>
+            <Routes>
+              <Route path="/employers/approvals" element={<ApprovalsPage />} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 

@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
 import { EmployerShell } from '../pages/EmployerPortal/EmployerShell.js';
+import { ThemeProvider } from '../theme/ThemeContext.js';
 
 const STORAGE_KEY = 'matchday.auth';
 
@@ -34,27 +35,29 @@ function mockPortalFetch() {
 function renderShell() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/employer/dashboard']}>
-        <AuthProvider>
-          <Routes>
-            <Route
-              path="/employer/dashboard"
-              element={<EmployerShell><div>DASHBOARD CONTENT</div></EmployerShell>}
-            />
-            <Route
-              path="/employer/drives"
-              element={<EmployerShell><div>DRIVES PAGE</div></EmployerShell>}
-            />
-            <Route
-              path="/employer/registrations"
-              element={<EmployerShell><div>REGISTRATIONS PAGE</div></EmployerShell>}
-            />
-            <Route path="/employer/coming-soon/:slug" element={<div>COMING SOON PAGE</div>} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/employer/dashboard']}>
+          <AuthProvider>
+            <Routes>
+              <Route
+                path="/employer/dashboard"
+                element={<EmployerShell><div>DASHBOARD CONTENT</div></EmployerShell>}
+              />
+              <Route
+                path="/employer/drives"
+                element={<EmployerShell><div>DRIVES PAGE</div></EmployerShell>}
+              />
+              <Route
+                path="/employer/registrations"
+                element={<EmployerShell><div>REGISTRATIONS PAGE</div></EmployerShell>}
+              />
+              <Route path="/employer/coming-soon/:slug" element={<div>COMING SOON PAGE</div>} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 
