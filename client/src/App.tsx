@@ -24,6 +24,7 @@ import { EmployerOffers } from './pages/EmployerPortal/EmployerOffers.js';
 import { EmployerRegister } from './pages/EmployerPortal/EmployerRegister.js';
 import { EmployerRegistrations } from './pages/EmployerPortal/EmployerRegistrations.js';
 import { EmployerReports } from './pages/EmployerPortal/EmployerReports.js';
+import { EmployerPipelineEntry } from './pages/EmployerPortal/EmployerPipelineEntry.js';
 import { EmployerShell } from './pages/EmployerPortal/EmployerShell.js';
 import { EmployerShortlist } from './pages/EmployerPortal/EmployerShortlist.js';
 import { EmployerSignup } from './pages/EmployerPortal/EmployerSignup.js';
@@ -91,6 +92,8 @@ export default function App() {
         <Route path="/employer/drives/:id/offers" element={<RoleRoute role="employer"><EmployerShell><EmployerOffers /></EmployerShell></RoleRoute>} />
         <Route path="/employer/registrations" element={<RoleRoute role="employer"><EmployerShell><EmployerRegistrations /></EmployerShell></RoleRoute>} />
         <Route path="/employer/reports" element={<RoleRoute role="employer"><EmployerShell><EmployerReports /></EmployerShell></RoleRoute>} />
+        <Route path="/employer/kanban" element={<RoleRoute role="employer"><EmployerShell><EmployerPipelineEntry target="board" title="Kanban" subtitle="Your hiring pipeline board." /></EmployerShell></RoleRoute>} />
+        <Route path="/employer/interviews" element={<RoleRoute role="employer"><EmployerShell><EmployerPipelineEntry target="interviews" title="Interviews" subtitle="Your scheduled interviews." /></EmployerShell></RoleRoute>} />
         <Route path="/employer/notifications" element={<RoleRoute role="employer"><EmployerShell><EmployerNotifications /></EmployerShell></RoleRoute>} />
         <Route path="/employer/support" element={<RoleRoute role="employer"><EmployerShell><EmployerSupport /></EmployerShell></RoleRoute>} />
         <Route path="/employer/team" element={<RoleRoute role="employer"><EmployerShell><EmployerTeam /></EmployerShell></RoleRoute>} />

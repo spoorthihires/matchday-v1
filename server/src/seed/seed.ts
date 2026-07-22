@@ -9,6 +9,8 @@ import { RegistrationRequest } from '../models/RegistrationRequest.js';
 import { Drive, type DriveDoc } from '../models/Drive.js';
 import { Jobseeker, type JobseekerStage } from '../models/Jobseeker.js';
 import { Slot } from '../models/Slot.js';
+import { Application } from '../models/Application.js';
+import { Interview } from '../models/Interview.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { DriveTemplate } from '../models/DriveTemplate.js';
 import { EvalConfig } from '../models/EvalConfig.js';
@@ -289,6 +291,48 @@ async function run() {
     createdAt: spread(), email: 'seeker.applied@matchday.dev', consent: 'Granted', passwordHash: seekerPasswordHash,
   });
   const createdSeekers = await Jobseeker.insertMany(jobseekerDocs);
+
+  // ---- Demo employer working pipeline ----------------------------------------
+  // The demo employer (employers[0] = employer.demo@acme.test) gets an APPROVED
+  // registration for one drive + a spread of Applications, so the logged-in demo
+  // employer can immediately use Candidates / Kanban / Interviews / Offers (all
+  // gated on an approved registration and derived from Application/Interview).
+  const demoEmp = employers[0];
+  const demoDrive = drives[1];
+  await RegistrationRequest.create({
+    company: demoEmp.name, industry: demoEmp.industry, submittedBy: demoEmp.spoc || demoEmp.name,
+    employerId: demoEmp._id, driveId: demoDrive._id, driveName: demoDrive.name,
+    role: 'Software Engineer', openings: 6, ctcRange: '18–28 LPA',
+    skills: ['TypeScript', 'React', 'Node.js'], status: 'Approved', createdAt: daysAgo(3),
+    activity: [
+      { action: 'Submitted', by: demoEmp.spoc || demoEmp.name, at: daysAgo(3) },
+      { action: 'Approved', by: 'Platform Admin', at: daysAgo(2) },
+    ],
+  });
+  const READY = new Set(['MatchReady', 'Shortlisted', 'Offer', 'Joined']);
+  const demoPool = createdSeekers.filter((j) =>
+    READY.has(j.stage as string)
+    && isEligible(demoDrive.eligibility as never, { branch: j.branch as string, gradYear: j.gradYear as number, source: j.source as string }),
+  ).slice(0, 10);
+  const demoSlot = await Slot.create({
+    driveId: demoDrive._id, employerId: demoEmp._id,
+    date: (demoDrive.eventDates as unknown as Date[])[0] ?? upcomingDates[0],
+    start: '10:00', end: '12:00', capacity: 8, status: 'Scheduled',
+    link: 'https://meet.hiringhood.test/demo-slot',
+  });
+  const in48h = new Date(NOW.getTime() + 48 * 3600 * 1000);
+  const demoApps = demoPool.map((j, idx) => {
+    const base = { employerId: demoEmp._id, driveId: demoDrive._id, jobseekerId: j._id };
+    if (idx < 2) return { ...base, decision: 'Shortlisted', consent: { status: 'granted', requestedAt: daysAgo(4), expiresAt: in48h, respondedAt: daysAgo(3) }, offer: { status: 'Sent', response: 'Pending', ctc: 24, location: 'Bengaluru', mode: 'Hybrid' } };
+    if (idx < 4) return { ...base, decision: 'Shortlisted', consent: { status: 'granted', requestedAt: daysAgo(4), expiresAt: in48h, respondedAt: daysAgo(3) } };
+    if (idx < 7) return { ...base, decision: 'Shortlisted' };
+    return { ...base, decision: 'Hold' };
+  });
+  await Application.insertMany(demoApps);
+  if (demoPool[2]) {
+    // one consent-granted candidate gets a scheduled interview → the board's "Scheduled" column
+    await Interview.create({ employerId: demoEmp._id, driveId: demoDrive._id, jobseekerId: demoPool[2]._id, slotId: demoSlot._id, time: '10:30', interviewers: ['A. Recruiter'], status: 'Scheduled' });
+  }
 
   // Interview slot sessions across Jul 2026 (Wed & Sat). Option B sums: cap 360 / booked 288 / held 36.
   const SLOT_DAYS = [1, 4, 8, 11, 15, 18, 22, 25, 29];

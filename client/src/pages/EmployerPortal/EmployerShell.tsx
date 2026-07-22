@@ -74,7 +74,9 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'interviews',
         label: 'Interviews',
-        path: '/employer/coming-soon/interviews',
+        // Interviews are per-drive; this lands on a resolver that opens the employer's
+        // approved drive's interviews (auto when one, a picker when several, else an empty state).
+        path: '/employer/interviews',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
             <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /><path d="M9 15l2 2 4-4" />
@@ -84,7 +86,9 @@ const NAV_SECTIONS: NavSection[] = [
       {
         slug: 'kanban',
         label: 'Kanban',
-        path: '/employer/coming-soon/kanban',
+        // The pipeline board is per-drive; this lands on a resolver that opens the employer's
+        // approved drive's board (auto when one, a picker when several, else an empty state).
+        path: '/employer/kanban',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
             <rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="14" rx="1" />
