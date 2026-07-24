@@ -51,7 +51,7 @@ export function EmployersToolbar({
       <div className="grow" />
       <button className="btn btn-ghost" onClick={onApprovals}><i className="ti ti-file-check" /> Registration Approvals</button>
       <button className="btn btn-ghost" onClick={onExport}><i className="ti ti-download" /> Export</button>
-      <button className="btn btn-primary" onClick={onCreate}><i className="ti ti-plus" /> Create Employer</button>
+      <button className="btn btn-accent" onClick={onCreate}><i className="ti ti-plus" /> Create Employer</button>
     </div>
   );
 }

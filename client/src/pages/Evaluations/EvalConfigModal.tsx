@@ -72,7 +72,7 @@ export function EvalConfigModal({ mode, config, initialType, onClose, onSaved }:
             <div className="fld full">
               <label htmlFor="emThreshold">Auto-qualify when score ≥ (%)</label>
               <input id="emThreshold" type="number" min={0} max={100} value={threshold} onChange={(e) => setThreshold(numOr(e.target.value, 0))} />
-              <span className="fnote" style={{ fontSize: 11.5, color: 'var(--faint)' }}>Candidates above this score skip manual review.</span>
+              <span className="fnote" style={{ fontSize: 11.5, color: 'var(--faint)' }}>Jobseekers above this score skip manual review.</span>
             </div>
           )}
         </div>

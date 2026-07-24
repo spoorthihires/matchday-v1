@@ -41,29 +41,29 @@ export function StreamRulesPage() {
         <div className="sr-summary"><b className="lab"><i className="ti ti-info-circle" /> Current policy</b><p>{streamRulesSummary(cfg)}</p></div>
 
         <div className="set-card">
-          <div className="sc-h"><span className="sic i-indigo"><i className="ti ti-stack-2" /></span><div><b>Number of Streams Allowed</b><p>How many streams a candidate can be enrolled in.</p></div></div>
-          <div className="set-body"><div className="set-row"><div className="sl"><b>Max streams per candidate</b><span>Includes primary and secondary streams.</span></div>
+          <div className="sc-h"><span className="sic i-indigo"><i className="ti ti-stack-2" /></span><div><b>Number of Streams Allowed</b><p>How many streams a jobseeker can be enrolled in.</p></div></div>
+          <div className="set-body"><div className="set-row"><div className="sl"><b>Max streams per jobseeker</b><span>Includes primary and secondary streams.</span></div>
             <div className="sc"><Pick opts={['1', '2', '3', 'Unlimited']} value={cfg.numAllowed} onPick={(v) => set('numAllowed', v)} /></div></div></div>
         </div>
 
         <div className="set-card">
-          <div className="sc-h"><span className="sic i-teal"><i className="ti ti-star" /></span><div><b>Primary Stream</b><p>Every candidate's main hiring track.</p></div></div>
+          <div className="sc-h"><span className="sic i-teal"><i className="ti ti-star" /></span><div><b>Primary Stream</b><p>Every jobseeker's main hiring track.</p></div></div>
           <div className="set-body">
-            <div className="set-row"><div className="sl"><b>Require a primary stream</b><span>Candidates must designate one primary track.</span></div><div className="sc"><Switch on={cfg.requirePrimary} label="Require a primary stream" onClick={() => set('requirePrimary', !cfg.requirePrimary)} /></div></div>
-            <div className={`set-row${cfg.requirePrimary ? '' : ' disabled'}`}><div className="sl"><b>Default primary stream</b><span>Applied when a candidate hasn't chosen one.</span></div><div className="sc"><select value={cfg.defaultPrimary} onChange={(e) => set('defaultPrimary', e.target.value)}>{primaryOpts.map((o) => <option key={o}>{o}</option>)}</select></div></div>
+            <div className="set-row"><div className="sl"><b>Require a primary stream</b><span>Jobseekers must designate one primary track.</span></div><div className="sc"><Switch on={cfg.requirePrimary} label="Require a primary stream" onClick={() => set('requirePrimary', !cfg.requirePrimary)} /></div></div>
+            <div className={`set-row${cfg.requirePrimary ? '' : ' disabled'}`}><div className="sl"><b>Default primary stream</b><span>Applied when a jobseeker hasn't chosen one.</span></div><div className="sc"><select value={cfg.defaultPrimary} onChange={(e) => set('defaultPrimary', e.target.value)}>{primaryOpts.map((o) => <option key={o}>{o}</option>)}</select></div></div>
           </div>
         </div>
 
         <div className="set-card">
-          <div className="sc-h"><span className="sic i-violet"><i className="ti ti-git-branch" /></span><div><b>Secondary Streams</b><p>Additional tracks a candidate may join.</p></div></div>
+          <div className="sc-h"><span className="sic i-violet"><i className="ti ti-git-branch" /></span><div><b>Secondary Streams</b><p>Additional tracks a jobseeker may join.</p></div></div>
           <div className="set-body">
-            <div className="set-row"><div className="sl"><b>Allow secondary streams</b><span>Let candidates opt into more than one track.</span></div><div className="sc"><Switch on={cfg.allowSecondary} label="Allow secondary streams" onClick={() => set('allowSecondary', !cfg.allowSecondary)} /></div></div>
+            <div className="set-row"><div className="sl"><b>Allow secondary streams</b><span>Let jobseekers opt into more than one track.</span></div><div className="sc"><Switch on={cfg.allowSecondary} label="Allow secondary streams" onClick={() => set('allowSecondary', !cfg.allowSecondary)} /></div></div>
             <div className={`set-row${cfg.allowSecondary ? '' : ' disabled'}`}><div className="sl"><b>Max secondary streams</b><span>Cap beyond the primary stream.</span></div><div className="sc"><input type="number" min={0} max={5} value={cfg.maxSecondary} onChange={(e) => set('maxSecondary', e.target.value === '' ? 0 : Number(e.target.value))} /></div></div>
           </div>
         </div>
 
         <div className="set-card">
-          <div className="sc-h"><span className="sic i-amber"><i className="ti ti-switch-horizontal" /></span><div><b>Stream Change Policy</b><p>When and how candidates can switch streams.</p></div></div>
+          <div className="sc-h"><span className="sic i-amber"><i className="ti ti-switch-horizontal" /></span><div><b>Stream Change Policy</b><p>When and how jobseekers can switch streams.</p></div></div>
           <div className="set-body">
             <div className="set-row"><div className="sl"><b>Change window</b><span>Governs when switching is permitted.</span></div><div className="sc"><select value={cfg.changePolicy} onChange={(e) => set('changePolicy', e.target.value)}><option>Anytime</option><option>Before evaluation only</option><option>Requires admin approval</option><option>Locked after drive assignment</option></select></div></div>
             <div className="set-row"><div className="sl"><b>Cooldown between changes</b><span>Minimum days before switching again.</span></div><div className="sc"><input type="number" min={0} max={365} value={cfg.cooldown} onChange={(e) => set('cooldown', e.target.value === '' ? 0 : Number(e.target.value))} /> <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>days</span></div></div>
@@ -73,7 +73,7 @@ export function StreamRulesPage() {
         <div className="set-card">
           <div className="sc-h"><span className="sic i-green"><i className="ti ti-recycle" /></span><div><b>Evaluation Reusability</b><p>Whether scores carry across streams.</p></div></div>
           <div className="set-body">
-            <div className="set-row"><div className="sl"><b>Reuse evaluations across streams</b><span>Avoid re-testing candidates for shared skills.</span></div><div className="sc"><Switch on={cfg.reuseEval} label="Reuse evaluations across streams" onClick={() => set('reuseEval', !cfg.reuseEval)} /></div></div>
+            <div className="set-row"><div className="sl"><b>Reuse evaluations across streams</b><span>Avoid re-testing jobseekers for shared skills.</span></div><div className="sc"><Switch on={cfg.reuseEval} label="Reuse evaluations across streams" onClick={() => set('reuseEval', !cfg.reuseEval)} /></div></div>
             <div className={`set-row${cfg.reuseEval ? '' : ' disabled'}`}><div className="sl"><b>Reuse scope</b><span>Which evaluations may be reused.</span></div><div className="sc"><Pick opts={['Any stream', 'Same domain only', 'Exact match only']} value={cfg.reuseScope} onPick={(v) => set('reuseScope', v)} /></div></div>
           </div>
         </div>
@@ -87,7 +87,7 @@ export function StreamRulesPage() {
         </div>
 
         <div className="set-card">
-          <div className="sc-h"><span className="sic i-violet"><i className="ti ti-wand" /></span><div><b>Auto Stream Suggestion</b><p>Recommend streams from candidate profiles.</p></div></div>
+          <div className="sc-h"><span className="sic i-violet"><i className="ti ti-wand" /></span><div><b>Auto Stream Suggestion</b><p>Recommend streams from jobseeker profiles.</p></div></div>
           <div className="set-body">
             <div className="set-row"><div className="sl"><b>Suggest streams automatically</b><span>Surface best-fit streams during signup.</span></div><div className="sc"><Switch on={cfg.autoSuggest} label="Suggest streams automatically" onClick={() => set('autoSuggest', !cfg.autoSuggest)} /></div></div>
             <div className={`set-row${cfg.autoSuggest ? '' : ' disabled'}`}><div className="sl"><b>Suggestion basis</b><span>Signals used to rank streams.</span></div><div className="sc"><Pick opts={['Skills', 'Past evaluations', 'Skills + evaluations']} value={cfg.suggestBasis} onPick={(v) => set('suggestBasis', v)} /></div></div>

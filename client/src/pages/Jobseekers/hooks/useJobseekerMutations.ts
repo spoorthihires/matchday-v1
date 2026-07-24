@@ -14,8 +14,8 @@ export function useJobseekerMutations() {
   const add = useMutation({ mutationFn: (b: JobseekerInput) => apiFetch('/jobseekers', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Jobseeker added' } });
   const update = useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<JobseekerInput> }) => apiFetch(`/jobseekers/${id}`, { method: 'PATCH', body, token }), onSuccess: invalidate, meta: { silentError: true, successMessage: 'Jobseeker saved' } });
   const block = useMutation({ mutationFn: (b: { ids: string[]; action: 'block' }) => apiFetch('/jobseekers/bulk', { method: 'POST', body: b, token }), onSuccess: invalidate, meta: { successMessage: 'Jobseekers blocked' } });
-  const blockOne = useMutation({ mutationFn: (id: string) => apiFetch('/jobseekers/bulk', { method: 'POST', body: { ids: [id], action: 'block' }, token }), onSuccess: invalidate, meta: { successMessage: 'Candidate blocked' } });
-  const unblockOne = useMutation({ mutationFn: (id: string) => apiFetch('/jobseekers/bulk', { method: 'POST', body: { ids: [id], action: 'unblock' }, token }), onSuccess: invalidate, meta: { successMessage: 'Candidate unblocked' } });
+  const blockOne = useMutation({ mutationFn: (id: string) => apiFetch('/jobseekers/bulk', { method: 'POST', body: { ids: [id], action: 'block' }, token }), onSuccess: invalidate, meta: { successMessage: 'Jobseeker blocked' } });
+  const unblockOne = useMutation({ mutationFn: (id: string) => apiFetch('/jobseekers/bulk', { method: 'POST', body: { ids: [id], action: 'unblock' }, token }), onSuccess: invalidate, meta: { successMessage: 'Jobseeker unblocked' } });
   // TODO: no server endpoint exists yet for resetting a candidate's evaluation (nothing under
   // /jobseekers or /eval-monitor covers it). Until one lands, this mutation only patches the
   // cached list rows client-side so the UI reflects the reset immediately; a hard refresh or

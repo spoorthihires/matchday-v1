@@ -52,7 +52,7 @@ export function TabOverview({
       </div>
       <div className="rev-card">
         <div className="rc-h"><b>Participation</b></div>
-        {row('Candidates uploaded', funnel.uploaded.toLocaleString('en-IN'))}
+        {row('Jobseekers uploaded', funnel.uploaded.toLocaleString('en-IN'))}
         {row('Match-ready rate', `${funnel.matchReadyPct}%`)}
         {row('Shortlist rate', `${funnel.shortlistPct}%`)}
         {row('Offer rate', `${funnel.offerPct}%`)}

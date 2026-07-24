@@ -91,7 +91,7 @@ export function JobseekersTable({
                 <i className="ti ti-check" />
               </span>
             </th>
-            <SortableHeader label="Candidate" sortKey="name" sort={sort} order={order} onSort={onSort} />
+            <SortableHeader label="Jobseeker" sortKey="name" sort={sort} order={order} onSort={onSort} />
             <SortableHeader
               label="Institute" sortKey="institute" sort={sort} order={order} onSort={onSort}
               filter={
@@ -160,7 +160,7 @@ export function JobseekersTable({
           {isLoading && (
             <tr>
               <td colSpan={COLSPAN}>
-                <div className="dm-empty">Loading candidates…</div>
+                <div className="dm-empty">Loading jobseekers…</div>
               </td>
             </tr>
           )}
@@ -169,9 +169,9 @@ export function JobseekersTable({
               <td colSpan={COLSPAN}>
                 <div className="dm-empty">
                   <i className="ti ti-user-off" />
-                  No candidates match these filters.
+                  No jobseekers match these filters.
                   <br />
-                  <span style={{ fontSize: 12.5 }}>Try clearing search or filters, or add a new candidate.</span>
+                  <span style={{ fontSize: 12.5 }}>Try clearing search or filters, or add a new jobseeker.</span>
                 </div>
               </td>
             </tr>
@@ -225,9 +225,9 @@ export function JobseekersTable({
                       <button onClick={() => act('reset-evaluation', x.id)}><i className="ti ti-refresh" /> Reset evaluation</button>
                       <hr />
                       {blocked ? (
-                        <button className="danger" onClick={() => act('unblock', x.id)}><i className="ti ti-ban" /> Unblock candidate</button>
+                        <button className="danger" onClick={() => act('unblock', x.id)}><i className="ti ti-ban" /> Unblock jobseeker</button>
                       ) : (
-                        <button className="danger" onClick={() => act('block', x.id)}><i className="ti ti-ban" /> Block candidate</button>
+                        <button className="danger" onClick={() => act('block', x.id)}><i className="ti ti-ban" /> Block jobseeker</button>
                       )}
                     </div>
                   )}

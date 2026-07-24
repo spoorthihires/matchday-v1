@@ -30,7 +30,7 @@ describe('StreamRulesPage', () => {
   it('loads defaults into the summary and Save PUTs the rules', async () => {
     renderPage();
     const user = userEvent.setup();
-    expect(await screen.findByText(/Candidates may join up to 2 stream/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Jobseekers may join up to 2 stream/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Save rules/i }));
     await waitFor(() => {
       const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
@@ -41,7 +41,7 @@ describe('StreamRulesPage', () => {
   it('turning off "Allow secondary streams" greys its dependent row and updates the summary', async () => {
     renderPage();
     const user = userEvent.setup();
-    await screen.findByText(/Candidates may join up to 2 stream/i);
+    await screen.findByText(/Jobseekers may join up to 2 stream/i);
     const sw = screen.getByLabelText(/Allow secondary streams/i);
     await user.click(sw);
     expect(await screen.findByText(/no secondary streams/i)).toBeInTheDocument();

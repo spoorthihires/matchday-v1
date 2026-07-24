@@ -22,7 +22,7 @@ export function StepDuplicates({ preview, busy, onRemoveRow }: StepDuplicatesPro
       <div className="wh">
         <div className="eyebrow">Step 2</div>
         <h2>Duplicate Check</h2>
-        <p>Candidates in this file that match existing records or repeat within the batch. Remove any that aren&apos;t real duplicates — the rest are skipped on import.</p>
+        <p>Jobseekers in this file that match existing records or repeat within the batch. Remove any that aren&apos;t real duplicates — the rest are skipped on import.</p>
       </div>
 
       {dupes.length === 0 ? (

@@ -12,7 +12,7 @@ export function BrandMark({ className }: { className?: string }) {
       <path
         d="M30 49 L50 73 L94 6"
         fill="none"
-        stroke="#f57316"
+        stroke="#FF6F0B"
         strokeWidth="13"
         strokeLinecap="square"
         strokeLinejoin="miter"

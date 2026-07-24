@@ -5,7 +5,7 @@
 export type JobseekerView = 'all' | 'institute' | 'stream' | 'eval' | 'match' | 'offer' | 'consent';
 
 const VIEWS: { key: JobseekerView; label: string; icon: string }[] = [
-  { key: 'all', label: 'All Candidates', icon: 'ti-users' },
+  { key: 'all', label: 'All Jobseekers', icon: 'ti-users' },
   { key: 'institute', label: 'By Institute', icon: 'ti-building-community' },
   { key: 'stream', label: 'By Stream', icon: 'ti-git-branch' },
   { key: 'eval', label: 'By Evaluation', icon: 'ti-clipboard-check' },

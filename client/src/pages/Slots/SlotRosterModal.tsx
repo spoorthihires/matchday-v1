@@ -46,7 +46,7 @@ export function SlotRosterModal({ slot, onClose }: SlotRosterModalProps) {
 
           <div className="fld full">
             <label>Booked ({booked.length})</label>
-            {booked.length === 0 && <p className="fnote">No candidates booked yet.</p>}
+            {booked.length === 0 && <p className="fnote">No jobseekers booked yet.</p>}
             {booked.map((r) => (
               <div key={r.bookingId} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
                 <span style={{ flex: 1 }}>{r.name} · {r.institute} · {r.branch} · {r.stage}</span>
@@ -68,10 +68,10 @@ export function SlotRosterModal({ slot, onClose }: SlotRosterModalProps) {
           </div>
 
           <div className="fld full">
-            <label htmlFor="rosterSearch">Add a candidate {full && '(slot full)'}</label>
+            <label htmlFor="rosterSearch">Add a jobseeker {full && '(slot full)'}</label>
             <input
               id="rosterSearch"
-              placeholder="Search Match-Ready candidates…"
+              placeholder="Search Match-Ready jobseekers…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               disabled={full}

@@ -24,7 +24,7 @@ export function Dashboard() {
       */}
       <div className="filters">
         <div className="grow" />
-        <button className="btn btn-primary" onClick={() => navigate('/drives?new=1')}>
+        <button className="btn btn-accent" onClick={() => navigate('/drives?new=1')}>
           <i className="ti ti-plus" /> New Drive
         </button>
       </div>

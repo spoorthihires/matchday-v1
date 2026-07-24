@@ -94,7 +94,7 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
 
   function handleLoadSample() {
     if (busy) return;
-    setFileName('sample-candidates.csv');
+    setFileName('sample-jobseekers.csv');
     handleRowsChange(SAMPLE_ROWS);
   }
 
@@ -160,12 +160,12 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
   const willImport = preview.data?.summary.willImport ?? 0;
 
   return (
-    <div id="upWizard" className="show" role="dialog" aria-modal="true" aria-label="Bulk candidate upload">
+    <div id="upWizard" className="show" role="dialog" aria-modal="true" aria-label="Bulk jobseeker upload">
       <div className="wiz-top">
         <span className="glyph"><i className="ti ti-users-plus" /></span>
         <div className="wt">
-          Bulk Candidate Upload
-          <small>Import candidates with duplicate &amp; validation checks</small>
+          Bulk Jobseeker Upload
+          <small>Import jobseekers with duplicate &amp; validation checks</small>
         </div>
         <div className="grow" />
         <button className="x" onClick={onClose} aria-label="Close"><i className="ti ti-x" /></button>
@@ -254,7 +254,7 @@ export function UploadWizard({ onClose }: UploadWizardProps) {
             disabled={busy || (step === 0 && rows.length === 0)}
           >
             {step === TOTAL_STEPS - 2
-              ? <>{commit.isPending ? 'Importing…' : `Import ${willImport} candidates`} <i className="ti ti-cloud-upload" /></>
+              ? <>{commit.isPending ? 'Importing…' : `Import ${willImport} jobseekers`} <i className="ti ti-cloud-upload" /></>
               : <>{preview.isPending ? 'Checking…' : 'Continue'} <i className="ti ti-arrow-right" /></>}
           </button>
         )}

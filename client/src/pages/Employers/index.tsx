@@ -100,7 +100,7 @@ export function EmployersPage() {
 
   function handleExport() {
     const rows = data?.items ?? [];
-    const head = ['Employer', 'Industry', 'Active Drives', 'Candidates Viewed', 'Shortlist Rate', 'Offer Rate', 'Response Time', 'Status'];
+    const head = ['Employer', 'Industry', 'Active Drives', 'Jobseekers Viewed', 'Shortlist Rate', 'Offer Rate', 'Response Time', 'Status'];
     const csv = [head.join(',')]
       .concat(rows.map((x) => [
         x.name, x.industry, x.activeDrives, x.candidatesViewed, `${x.shortlistRate}%`, `${x.offerRate}%`, fmtResp(x.respHours), x.status,

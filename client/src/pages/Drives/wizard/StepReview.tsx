@@ -59,7 +59,7 @@ export function StepReview({ model }: WizardStepProps) {
           {row('Name', model.name)}
           {row('Domain', model.domain)}
           {row('Stream', model.stream)}
-          {row('Candidate type', model.candType)}
+          {row('Jobseeker type', model.candType)}
           {row('Mode', model.mode)}
         </div>
         <div className="rev-card">
@@ -93,7 +93,7 @@ export function StepReview({ model }: WizardStepProps) {
           </div>
           {row('Employer registration', model.visibility.employerReg)}
           {row('Institute visibility', model.visibility.instituteVis)}
-          {row('Candidate access', model.visibility.candidateAccess)}
+          {row('Jobseeker access', model.visibility.candidateAccess)}
         </div>
       </div>
     </section>

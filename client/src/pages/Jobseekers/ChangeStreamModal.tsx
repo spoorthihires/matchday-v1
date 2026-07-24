@@ -32,13 +32,13 @@ export function ChangeStreamModal({ jobseekerId, currentStream, onClose }: Chang
         <div className="modal-h">
           <div>
             <h3 id="changeStreamTitle">Change Stream</h3>
-            <p>1 candidate(s) selected</p>
+            <p>1 jobseeker(s) selected</p>
           </div>
           <button className="x" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
         </div>
         <div className="modal-b">
           <div className="fld full">
-            <label htmlFor="changeStreamSelect">Move 1 candidate(s) to stream</label>
+            <label htmlFor="changeStreamSelect">Move 1 jobseeker(s) to stream</label>
             <select id="changeStreamSelect" value={stream} onChange={(e) => setStream(e.target.value)}>
               {MODAL_STREAM_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>

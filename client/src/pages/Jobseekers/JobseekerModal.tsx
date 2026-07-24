@@ -162,7 +162,7 @@ export function JobseekerModal({ mode, jobseeker, instituteOptions, onClose }: J
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="jmTitle">
         <div className="modal-h">
           <div>
-            <h3 id="jmTitle">{mode === 'edit' ? 'Edit Candidate' : 'Add Candidate'}</h3>
+            <h3 id="jmTitle">{mode === 'edit' ? 'Edit Jobseeker' : 'Add Jobseeker'}</h3>
             <p>Register a jobseeker into the MatchDay pipeline.</p>
           </div>
           <button className="x" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
@@ -173,7 +173,7 @@ export function JobseekerModal({ mode, jobseeker, instituteOptions, onClose }: J
           )}
           {mode === 'edit' && detailError && (
             <div className="fld full" style={{ color: 'var(--danger)', fontSize: 12.5 }}>
-              Couldn&apos;t load this candidate&apos;s grad year / CGPA — please re-enter them before saving.
+              Couldn&apos;t load this jobseeker&apos;s grad year / CGPA — please re-enter them before saving.
             </div>
           )}
           <div className="fld full">
@@ -270,7 +270,7 @@ export function JobseekerModal({ mode, jobseeker, instituteOptions, onClose }: J
           <div className="grow" />
           <button className="btn btn-ghost btn-lg" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-lg" disabled={pending || waitingOnDetail} onClick={handleSave}>
-            <i className="ti ti-device-floppy" /> {pending ? 'Saving…' : 'Save candidate'}
+            <i className="ti ti-device-floppy" /> {pending ? 'Saving…' : 'Save jobseeker'}
           </button>
         </div>
       </div>

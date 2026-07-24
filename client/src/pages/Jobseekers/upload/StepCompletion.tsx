@@ -64,7 +64,7 @@ export function StepCompletion({ commit, previewRows, onClose }: StepCompletionP
         <div className="bigtick"><i className="ti ti-check" /></div>
         <h3 style={{ fontSize: 18, fontWeight: 700 }}>Import complete</h3>
         <p style={{ color: 'var(--muted)', fontSize: 13.5, margin: '4px 0 0' }}>
-          {imported} candidate{imported === 1 ? '' : 's'} added to the MatchDay pipeline.
+          {imported} jobseeker{imported === 1 ? '' : 's'} added to the MatchDay pipeline.
         </p>
       </div>
 

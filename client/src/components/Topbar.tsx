@@ -16,7 +16,7 @@ export function Topbar({ crumb, title }: { crumb: string; title: string }) {
       <div className="grow" />
       <div className="search">
         <i className="ti ti-search" />
-        <input placeholder="Search drives, employers, candidates…" aria-label="Search" />
+        <input placeholder="Search drives, employers, jobseekers…" aria-label="Search" />
       </div>
       <ThemeToggle />
       <button className="icon-btn" aria-label="Notifications">

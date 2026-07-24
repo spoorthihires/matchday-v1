@@ -11,7 +11,7 @@ export const SR_DEFAULTS: StreamRules = {
 // via <span class="hl">; we render plain text — accepted minor fidelity trade for a pure/testable util).
 export function streamRulesSummary(c: StreamRules): string {
   return (
-    `Candidates may join up to ${c.numAllowed} stream(s)` +
+    `Jobseekers may join up to ${c.numAllowed} stream(s)` +
     `${c.requirePrimary ? ', with a required primary stream' : ', with no required primary'}` +
     `${c.allowSecondary ? ` and up to ${c.maxSecondary} secondary` : ' and no secondary streams'}. ` +
     `Stream changes are allowed ${c.changePolicy.toLowerCase()} (cooldown ${c.cooldown} days). ` +

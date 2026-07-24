@@ -111,10 +111,10 @@ export function JobseekersPage() {
         break;
       }
       case 'block':
-        if (window.confirm('Block this candidate?')) blockOne.mutate(id);
+        if (window.confirm('Block this jobseeker?')) blockOne.mutate(id);
         break;
       case 'unblock':
-        if (window.confirm('Unblock this candidate?')) unblockOne.mutate(id);
+        if (window.confirm('Unblock this jobseeker?')) unblockOne.mutate(id);
         break;
       case 'reset-evaluation':
         setResetEvalId(id);
@@ -133,7 +133,7 @@ export function JobseekersPage() {
 
   function handleBulkBlock() {
     if (selectedIds.length === 0) return;
-    if (!window.confirm(`Block ${selectedIds.length} candidate(s)?`)) return;
+    if (!window.confirm(`Block ${selectedIds.length} jobseeker(s)?`)) return;
     block.mutate({ ids: selectedIds, action: 'block' }, { onSuccess: () => setSelectedIds([]) });
   }
 
@@ -186,7 +186,7 @@ export function JobseekersPage() {
         {isError && (
           <div className="card">
             <p style={{ padding: '20px', color: 'var(--danger)' }}>
-              Failed to load candidates: {error instanceof Error ? error.message : 'Unknown error'}
+              Failed to load jobseekers: {error instanceof Error ? error.message : 'Unknown error'}
             </p>
           </div>
         )}
@@ -209,7 +209,7 @@ export function JobseekersPage() {
           />
           <div className="dm-pager">
             <div className="pinfo">
-              {total ? <>Showing <b>{start + 1}–{start + shown}</b> of <b>{total}</b></> : 'No candidates'}
+              {total ? <>Showing <b>{start + 1}–{start + shown}</b> of <b>{total}</b></> : 'No jobseekers'}
             </div>
             <div className="rpp">
               Rows: <select value={limit} onChange={(e) => handleLimitChange(Number(e.target.value))}>

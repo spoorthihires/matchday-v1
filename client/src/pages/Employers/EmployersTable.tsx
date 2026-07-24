@@ -125,7 +125,7 @@ export function EmployersTable({
               }
             />
             <SortableHeader
-              label="Candidates Viewed" sortKey="viewed" className="r" sort={sort} order={order} onSort={onSort}
+              label="Jobseekers Viewed" sortKey="viewed" className="r" sort={sort} order={order} onSort={onSort}
               filter={
                 <FilterPopover summary={formatRangeSummary(filters.viewed, 'Select range')} active={!!(filters.viewed.from || filters.viewed.to)}>
                   {(close) => <RangeFilter type="number" value={filters.viewed} onChange={(v) => onFilterChange('viewed', v)} onClear={() => onFilterClear('viewed')} close={close} />}

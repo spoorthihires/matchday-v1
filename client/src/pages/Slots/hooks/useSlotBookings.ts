@@ -38,7 +38,7 @@ export function useBookingMutations(slotId: string) {
     mutationFn: ({ jobseekerId, status }: { jobseekerId: string; status: BookingStatus }) =>
       apiFetch(`/slots/${slotId}/bookings`, { method: 'POST', body: { jobseekerId, status }, token }),
     onSuccess: invalidate,
-    meta: { silentError: true, successMessage: 'Candidate booked' },
+    meta: { silentError: true, successMessage: 'Jobseeker booked' },
   });
   const confirm = useMutation({
     mutationFn: (bookingId: string) =>

@@ -18,7 +18,7 @@ import { TabSourceAttribution } from './TabSourceAttribution.js';
 type TabKey = 'candidates' | 'institutes' | 'source' | 'conflicts';
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'candidates', label: 'Candidate Ownership', icon: 'ti-user-check' },
+  { key: 'candidates', label: 'Jobseeker Ownership', icon: 'ti-user-check' },
   { key: 'institutes', label: 'Institute Ownership', icon: 'ti-building-community' },
   { key: 'source', label: 'Source Attribution', icon: 'ti-chart-donut' },
   { key: 'conflicts', label: 'Conflicts', icon: 'ti-alert-triangle' },
@@ -43,12 +43,12 @@ export function OwnershipManagementPage() {
 
         <div className="kpis" style={{ marginTop: 16 }}>
           <div className="kpi">
-            <div className="kh"><span className="ic i-indigo"><i className="ti ti-users-group" /></span> Candidates Owned</div>
+            <div className="kh"><span className="ic i-indigo"><i className="ti ti-users-group" /></span> Jobseekers Owned</div>
             <div className="kv mono">{candidateRows.length}</div>
             <div className="kd flat"><i className="ti ti-minus" /> tracked</div>
           </div>
           <div className="kpi">
-            <div className="kh"><span className="ic i-amber"><i className="ti ti-user-question" /></span> Unassigned Candidates</div>
+            <div className="kh"><span className="ic i-amber"><i className="ti ti-user-question" /></span> Unassigned Jobseekers</div>
             <div className="kv mono">{unassignedCandidates}</div>
             <div className="kd flat"><i className="ti ti-alert-circle" /> needs an owner</div>
           </div>

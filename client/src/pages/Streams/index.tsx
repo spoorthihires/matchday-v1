@@ -32,7 +32,7 @@ export function StreamsPage() {
     else if (action === 'toggle') update.mutate({ id: s.id, body: { status: s.status === 'Active' ? 'Disabled' : 'Active' } });
   }
   function exportCsv() {
-    const head = ['Stream Name', 'Parent Category', 'Employer Label', 'Skills Required', 'Good To Have', 'Evaluation Flow', 'Cutoff Score', 'Min CGPA', 'Max Backlogs', 'Graduation Years', 'Allowed Branches', 'Candidate Sources', 'Version', 'Status'];
+    const head = ['Stream Name', 'Parent Category', 'Employer Label', 'Skills Required', 'Good To Have', 'Evaluation Flow', 'Cutoff Score', 'Min CGPA', 'Max Backlogs', 'Graduation Years', 'Allowed Branches', 'Jobseeker Sources', 'Version', 'Status'];
     const rows = items.map((s) => [s.name, s.parent, s.label, s.skills.join('; '), s.good.join('; '), s.flow.join(' > '), s.cutoff, s.cgpa, s.backlogs, s.grad.join('; '), s.branches.join('; '), s.sources.join('; '), s.version, s.status].map((v) => `"${v}"`).join(','));
     const csv = [head.join(','), ...rows].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -61,7 +61,7 @@ export function StreamsPage() {
           <div className="grow" />
           <button className="btn btn-ghost" onClick={() => navigate('/streams/rules')}><i className="ti ti-adjustments" /> Selection Rules</button>
           <button className="btn btn-ghost" onClick={exportCsv}><i className="ti ti-download" /> Export</button>
-          <button className="btn btn-primary" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Stream</button>
+          <button className="btn btn-accent" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Stream</button>
         </div>
         {isError && <div className="card"><p style={{ padding: 20, color: 'var(--danger)' }}>Failed to load streams: {error instanceof Error ? error.message : 'Unknown error'}</p></div>}
         {isLoading && <div className="dm-empty" style={{ padding: 20 }}>Loading streams…</div>}

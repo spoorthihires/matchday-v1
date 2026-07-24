@@ -26,7 +26,7 @@ export function StepEligibility({ model, onChange, errors }: WizardStepProps) {
       <div className="wh">
         <div className="eyebrow">Step 3</div>
         <h2>Eligibility</h2>
-        <p>Define which candidates can enter this drive.</p>
+        <p>Define which jobseekers can enter this drive.</p>
       </div>
       <div className={`wfld full${sourcesErr ? ' err' : ''}`} id="w-sources">
         <label>
