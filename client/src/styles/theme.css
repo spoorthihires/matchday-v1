@@ -2,6 +2,7 @@
 /* ---- below: the prototype <style> block (matchday-admin-app_23.html lines 12-973), pasted verbatim ---- */
   :root{
     --indigo:#1e3a8a; --indigo-600:#172c69; --indigo-050:#f2f3f8; --indigo-100:#e4e7f1;
+    --accent:#FF6F0B; --accent-600:#E85F00; --accent-050:#FFF3E9; --accent-100:#FFE1C9;
     --ink:#141726; --ink-2:#3a3f52; --muted:#727890; --faint:#9aa0b6;
     --line:#e4e7f2; --line-strong:#d2d7ea; --bg:#f4f6fc; --white:#fff;
     --success:#0f9d58; --success-bg:#e8f6ee;
@@ -32,6 +33,7 @@
   /* ---- dark mode: redefine tokens only — component rules above stay untouched ---- */
   :root[data-theme="dark"]{
     --indigo:#4c6fe0; --indigo-600:#3f5bc0; --indigo-050:rgba(124,140,255,.12); --indigo-100:rgba(124,140,255,.18);
+    --accent:#ff9a4d; --accent-600:#ffb37a; --accent-050:rgba(255,111,11,.16); --accent-100:rgba(255,111,11,.24);
     --ink:#e8ebf5; --ink-2:#c3c9dc; --muted:#8b93ac; --faint:#6b7390;
     --line:#2a3150; --line-strong:#3b4368; --bg:#0f1424; --white:#1a2036;
     --success:#3ddc84; --success-bg:rgba(61,220,132,.14);
@@ -244,6 +246,8 @@
   .btn:focus-visible{box-shadow:var(--focus);outline:none}
   .btn-primary{background:var(--indigo);color:#fff}
   .btn-primary:hover{background:var(--indigo-600)}
+  .btn-accent{background:var(--accent);color:#fff}
+  .btn-accent:hover{background:var(--accent-600)}
   .btn-ghost{background:var(--white);border:1px solid var(--line);color:var(--ink-2)}
   .btn-ghost:hover{background:var(--indigo-050)}
   .content{padding:6px 26px 40px}
