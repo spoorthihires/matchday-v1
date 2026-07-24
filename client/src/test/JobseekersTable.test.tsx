@@ -23,7 +23,7 @@ const blockedItems: JobseekerListItem[] = [
 ];
 
 describe('JobseekersTable', () => {
-  it('renders a candidate row with derived fields', () => {
+  it('renders a jobseeker row with derived fields', () => {
     render(<JobseekersTable items={items} selectedIds={[]} onToggle={vi.fn()} onToggleAll={vi.fn()} onSort={vi.fn()} sort={undefined} order="asc" onRowAction={vi.fn()} {...filterProps} />);
     // Scoped to <tbody> since the Institute column's filter <select> also has a "CBIT" <option>.
     const tbody = within(document.querySelector('tbody')!);

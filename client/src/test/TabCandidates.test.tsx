@@ -41,7 +41,7 @@ describe('TabCandidates', () => {
     }));
   });
 
-  it('renders a candidate row with name and stage, and the pager shows the total', async () => {
+  it('renders a jobseeker row with name and stage, and the pager shows the total', async () => {
     renderTab();
 
     expect(await screen.findByText('Ananya Rao')).toBeInTheDocument();

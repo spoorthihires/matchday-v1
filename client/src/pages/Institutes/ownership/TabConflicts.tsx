@@ -14,6 +14,10 @@ const STATUS_CLASS: Record<ConflictRow['status'], string> = {
   Open: 'st-danger',
   Resolved: 'st-active',
 };
+const TYPE_LABEL: Record<ConflictRow['type'], string> = {
+  Candidate: 'Jobseeker',
+  Institute: 'Institute',
+};
 
 function csvEscape(v: string | number): string {
   return `"${String(v).replace(/"/g, '""')}"`;
@@ -108,7 +112,7 @@ export function TabConflicts({
               )}
               {filtered.map((r) => (
                 <tr key={r.id}>
-                  <td><span className="chip stream">{r.type}</span></td>
+                  <td><span className="chip stream">{TYPE_LABEL[r.type]}</span></td>
                   <td><b>{r.entity}</b></td>
                   <td>
                     {r.status === 'Resolved' ? (

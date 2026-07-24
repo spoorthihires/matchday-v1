@@ -244,12 +244,12 @@ export async function getOverview(now: Date = new Date()): Promise<DashboardOver
     { key: 'jobseekersAdded', label: 'Jobseekers Added', group: 'Supply', value: jsAdded, display: jsAdded.toLocaleString('en-US'), delta: fmtDelta(jsAddedRecent - jsAddedPrev) },
     { key: 'profilesCompleted', label: 'Profiles Completed', group: 'Supply', value: profilesCompleted, display: `${profilesCompleted.toLocaleString('en-US')} / ${jsAdded.toLocaleString('en-US')}`, delta: fmtDelta(pct(profilesCompleted, jsAdded), '%') },
     { key: 'evaluationsCompleted', label: 'Evaluations Completed', group: 'Supply', value: evalCompleted, display: String(evalCompleted), delta: fmtDelta(0) },
-    { key: 'matchReady', label: 'Match-Ready Candidates', group: 'Supply', value: matchReady, display: String(matchReady), delta: fmtDelta(0) },
+    { key: 'matchReady', label: 'Match-Ready Jobseekers', group: 'Supply', value: matchReady, display: String(matchReady), delta: fmtDelta(0) },
     { key: 'slotsBooked', label: 'Slots Booked', group: 'Slots', value: booked, display: `${booked} / ${totalSlots}`, delta: fmtDelta(pct(booked, totalSlots), '%') },
     { key: 'slotsAvailable', label: 'Slots Available', group: 'Slots', value: available, display: String(available), delta: fmtDelta(0) },
     { key: 'shortlisted', label: 'Shortlisted', group: 'Outcomes', value: shortlisted, display: String(shortlisted), delta: fmtDelta(0) },
     { key: 'offersSent', label: 'Offers Sent', group: 'Outcomes', value: offers, display: String(offers), delta: fmtDelta(0) },
-    { key: 'joined', label: 'Joined Candidates', group: 'Outcomes', value: joined, display: String(joined), delta: fmtDelta(0) },
+    { key: 'joined', label: 'Joined Jobseekers', group: 'Outcomes', value: joined, display: String(joined), delta: fmtDelta(0) },
     { key: 'dropOffRate', label: 'Drop-off Rate', group: 'Outcomes', value: dropOffRate, display: `${dropOffRate}%`, delta: fmtDelta(0) },
   ];
 
