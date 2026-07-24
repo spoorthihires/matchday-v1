@@ -130,7 +130,7 @@ export function EmployerDashboard() {
                   {data.dashboard.shortlist.length === 0 ? (
                     <p className="hint">No shortlisted candidates yet — they&apos;ll show up here once you shortlist someone from a drive.</p>
                   ) : (
-                    <p className="hint">{data.dashboard.shortlist.length} candidate(s).</p>
+                    <p className="hint">{data.dashboard.shortlist.length} jobseeker(s).</p>
                   )}
                 </div>
               </div>

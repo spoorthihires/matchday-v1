@@ -41,7 +41,7 @@ export function EmployerCandidates() {
         <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to drive
       </button>
       <div className="card">
-        <h2>Candidates — {drive.data?.name ?? '…'}</h2>
+        <h2>Jobseekers — {drive.data?.name ?? '…'}</h2>
         <p className="cand-privacy hint">Names, contact details and resumes stay hidden. Identity is only revealed after a shortlisted candidate confirms interest.</p>
         <div style={{ marginTop: 10 }}>
           <button type="button" className="btn btn-ghost" style={{ marginRight: 6 }}

@@ -315,6 +315,12 @@ export function EmployerRegister() {
           </div>
 
           <div className="wz-body">
+            {step > 1 && step < 7 && (
+              <div className="rd-banner action" role="status" style={{ marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 18 }}>
+                <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01" /><circle cx="12" cy="12" r="9" /></svg>
+                <span>Fields pre-filled from your JD — review and edit anything before saving.</span>
+              </div>
+            )}
             {step === 1 && (
               <div className="wz-step active">
                 <div className={`field${errors.role ? ' show-err' : ''}`}>

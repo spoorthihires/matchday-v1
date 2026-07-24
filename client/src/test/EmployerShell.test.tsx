@@ -80,7 +80,7 @@ describe('EmployerShell', () => {
     // Scoped to .sidebar: the topbar's user-menu dropdown also has a "Settings" entry, so an
     // unscoped query for that label would match two buttons.
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
-    for (const label of ['Dashboard', 'Available Drives', 'Registrations', 'Candidates', 'Interviews', 'Kanban', 'Reports', 'Settings']) {
+    for (const label of ['Dashboard', 'Available Drives', 'Registered Drives', 'Candidates', 'Interviews', 'Live Drive', 'Reports', 'Settings']) {
       expect(sidebar.getByRole('button', { name: new RegExp(label) })).toBeInTheDocument();
     }
     expect(screen.getByText('DASHBOARD CONTENT')).toBeInTheDocument();
@@ -93,10 +93,10 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/registrations when the Registrations nav item is clicked', async () => {
+  it('navigates to /employer/registrations when the Registered Drives nav item is clicked', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
-    await userEvent.click(sidebar.getByRole('button', { name: /Registrations/ }));
+    await userEvent.click(sidebar.getByRole('button', { name: /Registered Drives/ }));
     expect(await screen.findByText('REGISTRATIONS PAGE')).toBeInTheDocument();
   });
 
@@ -114,10 +114,10 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('INTERVIEWS PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/kanban when the Kanban nav item is clicked (resolves to the drive board)', async () => {
+  it('navigates to /employer/kanban when the Live Drive nav item is clicked (resolves to the drive board)', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
-    await userEvent.click(sidebar.getByRole('button', { name: /Kanban/ }));
+    await userEvent.click(sidebar.getByRole('button', { name: /Live Drive/ }));
     expect(await screen.findByText('KANBAN PAGE')).toBeInTheDocument();
   });
 

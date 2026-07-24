@@ -65,6 +65,6 @@ describe('EmployerKanban', () => {
 
   it('shows the empty state when the pool is empty', async () => {
     seedAuth(); mockFetch([]); renderPage();
-    await waitFor(() => expect(screen.getByText(/No candidates in the pipeline/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No jobseekers in the pipeline/i)).toBeInTheDocument());
   });
 });

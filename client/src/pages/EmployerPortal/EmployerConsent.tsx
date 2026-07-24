@@ -38,10 +38,10 @@ export function EmployerConsent() {
   return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
-        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to candidates
+        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
       <div className="card">
-        <h2>Candidate consent — {drive.data?.name ?? '…'}</h2>
+        <h2>Jobseeker consent — {drive.data?.name ?? '…'}</h2>
         <p className="cand-privacy hint">Identities are revealed only after a candidate consents. Request a reveal for your shortlisted candidates; requests expire in 48h if unanswered.</p>
       </div>
 

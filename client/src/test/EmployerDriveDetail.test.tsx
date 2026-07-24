@@ -89,14 +89,14 @@ describe('EmployerDriveDetail', () => {
     expect(await screen.findByText('REGISTER PLACEHOLDER')).toBeInTheDocument();
   });
 
-  it('disables View slots and View candidates when there is no approved registration for this drive', async () => {
+  it('disables View slots and View jobseekers when there is no approved registration for this drive', async () => {
     seedAuth();
     mockDriveFetch(200, DRIVE_DETAIL, []);
     renderPage();
 
     await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /view slots/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /view candidates/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /view jobseekers/i })).toBeDisabled();
   });
 
   it('enables View slots and navigates to the slots page when the drive has an approved registration', async () => {
@@ -112,13 +112,13 @@ describe('EmployerDriveDetail', () => {
     expect(await screen.findByText('SLOTS PLACEHOLDER')).toBeInTheDocument();
   });
 
-  it('enables View candidates and navigates to the candidates page when the drive has an approved registration', async () => {
+  it('enables View jobseekers and navigates to the candidates page when the drive has an approved registration', async () => {
     seedAuth();
     mockDriveFetch(200, DRIVE_DETAIL, [{ id: 'r1', driveId: 'd1', driveName: 'ActiveOne', role: 'SDE', openings: 2, status: 'Approved', submittedAt: '2026-07-01T00:00:00.000Z', latestActivity: '2026-07-02T00:00:00.000Z' }]);
     renderPage();
 
     await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
-    const btn = screen.getByRole('button', { name: /view candidates/i });
+    const btn = screen.getByRole('button', { name: /view jobseekers/i });
     await waitFor(() => expect(btn).toBeEnabled());
     await userEvent.click(btn);
 

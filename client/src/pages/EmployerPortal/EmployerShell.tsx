@@ -53,7 +53,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         slug: 'registrations',
-        label: 'Registrations',
+        label: 'Registered Drives',
         path: '/employer/registrations',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
@@ -62,12 +62,14 @@ const NAV_SECTIONS: NavSection[] = [
         ),
       },
       {
-        slug: 'candidates',
-        label: 'Candidates',
-        path: '/employer/drives',
+        slug: 'kanban',
+        label: 'Live Drive',
+        // The pipeline board is per-drive; this lands on a resolver that opens the employer's
+        // approved drive's board (auto when one, a picker when several, else an empty state).
+        path: '/employer/kanban',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
-            <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6M21 20a6 6 0 00-4-5.6" />
+            <rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="14" rx="1" />
           </svg>
         ),
       },
@@ -84,14 +86,12 @@ const NAV_SECTIONS: NavSection[] = [
         ),
       },
       {
-        slug: 'kanban',
-        label: 'Kanban',
-        // The pipeline board is per-drive; this lands on a resolver that opens the employer's
-        // approved drive's board (auto when one, a picker when several, else an empty state).
-        path: '/employer/kanban',
+        slug: 'candidates',
+        label: 'Candidates',
+        path: '/employer/drives',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="14" rx="1" />
+            <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6M21 20a6 6 0 00-4-5.6" />
           </svg>
         ),
       },
