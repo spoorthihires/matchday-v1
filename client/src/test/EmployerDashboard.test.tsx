@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/AuthContext.js';
@@ -174,5 +175,60 @@ describe('EmployerDashboard', () => {
 
     // Copy must say "jobseeker(s)", never "candidate" (product-wide renaming rule).
     expect(screen.queryByText(/candidate/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the MatchDay calendar for the current month with a registered date highlighted', async () => {
+    seedAuth();
+    // Anchor the seeded event to the 15th of the CURRENT month, in UTC -- matching the
+    // component's own UTC-anchored date-matching (see EmployerDashboardCalendar.tsx), so this
+    // assertion holds regardless of which timezone the test runner's machine is in.
+    const now = new Date();
+    const eventDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 15));
+    mockFetch('Active', {
+      dashboardOverrides: {
+        calendarEvents: [{ date: eventDate.toISOString(), driveName: 'Data Analyst MatchDay', status: 'Approved' }],
+      },
+    });
+    renderDashboard();
+
+    await waitFor(() => expect(screen.getByText('Welcome back, Asha Nambala')).toBeInTheDocument());
+    expect(screen.getByText('MatchDay calendar')).toBeInTheDocument();
+
+    const monthLabel = eventDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    expect(screen.getByText(monthLabel)).toBeInTheDocument();
+
+    const grid = document.querySelector('.cal-grid') as HTMLElement;
+    expect(grid).not.toBeNull();
+    const matchdayCell = within(grid).getByText('15');
+    expect(matchdayCell).toHaveClass('cal-day');
+    expect(matchdayCell).toHaveClass('matchday');
+
+    // Legend: only "Registered" -- the prototype's "Available MatchDay" swatch is dropped
+    // (no availability data behind this feed).
+    expect(screen.getByText('Registered')).toBeInTheDocument();
+    expect(screen.queryByText(/Available MatchDay/)).not.toBeInTheDocument();
+  });
+
+  it('shifts the MatchDay calendar month label on prev/next navigation', async () => {
+    seedAuth();
+    mockFetch('Active');
+    renderDashboard();
+    const user = userEvent.setup();
+
+    await waitFor(() => expect(screen.getByText('Welcome back, Asha Nambala')).toBeInTheDocument());
+
+    const now = new Date();
+    const currentLabel = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+      .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const nextLabel = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+      .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    expect(screen.getByText(currentLabel)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next month' }));
+    expect(screen.getByText(nextLabel)).toBeInTheDocument();
+    expect(screen.queryByText(currentLabel)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Previous month' }));
+    expect(screen.getByText(currentLabel)).toBeInTheDocument();
   });
 });

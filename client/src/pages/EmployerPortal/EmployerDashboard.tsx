@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEmployerPortal } from './hooks/useEmployerPortal.js';
 import { useEmployerReports } from './hooks/useEmployerReports.js';
 import { formatRelativeTime } from './hooks/useEmployerNotifications.js';
+import { MatchDayCalendar } from './EmployerDashboardCalendar.js';
 import type { EmployerPendingAction } from '../../types/employer.js';
 import './employerBase.js';
 
@@ -16,9 +17,9 @@ const NOTIF_TINT: Record<string, string> = { registration: 'ni-ok', candidate: '
 // funnel card (sourced from the reports endpoint, reused via useEmployerReports('all') -- the
 // same hook EmployerReports.tsx uses), an Active drives card (from `dashboard.activeDrives`),
 // and a Pending actions card (from `dashboard.pendingActions`). The prototype's "MatchDay
-// calendar" widget (an interactive month grid) is intentionally NOT built here -- that's Task 3;
-// this leaves a thin placeholder card in its slot so Task 3 has an obvious drop-in point,
-// and keeps the existing Recent notifications card below it in the right column.
+// calendar" widget (an interactive month grid) is built by `MatchDayCalendar` (Task 3, sibling
+// file EmployerDashboardCalendar.tsx) off `dashboard.calendarEvents`, replacing Task 2's thin
+// placeholder card; the existing Recent notifications card stays below it in the right column.
 
 // Active-drive status -> status-pill badge class. Mirrors EmployerRegistrations.tsx's
 // STATUS_BADGE_CLASS mapping verbatim (same RegistrationRequest.status enum this dashboard's
@@ -316,7 +317,7 @@ export function EmployerDashboard() {
                   </h3>
                 </div>
                 <div className="card-body">
-                  <p className="hint">The full calendar view is coming soon.</p>
+                  <MatchDayCalendar calendarEvents={data.dashboard.calendarEvents} />
                 </div>
               </div>
 
