@@ -131,8 +131,6 @@
     width: 32px; height: 32px; flex: none;
     display: flex; align-items: center; justify-content: center;
   }
-  .employer-app .brand small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .16em;
-    text-transform: uppercase; color: var(--indigo); margin-top: -3px; }
   .employer-app .brand-text { display: flex; flex-direction: column; }
   .employer-app .brand-name { font-weight: 800; letter-spacing: -.03em; line-height: 1; }
   .employer-app .brand-name .match { color: var(--indigo); }
@@ -462,7 +460,8 @@
       linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 44px 44px;
     mask-image: radial-gradient(520px 360px at 80% 110%, #000, transparent 72%); }
   .employer-app .auth-aside .brand { color: #fff; position: relative; }
-  .employer-app .auth-aside .brand small { color: #9fb0ff; }
+  .employer-app .auth-aside .brand-name .match { color: #fff; }
+  .employer-app .auth-aside .brand-tagline { color: #9fb0ff; }
   .employer-app .aa-body { position: relative; margin-top: auto; }
   .employer-app .aa-body h2 { font-size: 30px; line-height: 1.12; letter-spacing: -.03em; font-weight: 800; margin-bottom: 14px; }
   .employer-app .aa-body p { color: #c2ccf5; font-size: 15px; max-width: 340px; }
@@ -658,8 +657,6 @@
     position: sticky; top: 0; height: 100vh; z-index: 50; }
   .employer-app .sb-brand { display: flex; align-items: center; gap: 11px; padding: 18px 20px; border-bottom: 1px solid var(--line);
     font-weight: 800; letter-spacing: -.02em; font-size: 17px; }
-  .employer-app .sb-brand small { display: block; font-size: 9.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--indigo); margin-top: -3px; }
   .employer-app .sb-nav { flex: 1; overflow-y: auto; padding: 16px 12px; }
   .employer-app .sb-sec { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--grey-2);
     padding: 0 10px; margin: 16px 0 8px; }
