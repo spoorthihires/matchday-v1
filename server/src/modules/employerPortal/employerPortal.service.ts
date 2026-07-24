@@ -70,8 +70,29 @@ export async function getEmployerPortal(employerId: string) {
     return poolCountCache.get(key)!;
   }
 
-  // activeDrives: Approved regs first, then others; capped at 6.
-  const sortedRegs = [...allRegs].sort((a, b) => (a.status === 'Approved' ? 0 : 1) - (b.status === 'Approved' ? 0 : 1));
+  // activeDrives: one entry per driveId — an employer can have more than one
+  // registration row for the same drive (e.g. a Rejected reg then a re-Approved
+  // one), so dedupe by keeping the highest-priority registration's status.
+  function regStatusPriority(status: string): number {
+    switch (status) {
+      case 'Approved': return 0;
+      case 'Pending review': return 1;
+      case 'Changes requested': return 2;
+      case 'Rejected': return 4;
+      default: return 3; // unknown status: below Approved, above Rejected
+    }
+  }
+  const bestRegByDrive = new Map<string, (typeof allRegs)[number]>();
+  for (const r of allRegs) {
+    const driveIdStr = String(r.driveId ?? '');
+    if (!driveIdStr) continue;
+    const existing = bestRegByDrive.get(driveIdStr);
+    if (!existing || regStatusPriority(r.status as string) < regStatusPriority(existing.status as string)) {
+      bestRegByDrive.set(driveIdStr, r);
+    }
+  }
+  // Approved regs first, then others; capped at 6.
+  const sortedRegs = [...bestRegByDrive.values()].sort((a, b) => (a.status === 'Approved' ? 0 : 1) - (b.status === 'Approved' ? 0 : 1));
   const dashboardActiveDrives: { id: string; name: string; status: string; primaryEventDate: string | null; sharedCount: number }[] = [];
   for (const r of sortedRegs) {
     if (dashboardActiveDrives.length >= 6) break;
@@ -86,10 +107,11 @@ export async function getEmployerPortal(employerId: string) {
     });
   }
 
-  // pendingActions: cheap real rules, capped at 6, stable ids.
+  // pendingActions: cheap real rules, stable ids. Sorted by urgency (most
+  // urgent first) before capping at 6, so an urgent 'today' action on an
+  // older drive is never dropped in favor of a less-urgent one on a newer drive.
   const pendingActions: { id: string; text: string; kind: 'register' | 'slot' | 'shortlist'; urgency: 'today' | 'soon' | 'over' }[] = [];
   for (const r of allRegs) {
-    if (pendingActions.length >= 6) break;
     const driveIdStr = String(r.driveId ?? '');
     const name = r.driveName ?? '';
     if (r.status === 'Pending review') {
@@ -111,6 +133,9 @@ export async function getEmployerPortal(employerId: string) {
       }
     }
   }
+  const urgencyRank: Record<'over' | 'today' | 'soon', number> = { over: 0, today: 1, soon: 2 };
+  pendingActions.sort((a, b) => urgencyRank[a.urgency] - urgencyRank[b.urgency]); // stable: preserves relative order within a rank
+  pendingActions.splice(6); // cap AFTER sorting so the most urgent survive
 
   return {
     profile: {

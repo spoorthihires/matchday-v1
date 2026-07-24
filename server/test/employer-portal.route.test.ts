@@ -91,4 +91,38 @@ describe('GET /api/me/employer', () => {
     const raw = JSON.stringify(res.body.dashboard);
     for (const pii of ['Real Name', 'real@x.test', 'Secret College', 'Hyderabad']) expect(raw).not.toContain(pii);
   });
+
+  it('dedupes activeDrives by driveId, keeping the highest-priority (Approved) registration', async () => {
+    const emp = await Employer.create({ name: 'Acme', industry: 'Tech', email: 'acme2@a.test', status: 'Active', passwordHash: 'x', spoc: 'Jane' });
+    const drive = await Drive.create({
+      name: 'Repeat Drive 2026', domain: 'Data / ML', stream: 'B.Tech', status: 'Active',
+      eventDates: [new Date('2026-09-10')], candCap: 100, empCap: 8, slotCap: 20, frequency: 'Weekly', eventDay: 'Wednesday',
+      eligibility: { sources: ['Campus'], branches: ['CSE'], gradYears: [2026], expType: 'Freshers only' },
+      visibility: { employerReg: 'Open', instituteVis: 'All institutes', candidateAccess: 'Public' },
+    });
+    // A Rejected reg first, then a re-Approved reg for the SAME drive — two rows, one drive.
+    await RegistrationRequest.create({
+      company: 'Acme', industry: 'Tech', submittedBy: 'Jane', employerId: emp._id, driveId: drive._id,
+      driveName: drive.name, role: 'SDE', status: 'Rejected', activity: [],
+    });
+    await RegistrationRequest.create({
+      company: 'Acme', industry: 'Tech', submittedBy: 'Jane', employerId: emp._id, driveId: drive._id,
+      driveName: drive.name, role: 'SDE', status: 'Approved', activity: [],
+    });
+
+    const res = await request(createApp()).get('/api/me/employer')
+      .set('Authorization', `Bearer ${signToken({ sub: String(emp._id), role: 'employer' })}`);
+    expect(res.status).toBe(200);
+
+    const matching = res.body.dashboard.activeDrives.filter((d: { id: string }) => d.id === String(drive._id));
+    expect(matching).toHaveLength(1);
+    expect(matching[0]).toMatchObject({ status: 'Approved' });
+
+    // pendingActions urgency ordering: 'today' (slot booking, from the Approved reg
+    // with 0 slots) must be present before any 'soon' action.
+    const urgencies = res.body.dashboard.pendingActions.map((a: { urgency: string }) => a.urgency);
+    const firstToday = urgencies.indexOf('today');
+    const firstSoon = urgencies.indexOf('soon');
+    if (firstToday !== -1 && firstSoon !== -1) expect(firstToday).toBeLessThan(firstSoon);
+  });
 });
