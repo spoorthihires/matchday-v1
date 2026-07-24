@@ -35,7 +35,7 @@ export function EmployerLanding() {
             <h1 className="hero-title">Hire <span className="accent">pre-evaluated</span> AI/ML talent, every Wednesday.</h1>
             <p className="hero-sub">
               MatchDay is Hiringhood&rsquo;s weekly hiring event. Register a role, book a Wednesday slot, and review
-              candidates who&rsquo;ve already cleared aptitude, coding, and a TARA interview &mdash; ready to
+              jobseekers who&rsquo;ve already cleared aptitude, coding, and a TARA interview &mdash; ready to
               interview, not just to screen.
             </p>
             <div className="hero-actions">

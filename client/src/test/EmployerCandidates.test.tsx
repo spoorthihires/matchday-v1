@@ -68,7 +68,7 @@ describe('EmployerCandidates', () => {
 
   it('shows the empty state', async () => {
     seedAuth(); mockFetch([]); renderPage();
-    await waitFor(() => expect(screen.getByText(/No candidates/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No jobseekers/i)).toBeInTheDocument());
   });
 
   it('keeps "Consent status" enabled when filtered to Rejected (empty visible list) but a shortlisted candidate exists', async () => {
@@ -76,10 +76,10 @@ describe('EmployerCandidates', () => {
     const SHORTLISTED = { ...CAND, jobseekerId: 'j2', code: 'C-SHORT01', decision: 'Shortlisted' as const };
     mockFetch([], [SHORTLISTED]); // visible/filtered list is empty; dedicated shortlisted query has one
     renderPage();
-    await waitFor(() => expect(screen.getByText(/No candidates/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No jobseekers/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Rejected' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Rejected' })).toHaveClass('on'));
-    expect(screen.getByText(/No candidates/i)).toBeInTheDocument(); // still empty under the Rejected filter
+    expect(screen.getByText(/No jobseekers/i)).toBeInTheDocument(); // still empty under the Rejected filter
     await waitFor(() => expect(screen.getByRole('button', { name: 'Consent status' })).not.toBeDisabled());
   });
 });

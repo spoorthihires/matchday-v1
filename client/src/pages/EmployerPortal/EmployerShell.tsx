@@ -223,7 +223,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
             </button>
             <div className="tb-search">
               <svg className="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-              <input placeholder="Search drives, candidates, IDs…" aria-label="Search" />
+              <input placeholder="Search drives, jobseekers, IDs…" aria-label="Search" />
             </div>
             <div className="tb-actions">
               <button

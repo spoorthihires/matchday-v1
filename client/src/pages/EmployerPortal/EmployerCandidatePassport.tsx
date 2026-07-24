@@ -31,7 +31,7 @@ export function EmployerCandidatePassport() {
   if (passport.isError || !p) return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>← Back to jobseekers</button>
-      <div className="card" style={{ padding: 20 }}><h3>Jobseeker not found</h3><p className="hint">This candidate isn&apos;t in this drive&apos;s pool.</p></div>
+      <div className="card" style={{ padding: 20 }}><h3>Jobseeker not found</h3><p className="hint">This jobseeker isn&apos;t in this drive&apos;s pool.</p></div>
     </div>
   );
 
@@ -111,7 +111,7 @@ export function EmployerCandidatePassport() {
                   {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => remindReveal.mutate(jsId)}>Send reminder</button>}
                   {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => withdrawReveal.mutate(jsId)}>Withdraw</button>}
                 </div>
-                {st === 'none' && p.decision !== 'Shortlisted' && <p className="hint">Shortlist this candidate to request a reveal.</p>}
+                {st === 'none' && p.decision !== 'Shortlisted' && <p className="hint">Shortlist this jobseeker to request a reveal.</p>}
               </>
             );
           })()}

@@ -67,7 +67,7 @@ export function EmployerKanban() {
       <div className="card">
         <h2>Hiring pipeline</h2>
         <p className="hint">
-          Private to your team. Identities appear once a candidate consents.{' '}
+          Private to your team. Identities appear once a jobseeker consents.{' '}
           <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/interviews`)}>Interviews</button>
           <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/offers`)}>Offer management</button>
         </p>

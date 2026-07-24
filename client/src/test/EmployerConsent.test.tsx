@@ -63,6 +63,6 @@ describe('EmployerConsent', () => {
 
   it('shows the empty state when no candidates are shortlisted', async () => {
     seedAuth(); mockFetch([]); renderPage();
-    await waitFor(() => expect(screen.getByText(/shortlist candidates/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/shortlist jobseekers/i)).toBeInTheDocument());
   });
 });

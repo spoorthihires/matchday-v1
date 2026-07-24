@@ -98,7 +98,7 @@ export function EmployerShortlist() {
       </button>
       <div className="card">
         <h2>Shortlist workspace — {drive.data?.name ?? '…'}</h2>
-        <p className="hint">Review, decide and package your shortlist. Identities stay redacted until a candidate confirms interest.</p>
+        <p className="hint">Review, decide and package your shortlist. Identities stay redacted until a jobseeker confirms interest.</p>
       </div>
 
       {dl && (
@@ -144,7 +144,7 @@ export function EmployerShortlist() {
       )}
 
       <div className="card">
-        {candidates.isLoading ? <p className="hint">Loading candidates…</p>
+        {candidates.isLoading ? <p className="hint">Loading jobseekers…</p>
           : candidates.isError ? <p className="hint">{errMsg(candidates.error)}</p>
           : all.length === 0 ? <p className="cand-empty hint">No jobseekers in this drive's pool yet.</p>
           : (
@@ -170,7 +170,7 @@ export function EmployerShortlist() {
                   </div>
                 </div>
               ))}
-              {rows.length === 0 && <p className="hint">No candidates match these filters.</p>}
+              {rows.length === 0 && <p className="hint">No jobseekers match these filters.</p>}
             </div>
           )}
       </div>

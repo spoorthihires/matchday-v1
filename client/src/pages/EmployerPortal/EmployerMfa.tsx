@@ -55,7 +55,7 @@ export function EmployerMfa() {
           </Link>
           <div className="aa-body">
             <h2>Just confirming it&rsquo;s you.</h2>
-            <p>Multi-factor authentication keeps your candidate data and hiring pipeline secure.</p>
+            <p>Multi-factor authentication keeps your jobseeker data and hiring pipeline secure.</p>
             <ul className="aa-list">
               <li>
                 <span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span>

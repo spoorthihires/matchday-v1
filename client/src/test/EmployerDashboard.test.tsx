@@ -64,7 +64,7 @@ describe('EmployerDashboard', () => {
     expect(screen.getByText('9')).toBeInTheDocument();
 
     expect(screen.getByText(/No registrations yet/)).toBeInTheDocument();
-    expect(screen.getByText(/No shortlisted candidates yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No shortlisted jobseekers yet/)).toBeInTheDocument();
     expect(screen.getByText(/No upcoming interviews scheduled/)).toBeInTheDocument();
 
     expect(screen.getByText(/Pending review/)).toBeInTheDocument();

@@ -42,7 +42,7 @@ export function EmployerCandidates() {
       </button>
       <div className="card">
         <h2>Jobseekers — {drive.data?.name ?? '…'}</h2>
-        <p className="cand-privacy hint">Names, contact details and resumes stay hidden. Identity is only revealed after a shortlisted candidate confirms interest.</p>
+        <p className="cand-privacy hint">Names, contact details and resumes stay hidden. Identity is only revealed after a shortlisted jobseeker confirms interest.</p>
         <div style={{ marginTop: 10 }}>
           <button type="button" className="btn btn-ghost" style={{ marginRight: 6 }}
             onClick={() => navigate(`/employer/drives/${driveId}/shortlist`)}>Shortlist workspace</button>
@@ -72,9 +72,9 @@ export function EmployerCandidates() {
       </div>
 
       <div className="card">
-        {candidates.isLoading ? <p className="hint">Loading candidates…</p>
+        {candidates.isLoading ? <p className="hint">Loading jobseekers…</p>
           : candidates.isError ? <p className="hint">{errMsg(candidates.error)}</p>
-          : items.length === 0 ? <p className="cand-empty hint">No candidates match yet.</p>
+          : items.length === 0 ? <p className="cand-empty hint">No jobseekers match yet.</p>
           : (
             <div style={{ display: 'grid', gap: 8 }}>
               {items.map((c) => (

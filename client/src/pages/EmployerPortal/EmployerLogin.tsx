@@ -55,7 +55,7 @@ export function EmployerLogin() {
           </Link>
           <div className="aa-body">
             <h2>Welcome back. This Wednesday&rsquo;s pool is waiting.</h2>
-            <p>Sign in to manage your registrations, review candidates and book your next slot.</p>
+            <p>Sign in to manage your registrations, review jobseekers and book your next slot.</p>
             <ul className="aa-list">
               <li>
                 <span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span>

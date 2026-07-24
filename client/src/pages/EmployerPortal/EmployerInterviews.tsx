@@ -45,7 +45,7 @@ export function EmployerInterviews() {
   useEffect(() => { if (!jobseekerId && grantedCands.length) setJobseekerId(grantedCands[0].jobseekerId); }, [grantedCands, jobseekerId]);
 
   const submit = () => {
-    if (!jobseekerId || !slotId || !/^\d{2}:\d{2}$/.test(time)) { setFormErr('Pick a candidate, a slot and a valid time.'); return; }
+    if (!jobseekerId || !slotId || !/^\d{2}:\d{2}$/.test(time)) { setFormErr('Pick a jobseeker, a slot and a valid time.'); return; }
     setFormErr(null);
     const names = interviewers.split(',').map((s) => s.trim()).filter(Boolean);
     schedule.mutate({ jobseekerId, slotId, time, interviewers: names.length ? names : undefined }, { onSuccess: () => setInterviewers('') });
@@ -58,12 +58,12 @@ export function EmployerInterviews() {
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
         <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
-      <div className="card"><h2>Interview schedule</h2><p className="hint">Schedule consented candidates into your slots — confirm, reschedule, or cancel.</p></div>
+      <div className="card"><h2>Interview schedule</h2><p className="hint">Schedule consented jobseekers into your slots — confirm, reschedule, or cancel.</p></div>
 
       <div className="card" style={{ display: 'grid', gap: 10 }}>
         <h3>Schedule an interview</h3>
         {grantedCands.length === 0
-          ? <p className="hint">No consented candidates yet. A candidate must grant a reveal request (Consent status) before you can schedule an interview.</p>
+          ? <p className="hint">No consented jobseekers yet. A jobseeker must grant a reveal request (Consent status) before you can schedule an interview.</p>
           : slotItems.length === 0
           ? <p className="hint">No slots yet. Create a slot first (View slots) to schedule interviews into it.</p>
           : (

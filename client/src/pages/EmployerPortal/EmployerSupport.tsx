@@ -11,10 +11,10 @@ import './employerBase.js';
 // (App.tsx) which already provides the ".employer-app" CSS scope, so this intentionally does
 // NOT re-wrap in ".employer-app" (same convention as EmployerNotifications.tsx).
 const FAQS: { q: string; a: string }[] = [
-  { q: 'How do I register my company for a drive?', a: 'Open a drive under Available Drives and use Register to submit your requirement. Once an admin approves it you can create slots, view candidates, and schedule interviews for that drive.' },
-  { q: 'Why can’t I see candidate names?', a: 'Candidate identities are masked until the candidate grants your identity-reveal request. Shortlist a candidate, request a reveal, and their name and contact appear once they consent.' },
-  { q: 'How do interview slots work?', a: 'For an approved drive you create your own interview slots on the drive’s event dates. Candidates book into them, and you schedule interviews against a booked, consent-granted candidate.' },
-  { q: 'How do I make an offer?', a: 'Once a candidate has granted consent, open their card and record an offer (CTC, location, mode, joining date). The offer status flows into your pipeline board automatically.' },
+  { q: 'How do I register my company for a drive?', a: 'Open a drive under Available Drives and use Register to submit your requirement. Once an admin approves it you can create slots, view jobseekers, and schedule interviews for that drive.' },
+  { q: 'Why can’t I see jobseeker names?', a: 'Jobseeker identities are masked until the jobseeker grants your identity-reveal request. Shortlist a jobseeker, request a reveal, and their name and contact appear once they consent.' },
+  { q: 'How do interview slots work?', a: 'For an approved drive you create your own interview slots on the drive’s event dates. Jobseekers book into them, and you schedule interviews against a booked, consent-granted jobseeker.' },
+  { q: 'How do I make an offer?', a: 'Once a jobseeker has granted consent, open their card and record an offer (CTC, location, mode, joining date). The offer status flows into your pipeline board automatically.' },
   { q: 'What do the bell and reports show?', a: 'The notification bell surfaces async updates (registration approvals, consent responses, slot bookings). Reports show a derived hiring funnel and KPIs across your drives.' },
   { q: 'Something isn’t working — how do I get help?', a: 'Raise a request below: pick a category, describe the issue, and the Hiringhood team will action it. You’ll see it tracked under “My requests”.' },
 ];

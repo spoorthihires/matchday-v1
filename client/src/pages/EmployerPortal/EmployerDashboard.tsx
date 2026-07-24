@@ -50,7 +50,7 @@ export function EmployerDashboard() {
               <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01" /><circle cx="12" cy="12" r="9" /></svg>
               <span>
                 <b>Pending review.</b> Your employer account is awaiting admin approval. You&apos;ll get full
-                access to drives and candidates once it&apos;s approved.
+                access to drives and jobseekers once it&apos;s approved.
               </span>
             </div>
           )}
@@ -128,7 +128,7 @@ export function EmployerDashboard() {
                 </div>
                 <div className="card-body">
                   {data.dashboard.shortlist.length === 0 ? (
-                    <p className="hint">No shortlisted candidates yet — they&apos;ll show up here once you shortlist someone from a drive.</p>
+                    <p className="hint">No shortlisted jobseekers yet — they&apos;ll show up here once you shortlist someone from a drive.</p>
                   ) : (
                     <p className="hint">{data.dashboard.shortlist.length} jobseeker(s).</p>
                   )}

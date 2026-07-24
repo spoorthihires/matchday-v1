@@ -162,7 +162,7 @@ export function EmployerSignup() {
             <p>Register your organisation to browse drives, book slots and review pre-evaluated AI/ML talent.</p>
             <ul className="aa-list">
               <li><span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span> Browse role-specific MatchDay drives</li>
-              <li><span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span> Review redacted candidate passports</li>
+              <li><span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span> Review redacted jobseeker passports</li>
               <li><span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span> Interview a shortlist in one slot</li>
             </ul>
           </div>
@@ -439,7 +439,7 @@ export function EmployerSignup() {
                       <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg>
                     </div>
                     <label onClick={() => setAcceptPrivacy((v) => !v)}>
-                      I&rsquo;ve read and agree to the <a onClick={(e) => e.stopPropagation()}>Privacy Policy</a>, including how candidate data is handled.
+                      I&rsquo;ve read and agree to the <a onClick={(e) => e.stopPropagation()}>Privacy Policy</a>, including how jobseeker data is handled.
                     </label>
                   </div>
                   {errors.consent && <div className="err-msg" style={{ marginTop: 8 }}>Please accept both the Terms and Privacy Policy to continue.</div>}

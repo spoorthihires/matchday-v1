@@ -264,7 +264,7 @@ export function EmployerRegister() {
         <div className="reg-done">
           <div className="rd-badge"><svg className="ic ic-lg" viewBox="0 0 24 24" style={{ width: 34, height: 34 }}><path d="M5 12l5 5L20 7" /></svg></div>
           <h2>Registration submitted</h2>
-          <p>Your requirement for <b>{result.driveName}</b> is in. Our Admin team will review and approve it, then we&rsquo;ll start matching candidates.</p>
+          <p>Your requirement for <b>{result.driveName}</b> is in. Our Admin team will review and approve it, then we&rsquo;ll start matching jobseekers.</p>
           <div className="rd-card">
             <span className="drive-ic"><svg className="ic" viewBox="0 0 24 24"><path d="M9 5h6M7 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-2" /><path d="M9 3h6a2 2 0 010 4H9a2 2 0 010-4z" /></svg></span>
             <div style={{ flex: 1 }}><div className="rd-id">{result.id}</div><div className="rd-l">Registration reference</div></div>
@@ -394,7 +394,7 @@ export function EmployerRegister() {
                   onChange={setMustHave}
                   ariaLabel="Must-have skills"
                   placeholder="Add a must-have skill"
-                  hint="These drive candidate matching. Type a skill and press Enter."
+                  hint="These drive jobseeker matching. Type a skill and press Enter."
                 />
                 <ChipField
                   label="Good-to-have skills"
@@ -600,7 +600,7 @@ export function EmployerRegister() {
                     />
                     <span className="range-val">{minEvalScore}%</span>
                   </div>
-                  <div className="hint">Candidates below this evaluation score won&rsquo;t be recommended.</div>
+                  <div className="hint">Jobseekers below this evaluation score won&rsquo;t be recommended.</div>
                 </div>
                 <ChipField
                   label="Mandatory skills"

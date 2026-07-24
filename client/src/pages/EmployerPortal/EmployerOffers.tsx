@@ -69,7 +69,7 @@ export function EmployerOffers() {
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/board`)}>
         <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to pipeline
       </button>
-      <div className="card"><h2>Offer management</h2><p className="hint">Track offers for consented candidates. Status changes move the candidate on the pipeline board.</p></div>
+      <div className="card"><h2>Offer management</h2><p className="hint">Track offers for consented jobseekers. Status changes move the jobseeker on the pipeline board.</p></div>
 
       {counts && (
         <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(5,1fr)' }}>
@@ -83,8 +83,8 @@ export function EmployerOffers() {
 
       <div className="card" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <strong style={{ fontSize: 13 }}>New offer:</strong>
-        <select className="select" aria-label="New offer candidate" value={newJs} onChange={(e) => setNewJs(e.target.value)} style={{ maxWidth: 240 }}>
-          <option value="">Select a consented candidate…</option>
+        <select className="select" aria-label="New offer jobseeker" value={newJs} onChange={(e) => setNewJs(e.target.value)} style={{ maxWidth: 240 }}>
+          <option value="">Select a consented jobseeker…</option>
           {candidatesForNew.map((c) => <option key={c.jobseekerId} value={c.jobseekerId}>{c.code}</option>)}
         </select>
         <button type="button" className="btn btn-ghost" disabled={!newJs || upsert.isPending}
@@ -94,7 +94,7 @@ export function EmployerOffers() {
       <div className="card">
         {offers.isLoading ? <p className="hint">Loading…</p>
           : offers.isError ? <p className="hint">{errMsg(offers.error)}</p>
-          : items.length === 0 ? <p className="cand-empty hint">No offers yet — send an offer to a consented candidate above.</p>
+          : items.length === 0 ? <p className="cand-empty hint">No offers yet — send an offer to a consented jobseeker above.</p>
           : (
             <div style={{ display: 'grid', gap: 4 }}>
               {items.map((o) => (

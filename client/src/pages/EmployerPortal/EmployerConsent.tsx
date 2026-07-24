@@ -42,13 +42,13 @@ export function EmployerConsent() {
       </button>
       <div className="card">
         <h2>Jobseeker consent — {drive.data?.name ?? '…'}</h2>
-        <p className="cand-privacy hint">Identities are revealed only after a candidate consents. Request a reveal for your shortlisted candidates; requests expire in 48h if unanswered.</p>
+        <p className="cand-privacy hint">Identities are revealed only after a jobseeker consents. Request a reveal for your shortlisted jobseekers; requests expire in 48h if unanswered.</p>
       </div>
 
       <div className="card">
         {candidates.isLoading ? <p className="hint">Loading…</p>
           : candidates.isError ? <p className="hint">{errMsg(candidates.error)}</p>
-          : items.length === 0 ? <p className="cand-empty hint">No shortlisted candidates yet — shortlist candidates to request their consent.</p>
+          : items.length === 0 ? <p className="cand-empty hint">No shortlisted jobseekers yet — shortlist jobseekers to request their consent.</p>
           : (
             <div style={{ display: 'grid', gap: 8 }}>
               {items.map((c) => {
