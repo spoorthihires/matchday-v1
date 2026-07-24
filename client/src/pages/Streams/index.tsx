@@ -32,7 +32,7 @@ export function StreamsPage() {
     else if (action === 'toggle') update.mutate({ id: s.id, body: { status: s.status === 'Active' ? 'Disabled' : 'Active' } });
   }
   function exportCsv() {
-    const head = ['Stream Name', 'Parent Category', 'Employer Label', 'Skills Required', 'Good To Have', 'Evaluation Flow', 'Cutoff Score', 'Min CGPA', 'Max Backlogs', 'Graduation Years', 'Allowed Branches', 'Candidate Sources', 'Version', 'Status'];
+    const head = ['Stream Name', 'Parent Category', 'Employer Label', 'Skills Required', 'Good To Have', 'Evaluation Flow', 'Cutoff Score', 'Min CGPA', 'Max Backlogs', 'Graduation Years', 'Allowed Branches', 'Jobseeker Sources', 'Version', 'Status'];
     const rows = items.map((s) => [s.name, s.parent, s.label, s.skills.join('; '), s.good.join('; '), s.flow.join(' > '), s.cutoff, s.cgpa, s.backlogs, s.grad.join('; '), s.branches.join('; '), s.sources.join('; '), s.version, s.status].map((v) => `"${v}"`).join(','));
     const csv = [head.join(','), ...rows].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));

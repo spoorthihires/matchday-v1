@@ -35,7 +35,7 @@ export function TabInstituteOwnership({
   }), [rows, q, status]);
 
   function handleExport() {
-    const head = ['Institute', 'City', 'Owner', 'Email', 'Candidates Owned', 'Last Transferred', 'Status'];
+    const head = ['Institute', 'City', 'Owner', 'Email', 'Jobseekers Owned', 'Last Transferred', 'Status'];
     const csv = [head.join(',')]
       .concat(filtered.map((r) => [r.institute, r.city, r.owner, r.email, r.candidatesOwned, r.lastTransferred, r.status].map(csvEscape).join(',')))
       .join('\n');
@@ -86,7 +86,7 @@ export function TabInstituteOwnership({
                 <th>Institute</th>
                 <th>City</th>
                 <th>Owner</th>
-                <th className="r">Candidates Owned</th>
+                <th className="r">Jobseekers Owned</th>
                 <th>Last Transferred</th>
                 <th>Status</th>
                 <th className="r">Actions</th>

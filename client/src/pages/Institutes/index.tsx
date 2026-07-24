@@ -144,7 +144,7 @@ export function InstitutesPage() {
             <div className="kd flat"><i className="ti ti-alert-circle" /> needs review</div>
           </div>
           <div className="kpi">
-            <div className="kh"><span className="ic i-teal"><i className="ti ti-user-plus" /></span> Candidates Uploaded</div>
+            <div className="kh"><span className="ic i-teal"><i className="ti ti-user-plus" /></span> Jobseekers Uploaded</div>
             <div className="kv mono">{(overview?.uploaded ?? 0).toLocaleString('en-IN')}</div>
             <div className="kd up"><i className="ti ti-trending-up" /> total</div>
           </div>

@@ -45,7 +45,7 @@ export function ScheduleSection({
                   </div>
                   <div className="ei">
                     <b>{e.title}</b>
-                    <span>{e.employers} employers · {e.slots} slots · {e.candidates} candidates</span>
+                    <span>{e.employers} employers · {e.slots} slots · {e.candidates} jobseekers</span>
                   </div>
                   <span className={`estat ${e.status}`}>{e.status === 'prep' ? `Prep ${e.prepPct}%` : 'Open'}</span>
                 </div>

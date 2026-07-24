@@ -64,7 +64,7 @@ export function JobseekersToolbar({
         <i className="ti ti-search" />
         <input
           placeholder="Search by name…"
-          aria-label="Search candidates"
+          aria-label="Search jobseekers"
           value={localQ}
           onChange={(e) => setLocalQ(e.target.value)}
         />
@@ -84,7 +84,7 @@ export function JobseekersToolbar({
       <div className="grow" />
       <button className="btn btn-ghost" onClick={onUpload}><i className="ti ti-upload" /> Bulk Upload</button>
       <button className="btn btn-ghost" onClick={onExport}><i className="ti ti-download" /> Export</button>
-      <button className="btn btn-accent" onClick={onCreate}><i className="ti ti-plus" /> Add Candidate</button>
+      <button className="btn btn-accent" onClick={onCreate}><i className="ti ti-plus" /> Add Jobseeker</button>
     </div>
   );
 }

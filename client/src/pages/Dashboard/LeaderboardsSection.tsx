@@ -47,7 +47,7 @@ export function LeaderboardsSection({ leaderboards, onInstituteClick }: Leaderbo
       <div className="grid-2b">
         <div className="card">
           <div className="card-h">
-            <div><h3>Institute Leaderboard</h3><div className="sub">By match-ready candidates supplied</div></div>
+            <div><h3>Institute Leaderboard</h3><div className="sub">By match-ready jobseekers supplied</div></div>
           </div>
           <div className="lb">
             <table>

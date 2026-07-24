@@ -118,7 +118,7 @@ describe('UploadWizard', () => {
     const willImportTile = screen.getByText('Will import').closest('.kpi') as HTMLElement;
     expect(within(willImportTile).getByText('2')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /import 2 candidates/i }));
+    await user.click(screen.getByRole('button', { name: /import 2 jobseekers/i }));
 
     // Step 5 (Completion Report): imported count from the mocked commit response.
     expect(await screen.findByRole('heading', { name: 'Completion Report' })).toBeInTheDocument();

@@ -48,7 +48,7 @@ export function EvalMonitorPage() {
   const opts = data ?? { contests: [], employers: [], institutes: [] };
 
   function exportCsv() {
-    const head = ['ID', 'Candidate', 'Institute', 'Contest', 'Employer', 'Stage', 'Score', 'Last update'];
+    const head = ['ID', 'Jobseeker', 'Institute', 'Contest', 'Employer', 'Stage', 'Score', 'Last update'];
     const body = rows.map((x) => [x.code, x.name, x.institute, x.contest, x.employer, STAGES[x.stage].k, x.score, fmtMins(x.minsAgo)].map((v) => `"${v}"`).join(','));
     const csv = [head.join(','), ...body].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -78,7 +78,7 @@ export function EvalMonitorPage() {
         </div>
 
         <div className="kpis" style={{ marginBottom: 14 }}>
-          <div className="kpi"><div className="kh"><span className="ic i-indigo"><i className="ti ti-users" /></span> In Pipeline</div><div className="kv mono">{kpi.total}</div><div className="kd flat"><i className="ti ti-minus" /> candidates</div></div>
+          <div className="kpi"><div className="kh"><span className="ic i-indigo"><i className="ti ti-users" /></span> In Pipeline</div><div className="kv mono">{kpi.total}</div><div className="kd flat"><i className="ti ti-minus" /> jobseekers</div></div>
           <div className="kpi"><div className="kh"><span className="ic i-amber"><i className="ti ti-hourglass" /></span> Awaiting Evaluation</div><div className="kv mono">{kpi.pending}</div><div className="kd flat"><i className="ti ti-alert-circle" /> in pending stages</div></div>
           <div className="kpi"><div className="kh"><span className="ic i-green"><i className="ti ti-user-check" /></span> Match Ready</div><div className="kv mono">{kpi.ready}</div><div className="kd up"><i className="ti ti-trending-up" /> {kpi.total ? Math.round(kpi.ready / kpi.total * 100) : 0}% of pipeline</div></div>
           <div className="kpi"><div className="kh"><span className="ic i-violet"><i className="ti ti-progress" /></span> Avg Progress</div><div className="kv mono">{kpi.avg}%</div><div className="kd up"><i className="ti ti-trending-up" /> through pipeline</div></div>
@@ -95,7 +95,7 @@ export function EvalMonitorPage() {
 
         <div className="grid-2" style={{ marginTop: 16 }}>
           <div className="card">
-            <div className="card-h"><div><h3>Evaluation funnel</h3><div className="sub">Candidates reaching each stage</div></div></div>
+            <div className="card-h"><div><h3>Evaluation funnel</h3><div className="sub">Jobseekers reaching each stage</div></div></div>
             <div className="funnel">
               {STAGES.map((st, s) => (
                 <div className="fstep" key={st.k}><div className="fl"><span className="name">{st.k}</span><span className="v mono">{reached[s]} <span className="pct">{kpi.total ? Math.round(reached[s] / kpi.total * 100) : 0}%</span></span></div>
@@ -104,7 +104,7 @@ export function EvalMonitorPage() {
             </div>
           </div>
           <div className="card">
-            <div className="card-h"><div><h3>Pipeline health</h3><div className="sub">Where candidates are waiting</div></div></div>
+            <div className="card-h"><div><h3>Pipeline health</h3><div className="sub">Where jobseekers are waiting</div></div></div>
             <div className="funnel">
               {STAGES.map((st, s) => (
                 <div className="fstep" key={st.k}><div className="fl"><span className="name">{st.k}</span><span className="v mono">{counts[s]}</span></div>
@@ -114,15 +114,15 @@ export function EvalMonitorPage() {
           </div>
         </div>
 
-        <div className="section-title">Candidates · {selStage == null ? 'all stages' : STAGES[selStage].k} <span className="rule" />
+        <div className="section-title">Jobseekers · {selStage == null ? 'all stages' : STAGES[selStage].k} <span className="rule" />
           {selStage != null && <span style={{ textTransform: 'none', fontWeight: 500, color: 'var(--indigo)', cursor: 'pointer' }} onClick={() => setSelStage(null)}>Clear filter</span>}
         </div>
         <div className="dm-table-wrap">
           <div className="dm-scroll">
             <table className="dm" style={{ minWidth: 820 }}>
-              <thead><tr><th>Candidate</th><th>Institute</th><th>Contest</th><th>Current stage</th><th className="r">Score</th><th className="r">Last update</th></tr></thead>
+              <thead><tr><th>Jobseeker</th><th>Institute</th><th>Contest</th><th>Current stage</th><th className="r">Score</th><th className="r">Last update</th></tr></thead>
               <tbody>
-                {rows.length === 0 && <tr><td colSpan={6}><div className="dm-empty"><i className="ti ti-user-off" /> No candidates in this view.</div></td></tr>}
+                {rows.length === 0 && <tr><td colSpan={6}><div className="dm-empty"><i className="ti ti-user-off" /> No jobseekers in this view.</div></td></tr>}
                 {rows.slice(0, 20).map((x) => (
                   <tr key={x.id}>
                     <td><div className="dm-name"><b>{x.name}</b><span>{x.code}</span></div></td>

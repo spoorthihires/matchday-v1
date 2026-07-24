@@ -97,7 +97,7 @@ export function StepSchedule({ model, onChange, errors }: WizardStepProps) {
       </div>
       <div className="wgrid">
         <div className="wfld">
-          <label>Candidate capacity</label>
+          <label>Jobseeker capacity</label>
           <input
             type="number"
             id="wCand"

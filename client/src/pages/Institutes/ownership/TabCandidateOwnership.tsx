@@ -36,14 +36,14 @@ export function TabCandidateOwnership({
   }), [rows, q, owner, status]);
 
   function handleExport() {
-    const head = ['Candidate', 'Email', 'Institute', 'Source', 'Owner', 'Role', 'Assigned On', 'Status'];
+    const head = ['Jobseeker', 'Email', 'Institute', 'Source', 'Owner', 'Role', 'Assigned On', 'Status'];
     const csv = [head.join(',')]
       .concat(filtered.map((r) => [r.candidate, r.email, r.institute, r.source, r.owner, r.ownerRole, r.assignedOn, r.status].map(csvEscape).join(',')))
       .join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'matchday-candidate-ownership.csv';
+    a.download = 'matchday-jobseeker-ownership.csv';
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -54,8 +54,8 @@ export function TabCandidateOwnership({
     <div className="card">
       <div className="card-h">
         <div>
-          <h3>Candidate Ownership</h3>
-          <div className="sub">Every uploaded candidate and their assigned owner</div>
+          <h3>Jobseeker Ownership</h3>
+          <div className="sub">Every uploaded jobseeker and their assigned owner</div>
         </div>
       </div>
 
@@ -63,8 +63,8 @@ export function TabCandidateOwnership({
         <div className="dm-search">
           <i className="ti ti-search" />
           <input
-            placeholder="Search candidates by name or institute…"
-            aria-label="Search candidates"
+            placeholder="Search jobseekers by name or institute…"
+            aria-label="Search jobseekers"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -88,7 +88,7 @@ export function TabCandidateOwnership({
           <table className="dm" style={{ minWidth: 1000 }}>
             <thead>
               <tr>
-                <th>Candidate</th>
+                <th>Jobseeker</th>
                 <th>Institute</th>
                 <th>Source</th>
                 <th>Owner</th>
@@ -100,7 +100,7 @@ export function TabCandidateOwnership({
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={8}><div className="dm-empty">No candidates match these filters.</div></td></tr>
+                <tr><td colSpan={8}><div className="dm-empty">No jobseekers match these filters.</div></td></tr>
               )}
               {filtered.map((r) => (
                 <tr key={r.id}>
@@ -128,8 +128,8 @@ export function TabCandidateOwnership({
 
       {transferTarget && (
         <TransferOwnerModal
-          title="Transfer Candidate Ownership"
-          entityLabel="Candidate"
+          title="Transfer Jobseeker Ownership"
+          entityLabel="Jobseeker"
           entityName={transferTarget.candidate}
           currentOwner={transferTarget.owner}
           onClose={() => setTransferId(null)}

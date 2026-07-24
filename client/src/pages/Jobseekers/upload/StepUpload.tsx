@@ -24,7 +24,7 @@ function downloadTemplate() {
   const url = URL.createObjectURL(new Blob([CSV_TEMPLATE], { type: 'text/csv' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'candidate-upload-template.csv';
+  a.download = 'jobseeker-upload-template.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -56,7 +56,7 @@ export function StepUpload({ rows, fileName, busy, fileInputRef, onFileChange, o
       <div className="wh">
         <div className="eyebrow">Step 1</div>
         <h2>CSV Upload</h2>
-        <p>Upload a candidate roster (CSV or XLSX). We&apos;ll check for duplicates and validate every row before importing.</p>
+        <p>Upload a jobseeker roster (CSV or XLSX). We&apos;ll check for duplicates and validate every row before importing.</p>
       </div>
 
       <div

@@ -99,7 +99,7 @@ export function StreamEditorModal({ mode, stream, onClose }: StreamEditorModalPr
               <input id="seBacklogs" type="number" min={0} value={backlogs} onChange={(e) => setBacklogs(e.target.value === '' ? 0 : Number(e.target.value))} /></div>
             <div className="fld full"><label>Eligibility · graduation years</label>{chipGroup(ALL_GRAD, grad, setGrad)}</div>
             <div className="fld full"><label>Allowed branches</label>{chipGroup(ALL_BRANCHES, branches, setBranches)}</div>
-            <div className="fld full"><label>Candidate sources</label>{chipGroup(ALL_SOURCES, sources, setSources)}</div>
+            <div className="fld full"><label>Jobseeker sources</label>{chipGroup(ALL_SOURCES, sources, setSources)}</div>
             <div className="fld"><label htmlFor="seStatus">Status</label>
               <select id="seStatus" value={status} onChange={(e) => setStatus(e.target.value as 'Active' | 'Disabled')}><option>Active</option><option>Disabled</option></select></div>
           </div>

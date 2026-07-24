@@ -28,7 +28,7 @@ export function ResetEvaluationModal({ jobseekerId, onClose }: ResetEvaluationMo
         </div>
         <div className="modal-b">
           <div className="fld full">
-            <p>Are you sure you want to reset this candidate's evaluation? The candidate will need to complete the evaluation again.</p>
+            <p>Are you sure you want to reset this jobseeker's evaluation? The jobseeker will need to complete the evaluation again.</p>
           </div>
         </div>
         <div className="modal-f">

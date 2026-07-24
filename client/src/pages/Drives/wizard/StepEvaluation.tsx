@@ -107,7 +107,7 @@ export function StepEvaluation({ model, onChange, errors }: WizardStepProps) {
       <div className="wh">
         <div className="eyebrow">Step 4</div>
         <h2>Evaluation</h2>
-        <p>Choose the screening stages candidates pass through before MatchDay.</p>
+        <p>Choose the screening stages jobseekers pass through before MatchDay.</p>
       </div>
       <div className="wfld full" style={{ marginBottom: 12 }}>
         <label htmlFor="tplPick">Start from a template</label>

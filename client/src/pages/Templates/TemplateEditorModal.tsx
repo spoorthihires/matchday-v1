@@ -167,7 +167,7 @@ export function TemplateEditorModal({ mode, template, onClose }: TemplateEditorM
             {tab === 'kanban' && (
               <>
                 <h4>Kanban stages</h4>
-                <p className="phelp">The pipeline candidates move through. Add or remove stages.</p>
+                <p className="phelp">The pipeline jobseekers move through. Add or remove stages.</p>
                 <div className="stage-list">
                   {draft.kanban.map((st, i) => (
                     <div className="stage-item" key={`${st}-${i}`}>
@@ -228,7 +228,7 @@ export function TemplateEditorModal({ mode, template, onClose }: TemplateEditorM
             {tab === 'privacy' && (
               <>
                 <h4>Privacy rules</h4>
-                <p className="phelp">Data-handling defaults applied to candidates in this template.</p>
+                <p className="phelp">Data-handling defaults applied to jobseekers in this template.</p>
                 {Object.keys(draft.privacy).map((k) => (
                   <div className="priv-row" key={k}>
                     <div className="pn"><b>{k}</b></div>

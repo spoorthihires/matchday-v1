@@ -32,27 +32,27 @@ describe('JobseekersTable', () => {
     expect(tbody.getByText('75%')).toBeInTheDocument();
   });
 
-  it('opens the kebab menu with Edit, Change stream, Reset evaluation, and Block candidate for an active candidate', async () => {
+  it('opens the kebab menu with Edit, Change stream, Reset evaluation, and Block jobseeker for an active jobseeker', async () => {
     const onRowAction = vi.fn();
     render(<JobseekersTable items={items} selectedIds={[]} onToggle={vi.fn()} onToggleAll={vi.fn()} onSort={vi.fn()} sort={undefined} order="asc" onRowAction={onRowAction} {...filterProps} />);
     const user = userEvent.setup();
     await user.click(screen.getByTitle('More'));
     expect(screen.getByText('Change stream')).toBeInTheDocument();
     expect(screen.getByText('Reset evaluation')).toBeInTheDocument();
-    expect(screen.getByText('Block candidate')).toBeInTheDocument();
-    expect(screen.queryByText('Unblock candidate')).not.toBeInTheDocument();
-    await user.click(screen.getByText('Block candidate'));
+    expect(screen.getByText('Block jobseeker')).toBeInTheDocument();
+    expect(screen.queryByText('Unblock jobseeker')).not.toBeInTheDocument();
+    await user.click(screen.getByText('Block jobseeker'));
     expect(onRowAction).toHaveBeenCalledWith('block', '1');
   });
 
-  it('shows Unblock candidate instead of Block candidate for a blocked candidate', async () => {
+  it('shows Unblock jobseeker instead of Block jobseeker for a blocked jobseeker', async () => {
     const onRowAction = vi.fn();
     render(<JobseekersTable items={blockedItems} selectedIds={[]} onToggle={vi.fn()} onToggleAll={vi.fn()} onSort={vi.fn()} sort={undefined} order="asc" onRowAction={onRowAction} {...filterProps} />);
     const user = userEvent.setup();
     await user.click(screen.getByTitle('More'));
-    expect(screen.getByText('Unblock candidate')).toBeInTheDocument();
-    expect(screen.queryByText('Block candidate')).not.toBeInTheDocument();
-    await user.click(screen.getByText('Unblock candidate'));
+    expect(screen.getByText('Unblock jobseeker')).toBeInTheDocument();
+    expect(screen.queryByText('Block jobseeker')).not.toBeInTheDocument();
+    await user.click(screen.getByText('Unblock jobseeker'));
     expect(onRowAction).toHaveBeenCalledWith('unblock', '2');
   });
 });

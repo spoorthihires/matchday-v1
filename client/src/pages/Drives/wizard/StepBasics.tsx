@@ -82,7 +82,7 @@ export function StepBasics({ model, onChange, errors }: WizardStepProps) {
         </span>
       </div>
       <div className="wfld full">
-        <label>Candidate type</label>
+        <label>Jobseeker type</label>
         <div className="pick" data-single="candType">
           {CAND_TYPES.map(({ v, icon, label }) => (
             <span

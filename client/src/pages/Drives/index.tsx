@@ -112,7 +112,7 @@ export function DrivesPage() {
 
   function handleExport() {
     const rows = data?.items ?? [];
-    const head = ['Drive Name', 'Domain', 'Stream', 'Month', 'Frequency', 'Event Day', 'Candidate Capacity', 'Employer Capacity', 'Slot Capacity', 'Status', 'Created By'];
+    const head = ['Drive Name', 'Domain', 'Stream', 'Month', 'Frequency', 'Event Day', 'Jobseeker Capacity', 'Employer Capacity', 'Slot Capacity', 'Status', 'Created By'];
     const csv = [head.join(',')]
       .concat(rows.map((d) => [d.name, d.domain, d.stream, d.month, d.frequency, d.eventDay, d.candCap, d.empCap, d.slotCap, d.status, d.createdBy].map(csvEscape).join(',')))
       .join('\n');

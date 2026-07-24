@@ -47,8 +47,8 @@ describe('TabCandidates', () => {
     expect(await screen.findByText('Ananya Rao')).toBeInTheDocument();
     expect(screen.getByText('Shortlisted')).toBeInTheDocument();
 
-    // Pager shows "Showing 1–1 of 23 candidates" — assert the total renders inside the pinfo.
+    // Pager shows "Showing 1–1 of 23 jobseekers" — assert the total renders inside the pinfo.
     expect(screen.getByText('23')).toBeInTheDocument();
-    expect(screen.getByText(/candidates$/)).toBeInTheDocument();
+    expect(screen.getByText(/jobseekers$/)).toBeInTheDocument();
   });
 });

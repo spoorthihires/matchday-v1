@@ -61,7 +61,7 @@ export function StepVisibility({ model, onChange }: WizardStepProps) {
         </div>
       </div>
       <div className="wfld full">
-        <label>Candidate access</label>
+        <label>Jobseeker access</label>
         <div className="pick" data-single="candAccess">
           {CANDIDATE_ACCESS.map(({ v, icon }) => (
             <span

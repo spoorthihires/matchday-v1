@@ -67,7 +67,7 @@ export function TabConflicts({
         <div className="dm-search">
           <i className="ti ti-search" />
           <input
-            placeholder="Search conflicts by candidate or institute…"
+            placeholder="Search conflicts by jobseeker or institute…"
             aria-label="Search conflicts"
             value={q}
             onChange={(e) => setQ(e.target.value)}

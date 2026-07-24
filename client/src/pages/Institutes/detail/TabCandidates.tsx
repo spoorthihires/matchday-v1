@@ -35,8 +35,8 @@ export function TabCandidates({ instituteId }: { instituteId: string }) {
     <div className="card">
       <div className="card-h">
         <div>
-          <h3>Candidates</h3>
-          <div className="sub">Candidates uploaded by this institute</div>
+          <h3>Jobseekers</h3>
+          <div className="sub">Jobseekers uploaded by this institute</div>
         </div>
       </div>
       <div className="dm-table-wrap">
@@ -57,7 +57,7 @@ export function TabCandidates({ instituteId }: { instituteId: string }) {
               {isLoading && (
                 <tr>
                   <td colSpan={COLSPAN}>
-                    <div className="dm-empty">Loading candidates…</div>
+                    <div className="dm-empty">Loading jobseekers…</div>
                   </td>
                 </tr>
               )}
@@ -66,7 +66,7 @@ export function TabCandidates({ instituteId }: { instituteId: string }) {
                   <td colSpan={COLSPAN}>
                     <div className="dm-empty">
                       <i className="ti ti-users" />
-                      No candidates uploaded yet.
+                      No jobseekers uploaded yet.
                     </div>
                   </td>
                 </tr>
@@ -91,7 +91,7 @@ export function TabCandidates({ instituteId }: { instituteId: string }) {
         </div>
         <div className="dm-pager">
           <div className="pinfo">
-            {total ? <>Showing <b>{start + 1}–{start + shown}</b> of <b>{total}</b> candidates</> : 'No candidates'}
+            {total ? <>Showing <b>{start + 1}–{start + shown}</b> of <b>{total}</b> jobseekers</> : 'No jobseekers'}
           </div>
           <div className="pctrl">
             <button className="pbtn" disabled={effPage <= 1} onClick={() => setPage(effPage - 1)}>

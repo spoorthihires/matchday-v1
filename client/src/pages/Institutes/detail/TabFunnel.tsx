@@ -9,7 +9,7 @@ import type { Funnel } from '../../../types/institutes.js';
 
 export function TabFunnel({ funnel, instituteName }: { funnel: Funnel; instituteName: string }) {
   const steps: [string, number, number][] = [
-    ['Candidates Uploaded', funnel.uploaded, 100],
+    ['Jobseekers Uploaded', funnel.uploaded, 100],
     ['Signed Up', Math.round((funnel.uploaded * funnel.signupPct) / 100), funnel.signupPct],
     ['Profile Completed', Math.round((funnel.uploaded * funnel.completionPct) / 100), funnel.completionPct],
     ['Match-Ready', Math.round((funnel.uploaded * funnel.matchReadyPct) / 100), funnel.matchReadyPct],

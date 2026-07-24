@@ -40,7 +40,7 @@ export function TabSourceAttribution({ rows }: { rows: SourceAttributionRow[] })
   const maxMatchReady = Math.max(...rows.map((r) => r.matchReadyPct), 1);
 
   function handleExport() {
-    const head = ['Source', 'Candidates', 'Share %', 'Match-Ready %', 'Trend'];
+    const head = ['Source', 'Jobseekers', 'Share %', 'Match-Ready %', 'Trend'];
     const csv = [head.join(',')]
       .concat(rows.map((r) => [r.source, r.candidates, r.sharePct, r.matchReadyPct, r.trend].map(csvEscape).join(',')))
       .join('\n');
@@ -56,7 +56,7 @@ export function TabSourceAttribution({ rows }: { rows: SourceAttributionRow[] })
     <>
       <div className="grid-2">
         <div className="card">
-          <div className="card-h"><div><h3>Candidate Share by Source</h3><div className="sub">Where uploaded candidates originate</div></div></div>
+          <div className="card-h"><div><h3>Jobseeker Share by Source</h3><div className="sub">Where uploaded jobseekers originate</div></div></div>
           <div className="slot">
             <div className="donut">
               <svg width="130" height="130" viewBox="0 0 130 130">
@@ -75,7 +75,7 @@ export function TabSourceAttribution({ rows }: { rows: SourceAttributionRow[] })
                   />
                 ))}
               </svg>
-              <div className="center"><span className="n mono">{rows.reduce((n, r) => n + r.candidates, 0)}</span><span className="k">candidates</span></div>
+              <div className="center"><span className="n mono">{rows.reduce((n, r) => n + r.candidates, 0)}</span><span className="k">jobseekers</span></div>
             </div>
             <div className="slot-legend">
               {rows.map((r) => (
@@ -89,7 +89,7 @@ export function TabSourceAttribution({ rows }: { rows: SourceAttributionRow[] })
         </div>
 
         <div className="card">
-          <div className="card-h"><div><h3>Match-Ready % by Source</h3><div className="sub">Quality of candidates per source</div></div></div>
+          <div className="card-h"><div><h3>Match-Ready % by Source</h3><div className="sub">Quality of jobseekers per source</div></div></div>
           <div style={{ padding: '0 18px 6px' }}>
             <div className="barchart">
               {rows.map((r) => (
@@ -117,7 +117,7 @@ export function TabSourceAttribution({ rows }: { rows: SourceAttributionRow[] })
               <thead>
                 <tr>
                   <th>Source</th>
-                  <th className="r">Candidates</th>
+                  <th className="r">Jobseekers</th>
                   <th className="r">Share</th>
                   <th className="r">Match-Ready</th>
                   <th className="r">Trend</th>

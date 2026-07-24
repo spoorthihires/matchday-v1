@@ -22,7 +22,7 @@ type TabKey = 'overview' | 'candidates' | 'drives' | 'funnel' | 'performance' | 
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'overview', label: 'Overview', icon: 'ti-layout-dashboard' },
-  { key: 'candidates', label: 'Candidates', icon: 'ti-users' },
+  { key: 'candidates', label: 'Jobseekers', icon: 'ti-users' },
   { key: 'drives', label: 'Drives', icon: 'ti-calendar-event' },
   { key: 'funnel', label: 'Funnel Analytics', icon: 'ti-filter' },
   { key: 'performance', label: 'Performance', icon: 'ti-chart-bar' },
@@ -130,7 +130,7 @@ export function InstituteDetail() {
 
         <div className="kpis" style={{ marginTop: 16 }}>
           <div className="kpi">
-            <div className="kh"><span className="ic i-teal"><i className="ti ti-user-plus" /></span> Candidates Uploaded</div>
+            <div className="kh"><span className="ic i-teal"><i className="ti ti-user-plus" /></span> Jobseekers Uploaded</div>
             <div className="kv mono">{kpis.uploaded.toLocaleString('en-IN')}</div>
             <div className="kd flat"><i className="ti ti-minus" /> total</div>
           </div>
