@@ -6,7 +6,9 @@ import { SlotBooking } from '../../models/SlotBooking.js';
 import { Drive } from '../../models/Drive.js';
 import { RegistrationRequest } from '../../models/RegistrationRequest.js';
 import { Interview } from '../../models/Interview.js';
+import { Application } from '../../models/Application.js';
 import { notificationsSummary } from './employerNotifications.service.js';
+import { poolSeekers } from './employerCandidates.service.js';
 import type { RegistrationInput, SlotInput, SlotPatch } from './employerPortal.schemas.js';
 
 export async function getEmployerPortal(employerId: string) {
@@ -30,18 +32,126 @@ export async function getEmployerPortal(employerId: string) {
   // derived: count of live (not cancelled) interviews still to happen, not a slot count
   const upcomingInterviews = await Interview.countDocuments({ employerId, status: { $in: ['Scheduled', 'Confirmed'] } });
   const { unreadCount, recent } = await notificationsSummary(employerId);
+
+  // --- V1 dashboard rebuild (Task 1): funnel-adjacent KPIs + activeDrives +
+  // pendingActions + calendarEvents. Derived-only, no PII. The funnel itself
+  // is NOT derived here — the client gets it from the reports endpoint.
+  const allRegs = await RegistrationRequest.find({ employerId: empObjId }).sort({ createdAt: -1 }).lean();
+  const activeRegistrations = allRegs.length;
+  const regDriveIds = [...new Set(allRegs.map((r) => String(r.driveId)).filter(Boolean))];
+  const regDrives = await Drive.find({ _id: { $in: regDriveIds } }).lean();
+  const driveById = new Map(regDrives.map((d) => [String(d._id), d as unknown as Record<string, any>]));
+
+  // calendarEvents: one entry per registered-drive event date, deduped by date+driveName.
+  const calEventSeen = new Set<string>();
+  const calendarEvents: { date: string; driveName: string; status: string }[] = [];
+  for (const r of allRegs) {
+    const drive = driveById.get(String(r.driveId));
+    if (!drive) continue;
+    for (const ed of (drive.eventDates ?? []) as Date[]) {
+      const iso = new Date(ed).toISOString();
+      const key = `${iso}|${drive.name}`;
+      if (calEventSeen.has(key)) continue;
+      calEventSeen.add(key);
+      calendarEvents.push({ date: iso, driveName: (drive.name as string) ?? '', status: r.status as string });
+    }
+  }
+  const upcomingMatchDays = new Set(
+    calendarEvents.filter((e) => new Date(e.date) >= now).map((e) => e.date),
+  ).size;
+
+  // sharedCount / pool-emptiness are only meaningful (and only cheap enough) to
+  // compute for Approved drives — cache per drive so activeDrives + pendingActions
+  // never call poolSeekers twice for the same drive.
+  const poolCountCache = new Map<string, number>();
+  async function poolCountFor(drive: Record<string, any>): Promise<number> {
+    const key = String(drive._id);
+    if (!poolCountCache.has(key)) poolCountCache.set(key, (await poolSeekers(drive as never)).length);
+    return poolCountCache.get(key)!;
+  }
+
+  // activeDrives: one entry per driveId — an employer can have more than one
+  // registration row for the same drive (e.g. a Rejected reg then a re-Approved
+  // one), so dedupe by keeping the highest-priority registration's status.
+  function regStatusPriority(status: string): number {
+    switch (status) {
+      case 'Approved': return 0;
+      case 'Pending review': return 1;
+      case 'Changes requested': return 2;
+      case 'Rejected': return 4;
+      default: return 3; // unknown status: below Approved, above Rejected
+    }
+  }
+  const bestRegByDrive = new Map<string, (typeof allRegs)[number]>();
+  for (const r of allRegs) {
+    const driveIdStr = String(r.driveId ?? '');
+    if (!driveIdStr) continue;
+    const existing = bestRegByDrive.get(driveIdStr);
+    if (!existing || regStatusPriority(r.status as string) < regStatusPriority(existing.status as string)) {
+      bestRegByDrive.set(driveIdStr, r);
+    }
+  }
+  // Approved regs first, then others; capped at 6.
+  const sortedRegs = [...bestRegByDrive.values()].sort((a, b) => (a.status === 'Approved' ? 0 : 1) - (b.status === 'Approved' ? 0 : 1));
+  const dashboardActiveDrives: { id: string; name: string; status: string; primaryEventDate: string | null; sharedCount: number }[] = [];
+  for (const r of sortedRegs) {
+    if (dashboardActiveDrives.length >= 6) break;
+    const drive = driveById.get(String(r.driveId));
+    if (!drive) continue;
+    const futureDates = ((drive.eventDates ?? []) as Date[])
+      .map((d) => new Date(d)).filter((d) => d >= now).sort((a, b) => +a - +b);
+    const sharedCount = r.status === 'Approved' ? await poolCountFor(drive) : 0;
+    dashboardActiveDrives.push({
+      id: String(r.driveId), name: (drive.name as string) ?? '', status: r.status as string,
+      primaryEventDate: futureDates[0] ? futureDates[0].toISOString() : null, sharedCount,
+    });
+  }
+
+  // pendingActions: cheap real rules, stable ids. Sorted by urgency (most
+  // urgent first) before capping at 6, so an urgent 'today' action on an
+  // older drive is never dropped in favor of a less-urgent one on a newer drive.
+  const pendingActions: { id: string; text: string; kind: 'register' | 'slot' | 'shortlist'; urgency: 'today' | 'soon' | 'over' }[] = [];
+  for (const r of allRegs) {
+    const driveIdStr = String(r.driveId ?? '');
+    const name = r.driveName ?? '';
+    if (r.status === 'Pending review') {
+      pendingActions.push({ id: `register:${driveIdStr}`, text: `Registration under review — ${name}`, kind: 'register', urgency: 'soon' });
+      continue;
+    }
+    if (r.status === 'Approved' && driveIdStr) {
+      const slotCount = await Slot.countDocuments({ employerId: empObjId, driveId: r.driveId });
+      if (slotCount === 0) {
+        pendingActions.push({ id: `slot:${driveIdStr}`, text: `Book a Wednesday slot — ${name}`, kind: 'slot', urgency: 'today' });
+        continue;
+      }
+      const drive = driveById.get(driveIdStr);
+      if (drive && (await poolCountFor(drive)) > 0) {
+        const decidedCount = await Application.countDocuments({ employerId: empObjId, driveId: r.driveId, decision: { $ne: null } });
+        if (decidedCount === 0) {
+          pendingActions.push({ id: `shortlist:${driveIdStr}`, text: `Shortlist jobseekers — ${name}`, kind: 'shortlist', urgency: 'soon' });
+        }
+      }
+    }
+  }
+  const urgencyRank: Record<'over' | 'today' | 'soon', number> = { over: 0, today: 1, soon: 2 };
+  pendingActions.sort((a, b) => urgencyRank[a.urgency] - urgencyRank[b.urgency]); // stable: preserves relative order within a rank
+  pendingActions.splice(6); // cap AFTER sorting so the most urgent survive
+
   return {
     profile: {
       id: String(emp._id), name: emp.name, email: emp.email ?? '', industry: emp.industry,
       size: emp.size ?? '', status: emp.status ?? 'Active', spoc: emp.spoc ?? '', website: emp.website ?? '',
     },
     dashboard: {
-      kpis: { activeDrives, upcomingInterviews, totalSlots },
+      kpis: { activeDrives, upcomingInterviews, totalSlots, activeRegistrations, upcomingMatchDays },
       calendar,
       registrations,
       shortlist: [] as unknown[],       // placeholder — filled by Slice 6
       notifications: recent,
       notificationsUnread: unreadCount,
+      activeDrives: dashboardActiveDrives,
+      pendingActions,
+      calendarEvents,
     },
   };
 }

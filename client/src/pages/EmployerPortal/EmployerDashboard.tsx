@@ -1,36 +1,93 @@
 import { Link } from 'react-router-dom';
 import { useEmployerPortal } from './hooks/useEmployerPortal.js';
+import { useEmployerReports } from './hooks/useEmployerReports.js';
 import { formatRelativeTime } from './hooks/useEmployerNotifications.js';
-import type { EmployerCalendarEntry } from '../../types/employer.js';
+import { MatchDayCalendar } from './EmployerDashboardCalendar.js';
+import type { EmployerPendingAction } from '../../types/employer.js';
 import './employerBase.js';
 
 const NOTIF_TINT: Record<string, string> = { registration: 'ni-ok', candidate: 'ni-cand', slot: 'ni-warn' };
 
-// Ported from the prototype Matchday_Employer.html lines ~2705-2790 (view-app's
-// #page-dashboard: .dash-greet header, .kpi-grid, and the .dash-cols two-column card
-// layout). Renders inside EmployerShell's ".page active" content area (App.tsx), which
-// already provides the ".employer-app" CSS scope — this component intentionally does NOT
-// re-wrap in ".employer-app" (only ".page-wrap", matching the prototype's inner markup).
-//
-// The prototype's dashboard is richer than this slice's data (an 8-tile KPI grid, a hiring
-// funnel, an interactive month-grid calendar, pending actions, recent notifications) — the
-// live hook only returns { kpis: {activeDrives, upcomingInterviews, totalSlots}, calendar,
-// registrations, shortlist }. So this ports the greeting/kpi-grid/card/dash-cols scaffolding
-// faithfully but: (1) renders exactly the 3 KPIs the API provides instead of 8 demo tiles,
-// (2) simplifies "MatchDay calendar" to a plain upcoming-interviews list (no month grid —
-// there's no month/booked-Wednesday data to drive one), and (3) adds registrations/shortlist
-// cards with empty-state copy since those arrays are placeholders this slice (Slice 3/6 fill
-// them in). The "Pending review" banner has no prototype dashboard equivalent (the prototype
-// has no signup-approval gate) — it reuses the amber ".rd-banner cr" notice style ported
-// elsewhere in employer.css for visual consistency.
+// Ported from the prototype MatchDay_Employer_V1.html's #page-dashboard (~2690-2760) for the
+// V1 dashboard rebuild (Task 2, off Task 1's extended `dashboard` aggregate). Keeps the
+// greeting/Pending-review-banner scaffolding from the original slice-1 port, but replaces the
+// 3-tile KPI block + registrations/shortlist/upcoming-interviews placeholder cards with the
+// prototype's real layout: an 8-tile `.kpi-grid` (no `.kdelta` -- the brief drops the
+// week-over-week delta line since the live data has no history to compute one from), a Hiring
+// funnel card (sourced from the reports endpoint, reused via useEmployerReports('all') -- the
+// same hook EmployerReports.tsx uses), an Active drives card (from `dashboard.activeDrives`),
+// and a Pending actions card (from `dashboard.pendingActions`). The prototype's "MatchDay
+// calendar" widget (an interactive month grid) is built by `MatchDayCalendar` (Task 3, sibling
+// file EmployerDashboardCalendar.tsx) off `dashboard.calendarEvents`, replacing Task 2's thin
+// placeholder card; the existing Recent notifications card stays below it in the right column.
 
-function formatCalendarEntry(entry: EmployerCalendarEntry): string {
-  const date = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  return `${date} · ${entry.start}–${entry.end}`;
+// Active-drive status -> status-pill badge class. Mirrors EmployerRegistrations.tsx's
+// STATUS_BADGE_CLASS mapping verbatim (same RegistrationRequest.status enum this dashboard's
+// `dashboard.activeDrives[].status` is sourced from server-side: 'Pending review' | 'Approved' |
+// 'Rejected' | 'Changes requested') rather than inventing a parallel taxonomy.
+const DRIVE_STATUS_CLASS: Record<string, string> = {
+  'Pending review': 'st-inprog',
+  Approved: 'st-approved',
+  Rejected: 'st-cancelled',
+  'Changes requested': 'st-cr',
+};
+function driveStatusClass(status: string): string {
+  return DRIVE_STATUS_CLASS[status] ?? 'st-draft';
+}
+
+// Pending-action kind -> destination route + button label. The server only emits 'register'
+// (registration awaiting admin review) and 'slot'/'shortlist' (post-approval follow-ups) today,
+// but all three are handled per the type's full enum.
+const ACTION_ROUTE: Record<EmployerPendingAction['kind'], string> = {
+  register: '/employer/registrations',
+  slot: '/employer/registrations',
+  shortlist: '/employer/drives',
+};
+const ACTION_LABEL: Record<EmployerPendingAction['kind'], string> = {
+  register: 'View',
+  slot: 'Book slot',
+  shortlist: 'Shortlist',
+};
+
+function actionGlyph(urgency: EmployerPendingAction['urgency']) {
+  if (urgency === 'over') return <><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16h.01" /></>;
+  if (urgency === 'today') return <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" /></>;
+  return <><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></>;
+}
+function actionDueLabel(urgency: EmployerPendingAction['urgency']): string {
+  if (urgency === 'over') return 'Overdue';
+  if (urgency === 'today') return 'Due today';
+  return 'Coming up';
+}
+function actionDueClass(urgency: EmployerPendingAction['urgency']): string {
+  if (urgency === 'over') return 'due-over';
+  if (urgency === 'today') return 'due-today';
+  return '';
+}
+
+function funnelPct(count: number, base: number): number {
+  return base > 0 ? Math.round((count / base) * 100) : 0;
+}
+
+function formatDriveDate(iso: string | null): string {
+  if (!iso) return 'Date TBD';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'Date TBD';
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 export function EmployerDashboard() {
   const { data, isLoading, isError, error } = useEmployerPortal();
+  const reports = useEmployerReports('all');
+
+  // Reports is a separate query from the portal aggregate -- default to zeros while it's
+  // loading (or if it errors) so the KPI grid / funnel never crash on undefined data.
+  const funnel = reports.data?.funnel ?? [];
+  const repKpis = reports.data?.kpis ?? {
+    recommended: 0, shortlisted: 0, interviewsScheduled: 0, offersSent: 0, offersAccepted: 0, dropOffPct: 0, avgMatchScore: 0,
+  };
+  const funnelBase = funnel[0]?.count ?? 0;
+  const joined = funnel.length > 0 ? funnel[funnel.length - 1].count : repKpis.offersAccepted;
 
   return (
     <div className="page-wrap">
@@ -65,13 +122,48 @@ export function EmployerDashboard() {
               <div className="ktop">
                 <span className="kic">
                   <svg className="ic ic-sm" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    <path d="M9 5h6M7 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-2" /><path d="M9 3h6a2 2 0 010 4H9a2 2 0 010-4z" />
                   </svg>
                 </span>
-                <span className="klabel">Active drives</span>
+                <span className="klabel">Active registrations</span>
               </div>
-              <div className="kn">{data.dashboard.kpis.activeDrives}</div>
+              <div className="kn">{data.dashboard.kpis.activeRegistrations}</div>
+            </div>
+
+            <div className="kpi">
+              <div className="ktop">
+                <span className="kic">
+                  <svg className="ic ic-sm" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" />
+                  </svg>
+                </span>
+                <span className="klabel">Upcoming MatchDays</span>
+              </div>
+              <div className="kn">{data.dashboard.kpis.upcomingMatchDays}</div>
+            </div>
+
+            <div className="kpi">
+              <div className="ktop">
+                <span className="kic">
+                  <svg className="ic ic-sm" viewBox="0 0 24 24">
+                    <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6" />
+                  </svg>
+                </span>
+                <span className="klabel">Jobseekers shared</span>
+              </div>
+              <div className="kn">{repKpis.recommended}</div>
+            </div>
+
+            <div className="kpi">
+              <div className="ktop">
+                <span className="kic">
+                  <svg className="ic ic-sm" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                  </svg>
+                </span>
+                <span className="klabel">Shortlisted</span>
+              </div>
+              <div className="kn">{repKpis.shortlisted}</div>
             </div>
 
             <div className="kpi">
@@ -81,7 +173,7 @@ export function EmployerDashboard() {
                     <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /><path d="M9 15l2 2 4-4" />
                   </svg>
                 </span>
-                <span className="klabel">Upcoming interviews</span>
+                <span className="klabel">Interviews scheduled</span>
               </div>
               <div className="kn">{data.dashboard.kpis.upcomingInterviews}</div>
             </div>
@@ -97,6 +189,26 @@ export function EmployerDashboard() {
               </div>
               <div className="kn">{data.dashboard.kpis.totalSlots}</div>
             </div>
+
+            <div className="kpi">
+              <div className="ktop">
+                <span className="kic">
+                  <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" /></svg>
+                </span>
+                <span className="klabel">Offers sent</span>
+              </div>
+              <div className="kn">{repKpis.offersSent}</div>
+            </div>
+
+            <div className="kpi">
+              <div className="ktop">
+                <span className="kic">
+                  <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z" /></svg>
+                </span>
+                <span className="klabel">Joined</span>
+              </div>
+              <div className="kn">{joined}</div>
+            </div>
           </div>
 
           <div className="dash-cols">
@@ -104,17 +216,29 @@ export function EmployerDashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3>
-                    <svg className="ic ic-sm" viewBox="0 0 24 24">
-                      <path d="M9 5h6M9 5a2 2 0 00-2 2v0a2 2 0 002 2h6a2 2 0 002-2v0a2 2 0 00-2-2M7 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
-                    </svg>
-                    Registrations
+                    <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z" /></svg>
+                    Hiring funnel
                   </h3>
+                  <Link className="more" to="/employer/reports">
+                    View reports <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </Link>
                 </div>
                 <div className="card-body">
-                  {data.dashboard.registrations.length === 0 ? (
-                    <p className="hint">No registrations yet — they&apos;ll appear here once you register for a drive.</p>
+                  {funnel.length === 0 || funnelBase === 0 ? (
+                    <p className="hint">No pipeline data yet — the funnel fills in once you share jobseekers for a drive.</p>
                   ) : (
-                    <p className="hint">{data.dashboard.registrations.length} registration(s).</p>
+                    funnel.map((f) => {
+                      const pct = funnelPct(f.count, funnelBase);
+                      return (
+                        <div className="funnel-row" key={f.stage}>
+                          <span className="flbl">{f.stage}</span>
+                          <span className="ftrack">
+                            <span className="ffill" style={{ width: `${Math.max(pct, 8)}%` }}>{f.count}</span>
+                          </span>
+                          <span className="fpct">{pct}%</span>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -122,15 +246,63 @@ export function EmployerDashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3>
-                    <svg className="ic ic-sm" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /></svg>
-                    Shortlist
+                    <svg className="ic ic-sm" viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                    Active drives
                   </h3>
+                  <Link className="more" to="/employer/registrations">
+                    All registrations <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </Link>
                 </div>
                 <div className="card-body">
-                  {data.dashboard.shortlist.length === 0 ? (
-                    <p className="hint">No shortlisted jobseekers yet — they&apos;ll show up here once you shortlist someone from a drive.</p>
+                  {data.dashboard.activeDrives.length === 0 ? (
+                    <p className="hint">No active drives yet — register for a drive to see it here.</p>
                   ) : (
-                    <p className="hint">{data.dashboard.shortlist.length} jobseeker(s).</p>
+                    data.dashboard.activeDrives.map((d) => (
+                      <div className="drive-row" key={d.id}>
+                        <span className="drive-ic">
+                          <svg className="ic" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></svg>
+                        </span>
+                        <div>
+                          <div className="dn">{d.name}</div>
+                          <div className="dm">{formatDriveDate(d.primaryEventDate)}</div>
+                        </div>
+                        <div className="dmeta">
+                          <span className={`status-pill ${driveStatusClass(d.status)}`}>{d.status}</span>
+                          <div className="dcount">{d.sharedCount} shared</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <h3>
+                    <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M12 8v4l3 2" /><circle cx="12" cy="12" r="9" /></svg>
+                    Pending actions
+                  </h3>
+                  <span className="status-pill st-short">{data.dashboard.pendingActions.length} to do</span>
+                </div>
+                <div className="card-body">
+                  {data.dashboard.pendingActions.length === 0 ? (
+                    <p className="hint">You&apos;re all caught up 🎉</p>
+                  ) : (
+                    data.dashboard.pendingActions.map((a) => (
+                      <div className="action-row" key={a.id}>
+                        <span className={`action-ic a-${a.urgency}`}>
+                          <svg className="ic ic-sm" viewBox="0 0 24 24">{actionGlyph(a.urgency)}</svg>
+                        </span>
+                        <div>
+                          <div className="at">{a.text}</div>
+                          <div className={`ad ${actionDueClass(a.urgency)}`}>{actionDueLabel(a.urgency)}</div>
+                        </div>
+                        <Link className="action-btn" to={ACTION_ROUTE[a.kind]}>{ACTION_LABEL[a.kind]}</Link>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -141,22 +313,11 @@ export function EmployerDashboard() {
                 <div className="card-head">
                   <h3>
                     <svg className="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
-                    Upcoming interviews
+                    MatchDay calendar
                   </h3>
                 </div>
                 <div className="card-body">
-                  {data.dashboard.calendar.length === 0 ? (
-                    <p className="hint">No upcoming interviews scheduled.</p>
-                  ) : (
-                    data.dashboard.calendar.map((entry) => (
-                      <div className="drive-row" key={entry.id}>
-                        <div>
-                          <div className="dn">{formatCalendarEntry(entry)}</div>
-                          <div className="dm">Drive {entry.driveId}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                  <MatchDayCalendar calendarEvents={data.dashboard.calendarEvents} />
                 </div>
               </div>
 

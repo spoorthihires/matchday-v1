@@ -37,13 +37,42 @@ export interface EmployerNotificationsResponse {
   lastReadAt: string | null;
 }
 
+// Task 1 (Employer Dashboard V1 rebuild) additions -- derived, no-PII fields
+// the richer dashboard layout needs. `dashboard.activeDrives` (list) is distinct
+// from `kpis.activeDrives` (count, pre-existing) -- keep both names as-is, they
+// mirror the server's shape exactly.
+export interface EmployerDashboardActiveDrive {
+  id: string;
+  name: string;
+  status: string;
+  primaryEventDate: string | null;
+  sharedCount: number;
+}
+export interface EmployerPendingAction {
+  id: string;
+  text: string;
+  kind: 'register' | 'slot' | 'shortlist';
+  urgency: 'today' | 'soon' | 'over';
+}
+export interface EmployerCalendarEvent {
+  date: string; // ISO
+  driveName: string;
+  status: string;
+}
+
 export interface EmployerDashboard {
-  kpis: { activeDrives: number; upcomingInterviews: number; totalSlots: number };
+  kpis: {
+    activeDrives: number; upcomingInterviews: number; totalSlots: number;
+    activeRegistrations: number; upcomingMatchDays: number;
+  };
   calendar: EmployerCalendarEntry[];
   registrations: unknown[];
   shortlist: unknown[];
   notifications: EmployerNotification[];
   notificationsUnread: number;
+  activeDrives: EmployerDashboardActiveDrive[];
+  pendingActions: EmployerPendingAction[];
+  calendarEvents: EmployerCalendarEvent[];
 }
 
 export interface EmployerPortalResponse {
