@@ -62,7 +62,7 @@ export function TemplatesPage() {
               <i className="ti ti-table" /> Table
             </button>
           </span>
-          <button className="btn btn-primary" onClick={() => setEditor({ mode: 'create' })}>
+          <button className="btn btn-accent" onClick={() => setEditor({ mode: 'create' })}>
             <i className="ti ti-plus" /> Create Template
           </button>
         </div>

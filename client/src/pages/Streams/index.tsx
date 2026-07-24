@@ -61,7 +61,7 @@ export function StreamsPage() {
           <div className="grow" />
           <button className="btn btn-ghost" onClick={() => navigate('/streams/rules')}><i className="ti ti-adjustments" /> Selection Rules</button>
           <button className="btn btn-ghost" onClick={exportCsv}><i className="ti ti-download" /> Export</button>
-          <button className="btn btn-primary" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Stream</button>
+          <button className="btn btn-accent" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Stream</button>
         </div>
         {isError && <div className="card"><p style={{ padding: 20, color: 'var(--danger)' }}>Failed to load streams: {error instanceof Error ? error.message : 'Unknown error'}</p></div>}
         {isLoading && <div className="dm-empty" style={{ padding: 20 }}>Loading streams…</div>}

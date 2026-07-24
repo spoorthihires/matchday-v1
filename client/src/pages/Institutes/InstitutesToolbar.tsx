@@ -51,7 +51,7 @@ export function InstitutesToolbar({
       <div className="grow" />
       <button className="btn btn-ghost" onClick={onOwnership}><i className="ti ti-users-group" /> Ownership</button>
       <button className="btn btn-ghost" onClick={onExport}><i className="ti ti-download" /> Export</button>
-      <button className="btn btn-primary" onClick={onCreate}><i className="ti ti-plus" /> Create Institute</button>
+      <button className="btn btn-accent" onClick={onCreate}><i className="ti ti-plus" /> Create Institute</button>
     </div>
   );
 }

@@ -9,20 +9,26 @@ import type { DashboardOverview } from '../../types/dashboard.js';
 // Any future/unknown key falls back to a per-group color family.
 const KPI_ICON: Record<string, { icon: string; tone: string }> = {
   activeDrives: { icon: 'ti-calendar-event', tone: 'i-indigo' },
-  upcomingWednesdays: { icon: 'ti-calendar-star', tone: 'i-violet' },
+  upcomingWednesdays: { icon: 'ti-calendar-star', tone: 'i-accent' },
   employerRegistrations: { icon: 'ti-briefcase', tone: 'i-indigo' },
   instituteParticipation: { icon: 'ti-building-community', tone: 'i-teal' },
   jobseekersAdded: { icon: 'ti-user-plus', tone: 'i-teal' },
   profilesCompleted: { icon: 'ti-id-badge-2', tone: 'i-teal' },
-  evaluationsCompleted: { icon: 'ti-clipboard-check', tone: 'i-amber' },
+  evaluationsCompleted: { icon: 'ti-clipboard-check', tone: 'i-accent' },
   matchReady: { icon: 'ti-user-check', tone: 'i-green' },
   slotsBooked: { icon: 'ti-calendar-check', tone: 'i-violet' },
   slotsAvailable: { icon: 'ti-calendar-plus', tone: 'i-indigo' },
   shortlisted: { icon: 'ti-list-check', tone: 'i-green' },
-  offersSent: { icon: 'ti-send', tone: 'i-green' },
+  offersSent: { icon: 'ti-send', tone: 'i-accent' },
   joined: { icon: 'ti-confetti', tone: 'i-green' },
   dropOffRate: { icon: 'ti-user-off', tone: 'i-red' },
 };
+
+// The 3 KPI keys that get the orange "accent" treatment (tone above + the
+// `.kpi.acc` left-rail modifier below) — the "attention/outcome" metrics
+// that mirror the dashboard's own attention callout ("evaluations pending")
+// and outcome-facing metrics, per the V1 design pass.
+const ACCENT_KEYS = new Set(['upcomingWednesdays', 'evaluationsCompleted', 'offersSent']);
 
 const GROUP_FALLBACK_ICON: Record<string, { icon: string; tone: string }> = {
   Demand: { icon: 'ti-briefcase', tone: 'i-indigo' },
@@ -106,7 +112,7 @@ export function KpiSection({ kpis }: { kpis: DashboardOverview['kpis'] }) {
           {kpis.map((k) => {
             const { icon, tone } = kpiIcon(k);
             return (
-              <div className="kpi" key={k.key}>
+              <div className={`kpi${ACCENT_KEYS.has(k.key) ? ' acc' : ''}`} key={k.key}>
                 <div className="kh"><span className={`ic ${tone}`}><i className={`ti ${icon}`} /></span> {k.label}</div>
                 <div className="kv mono">{k.display}</div>
                 <div className={`kd ${k.delta.direction}`}>

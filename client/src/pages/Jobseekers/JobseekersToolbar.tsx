@@ -84,7 +84,7 @@ export function JobseekersToolbar({
       <div className="grow" />
       <button className="btn btn-ghost" onClick={onUpload}><i className="ti ti-upload" /> Bulk Upload</button>
       <button className="btn btn-ghost" onClick={onExport}><i className="ti ti-download" /> Export</button>
-      <button className="btn btn-primary" onClick={onCreate}><i className="ti ti-plus" /> Add Candidate</button>
+      <button className="btn btn-accent" onClick={onCreate}><i className="ti ti-plus" /> Add Candidate</button>
     </div>
   );
 }

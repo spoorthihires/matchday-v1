@@ -41,7 +41,7 @@ export function EvaluationsPage() {
           </select>
           <div className="grow" />
           <button className="btn btn-ghost" onClick={() => navigate('/evaluations/monitor')}><i className="ti ti-activity-heartbeat" /> Live Monitoring</button>
-          <button className="btn btn-primary" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Configuration</button>
+          <button className="btn btn-accent" onClick={() => setEditor({ mode: 'create' })}><i className="ti ti-plus" /> Create Configuration</button>
         </div>
         {isError && <div className="card"><p style={{ padding: 20, color: 'var(--danger)' }}>Failed to load configurations: {error instanceof Error ? error.message : 'Unknown error'}</p></div>}
         {isLoading && <div className="dm-empty" style={{ padding: 20 }}>Loading configurations…</div>}

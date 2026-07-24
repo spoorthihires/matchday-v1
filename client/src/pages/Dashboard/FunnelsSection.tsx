@@ -7,8 +7,8 @@ import type { DashboardOverview, FunnelStep } from '../../types/dashboard.js';
 // known, fixed funnel identities).
 const ACCENTS: Record<'supply' | 'demand' | 'hiring', string> = {
   supply: 'linear-gradient(90deg,#0aa3a3,#12bdbd)',
-  demand: 'linear-gradient(90deg,#2f4fe0,#5a74ee)',
-  hiring: 'linear-gradient(90deg,#7c5cff,#9d84ff)',
+  demand: 'linear-gradient(90deg,#1e3a8a,#3a5bc0)',
+  hiring: 'linear-gradient(90deg,#FF6F0B,#ff9247)',
 };
 
 function Funnel({
