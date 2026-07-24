@@ -80,7 +80,7 @@ describe('EmployerShell', () => {
     // Scoped to .sidebar: the topbar's user-menu dropdown also has a "Settings" entry, so an
     // unscoped query for that label would match two buttons.
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
-    for (const label of ['Dashboard', 'Available Drives', 'Registered Drives', 'Candidates', 'Interviews', 'Live Drive', 'Reports', 'Settings']) {
+    for (const label of ['Dashboard', 'Available Drives', 'Registered Drives', 'Jobseekers', 'Interviews', 'Live Drive', 'Reports', 'Settings']) {
       expect(sidebar.getByRole('button', { name: new RegExp(label) })).toBeInTheDocument();
     }
     expect(screen.getByText('DASHBOARD CONTENT')).toBeInTheDocument();
@@ -100,10 +100,10 @@ describe('EmployerShell', () => {
     expect(await screen.findByText('REGISTRATIONS PAGE')).toBeInTheDocument();
   });
 
-  it('navigates to /employer/drives when the Candidates nav item is clicked (candidates are viewed per-drive)', async () => {
+  it('navigates to /employer/drives when the Jobseekers nav item is clicked (candidates are viewed per-drive)', async () => {
     const { container } = renderShell();
     const sidebar = within(container.querySelector('.sidebar') as HTMLElement);
-    await userEvent.click(sidebar.getByRole('button', { name: /Candidates/ }));
+    await userEvent.click(sidebar.getByRole('button', { name: /Jobseekers/ }));
     expect(await screen.findByText('DRIVES PAGE')).toBeInTheDocument();
   });
 

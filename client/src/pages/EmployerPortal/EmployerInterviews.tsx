@@ -68,7 +68,7 @@ export function EmployerInterviews() {
           ? <p className="hint">No slots yet. Create a slot first (View slots) to schedule interviews into it.</p>
           : (
             <div className={`field${formErr ? ' show-err' : ''}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <select className="select" aria-label="Candidate" value={jobseekerId} onChange={(e) => setJobseekerId(e.target.value)} style={{ maxWidth: 220 }}>
+              <select className="select" aria-label="Jobseeker" value={jobseekerId} onChange={(e) => setJobseekerId(e.target.value)} style={{ maxWidth: 220 }}>
                 {grantedCands.map((c) => <option key={c.jobseekerId} value={c.jobseekerId}>{c.revealed?.name ?? c.code} · {c.code}</option>)}
               </select>
               <select className="select" aria-label="Slot" value={slotId} onChange={(e) => { setSlotId(e.target.value); const s = slotItems.find((x) => x.id === e.target.value); if (s) setTime(s.start); }} style={{ maxWidth: 220 }}>

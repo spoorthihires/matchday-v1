@@ -92,7 +92,7 @@ export default function App() {
         <Route path="/employer/drives/:id/offers" element={<RoleRoute role="employer"><EmployerShell><EmployerOffers /></EmployerShell></RoleRoute>} />
         <Route path="/employer/registrations" element={<RoleRoute role="employer"><EmployerShell><EmployerRegistrations /></EmployerShell></RoleRoute>} />
         <Route path="/employer/reports" element={<RoleRoute role="employer"><EmployerShell><EmployerReports /></EmployerShell></RoleRoute>} />
-        <Route path="/employer/kanban" element={<RoleRoute role="employer"><EmployerShell><EmployerPipelineEntry target="board" title="Kanban" subtitle="Your hiring pipeline board." /></EmployerShell></RoleRoute>} />
+        <Route path="/employer/kanban" element={<RoleRoute role="employer"><EmployerShell><EmployerPipelineEntry target="board" title="Live Drive" subtitle="Your hiring pipeline board." /></EmployerShell></RoleRoute>} />
         <Route path="/employer/interviews" element={<RoleRoute role="employer"><EmployerShell><EmployerPipelineEntry target="interviews" title="Interviews" subtitle="Your scheduled interviews." /></EmployerShell></RoleRoute>} />
         <Route path="/employer/notifications" element={<RoleRoute role="employer"><EmployerShell><EmployerNotifications /></EmployerShell></RoleRoute>} />
         <Route path="/employer/support" element={<RoleRoute role="employer"><EmployerShell><EmployerSupport /></EmployerShell></RoleRoute>} />

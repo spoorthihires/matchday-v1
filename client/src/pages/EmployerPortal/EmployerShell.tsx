@@ -87,7 +87,7 @@ const NAV_SECTIONS: NavSection[] = [
       },
       {
         slug: 'candidates',
-        label: 'Candidates',
+        label: 'Jobseekers',
         path: '/employer/drives',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">

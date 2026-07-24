@@ -3,7 +3,7 @@ import { useEmployerRegistrations } from './hooks/useEmployerRegistrations.js';
 import './employerBase.js';
 
 // The pipeline board and interviews are per-drive (/employer/drives/:id/board and /:id/interviews).
-// The sidebar "Kanban" / "Interviews" items route here; this resolves the employer's
+// The sidebar "Live Drive" / "Interviews" items route here; this resolves the employer's
 // approved-registration drive(s): auto-open when there's exactly one, offer a picker when there
 // are several, or show an empty state prompting registration when there are none.
 export function EmployerPipelineEntry({ target, title, subtitle }: {
