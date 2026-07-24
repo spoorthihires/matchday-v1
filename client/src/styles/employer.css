@@ -29,15 +29,18 @@
      ============================================================ */
   .employer-app {
     --indigo: #1e3a8a;
-    --indigo-d: #152552;
-    --indigo-dd: #0f1a37;
-    --wash: #f2f3f8;
-    --wash-2: #f6f7fa;
+    --indigo-d: #162d6e;
+    --indigo-dd: #0f1f4d;
+    --wash: #e8eef8;
+    --wash-2: #f2f5fc;
+    --orange: #FF6F0B;
+    --orange-d: #e0600a;
+    --orange-bg: #fff3ea;
     --ink: #14162b;
     --grey: #5b6172;
     --grey-2: #868ca0;
-    --line: #e3e8f7;
-    --line-2: #d5dbf5;
+    --line: #dde4f0;
+    --line-2: #c9d3e8;
     --white: #ffffff;
     --green: #17a673;
     --green-bg: #e7f6ef;
@@ -46,9 +49,9 @@
     --radius: 14px;
     --radius-sm: 10px;
     --radius-lg: 22px;
-    --shadow-sm: 0 1px 2px rgba(15,26,55,.05), 0 1px 3px rgba(15,26,55,.06);
-    --shadow: 0 4px 14px rgba(15,26,55,.07), 0 2px 6px rgba(15,26,55,.05);
-    --shadow-lg: 0 18px 48px rgba(15,26,55,.14), 0 6px 16px rgba(15,26,55,.08);
+    --shadow-sm: 0 1px 2px rgba(30,58,138,.05), 0 1px 3px rgba(30,58,138,.06);
+    --shadow: 0 4px 14px rgba(30,58,138,.07), 0 2px 6px rgba(30,58,138,.05);
+    --shadow-lg: 0 18px 48px rgba(30,58,138,.14), 0 6px 16px rgba(30,58,138,.08);
     --maxw: 1180px;
     --font: 'Inter', system-ui, -apple-system, sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -66,6 +69,7 @@
      (.employer-app[data-theme]) — .employer-app never carries the attribute itself. */
   [data-theme="dark"] .employer-app {
     --indigo: #5b7fe0; --indigo-d: #a9bdfa; --indigo-dd: #0f1a37;
+    --orange: #ff9a4d; --orange-d: #ffb37a; --orange-bg: rgba(255,111,11,.16);
     --wash: rgba(91,127,224,.12); --wash-2: rgba(255,255,255,.05);
     --ink: #e8ebf5; --grey: #9aa2bc; --grey-2: #75809e;
     --line: #2b3358; --line-2: #3c4670; --white: #1a2036;
@@ -124,12 +128,17 @@
   .employer-app .nav-inner { display: flex; align-items: center; gap: 28px; height: 68px; }
   .employer-app .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.02em; font-size: 18px; }
   .employer-app .logo-mark {
-    width: 32px; height: 32px; border-radius: 9px; flex: none;
-    background: linear-gradient(135deg, var(--green) 0%, var(--indigo) 68%);
-    display: grid; place-items: center; color: #fff; box-shadow: 0 4px 12px rgba(30,58,138,.28);
+    width: 32px; height: 32px; flex: none;
+    display: flex; align-items: center; justify-content: center;
   }
   .employer-app .brand small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .16em;
     text-transform: uppercase; color: var(--indigo); margin-top: -3px; }
+  .employer-app .brand-text { display: flex; flex-direction: column; }
+  .employer-app .brand-name { font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .employer-app .brand-name .match { color: var(--indigo); }
+  .employer-app .brand-name .day { color: var(--orange); }
+  .employer-app .brand-tagline { display: block; font-size: 10px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--grey-2); margin-top: 2px; }
   .employer-app .nav-links { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
   .employer-app .nav-link { padding: 9px 13px; border-radius: 9px; font-size: 14.5px; font-weight: 500; color: var(--grey);
     transition: .15s; }
