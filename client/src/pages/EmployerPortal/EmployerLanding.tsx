@@ -13,12 +13,12 @@ export function EmployerLanding() {
         <div className="wrap nav-inner">
           <Link className="brand" to="/employer">
             <span className="logo-mark">
-              <svg className="ic ic-sm" viewBox="0 0 24 24">
-                <path d="M4 7l8-4 8 4-8 4-8-4z" />
-                <path d="M4 7v6l8 4 8-4V7" />
+              <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
+                <rect x="2" y="2" width="32" height="32" rx="5" stroke="#1E3A8A" strokeWidth="2.5" fill="white" />
+                <polyline points="8,18 15,25 28,11" stroke="#FF6F0B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <span>Hiringhood<small>MatchDay</small></span>
+            <span className="brand-text"><span className="brand-name"><span className="match">Match</span><span className="day">Day</span></span><span className="brand-tagline">AI/ML &amp; Data Hiring Drive</span></span>
           </Link>
           <div className="nav-cta">
             <button className="btn btn-ghost" onClick={() => navigate('/employer/login')}>Log in</button>
@@ -35,7 +35,7 @@ export function EmployerLanding() {
             <h1 className="hero-title">Hire <span className="accent">pre-evaluated</span> AI/ML talent, every Wednesday.</h1>
             <p className="hero-sub">
               MatchDay is Hiringhood&rsquo;s weekly hiring event. Register a role, book a Wednesday slot, and review
-              candidates who&rsquo;ve already cleared aptitude, coding, and a TARA interview &mdash; ready to
+              jobseekers who&rsquo;ve already cleared aptitude, coding, and a TARA interview &mdash; ready to
               interview, not just to screen.
             </p>
             <div className="hero-actions">

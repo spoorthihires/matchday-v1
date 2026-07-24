@@ -7,11 +7,11 @@ import './employerBase.js';
 const CATS: { key: EmployerNotificationCategory | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'registration', label: 'Registrations' },
-  { key: 'candidate', label: 'Candidates' },
+  { key: 'candidate', label: 'Jobseekers' },
   { key: 'slot', label: 'Slots' },
 ];
 const TINT: Record<EmployerNotificationCategory, string> = { registration: 'ni-ok', candidate: 'ni-cand', slot: 'ni-warn' };
-const CAT_LABEL: Record<EmployerNotificationCategory, string> = { registration: 'Registration', candidate: 'Candidate', slot: 'Slot' };
+const CAT_LABEL: Record<EmployerNotificationCategory, string> = { registration: 'Registration', candidate: 'Jobseeker', slot: 'Slot' };
 
 export function EmployerNotifications() {
   const [cat, setCat] = useState<EmployerNotificationCategory | 'all'>('all');

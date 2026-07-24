@@ -113,6 +113,37 @@ describe('EmployerRegister', () => {
     expect(fetch).not.toHaveBeenCalledWith(expect.stringContaining('/me/employer/registrations'), expect.anything());
   });
 
+  it('shows the JD-prefill banner on input steps, but not on the role step or the review step', async () => {
+    seedAuth();
+    mockFetch();
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('ActiveOne')).toBeInTheDocument());
+    // Step 1 (role & JD): no banner yet
+    expect(screen.queryByText(/Fields pre-filled from your JD/i)).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Role title'), 'Data Analyst');
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Step 2 (eligibility): banner shows
+    expect(screen.getByText(/Fields pre-filled from your JD/i)).toBeInTheDocument();
+
+    // advance through the remaining input steps (3-6) to reach the review step
+    await userEvent.type(screen.getByLabelText('Must-have skills'), 'SQL{enter}');
+    await userEvent.click(screen.getByRole('button', { name: /continue/i })); // -> step 3
+    await userEvent.clear(screen.getByLabelText('CTC min (LPA)'));
+    await userEvent.type(screen.getByLabelText('CTC min (LPA)'), '6');
+    await userEvent.clear(screen.getByLabelText('CTC max (LPA)'));
+    await userEvent.type(screen.getByLabelText('CTC max (LPA)'), '10');
+    await userEvent.click(screen.getByRole('button', { name: /continue/i })); // -> step 4
+    await userEvent.click(screen.getByRole('button', { name: /continue/i })); // -> step 5
+    await userEvent.click(screen.getByRole('button', { name: /continue/i })); // -> step 6
+    await userEvent.click(screen.getByRole('button', { name: /continue/i })); // -> step 7
+
+    // Step 7 (review & submit): banner hidden again
+    expect(screen.queryByText(/Fields pre-filled from your JD/i)).not.toBeInTheDocument();
+  });
+
   it('completes all steps, POSTs the expected body, and shows the success screen', async () => {
     const fetchMock = mockFetch();
     seedAuth();

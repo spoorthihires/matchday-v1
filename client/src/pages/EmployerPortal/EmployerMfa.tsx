@@ -46,16 +46,16 @@ export function EmployerMfa() {
           <div className="aa-grid" />
           <Link className="brand" to="/employer">
             <span className="logo-mark">
-              <svg className="ic ic-sm" viewBox="0 0 24 24">
-                <path d="M4 7l8-4 8 4-8 4-8-4z" />
-                <path d="M4 7v6l8 4 8-4V7" />
+              <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
+                <rect x="2" y="2" width="32" height="32" rx="5" stroke="#1E3A8A" strokeWidth="2.5" fill="white" />
+                <polyline points="8,18 15,25 28,11" stroke="#FF6F0B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <span>Hiringhood<small>MatchDay</small></span>
+            <span className="brand-text"><span className="brand-name"><span className="match">Match</span><span className="day">Day</span></span><span className="brand-tagline">AI/ML &amp; Data Hiring Drive</span></span>
           </Link>
           <div className="aa-body">
             <h2>Just confirming it&rsquo;s you.</h2>
-            <p>Multi-factor authentication keeps your candidate data and hiring pipeline secure.</p>
+            <p>Multi-factor authentication keeps your jobseeker data and hiring pipeline secure.</p>
             <ul className="aa-list">
               <li>
                 <span className="ck"><svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span>

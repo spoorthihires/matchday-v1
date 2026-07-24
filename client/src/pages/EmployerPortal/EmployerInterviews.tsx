@@ -45,7 +45,7 @@ export function EmployerInterviews() {
   useEffect(() => { if (!jobseekerId && grantedCands.length) setJobseekerId(grantedCands[0].jobseekerId); }, [grantedCands, jobseekerId]);
 
   const submit = () => {
-    if (!jobseekerId || !slotId || !/^\d{2}:\d{2}$/.test(time)) { setFormErr('Pick a candidate, a slot and a valid time.'); return; }
+    if (!jobseekerId || !slotId || !/^\d{2}:\d{2}$/.test(time)) { setFormErr('Pick a jobseeker, a slot and a valid time.'); return; }
     setFormErr(null);
     const names = interviewers.split(',').map((s) => s.trim()).filter(Boolean);
     schedule.mutate({ jobseekerId, slotId, time, interviewers: names.length ? names : undefined }, { onSuccess: () => setInterviewers('') });
@@ -56,19 +56,19 @@ export function EmployerInterviews() {
   return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
-        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to candidates
+        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
-      <div className="card"><h2>Interview schedule</h2><p className="hint">Schedule consented candidates into your slots — confirm, reschedule, or cancel.</p></div>
+      <div className="card"><h2>Interview schedule</h2><p className="hint">Schedule consented jobseekers into your slots — confirm, reschedule, or cancel.</p></div>
 
       <div className="card" style={{ display: 'grid', gap: 10 }}>
         <h3>Schedule an interview</h3>
         {grantedCands.length === 0
-          ? <p className="hint">No consented candidates yet. A candidate must grant a reveal request (Consent status) before you can schedule an interview.</p>
+          ? <p className="hint">No consented jobseekers yet. A jobseeker must grant a reveal request (Consent status) before you can schedule an interview.</p>
           : slotItems.length === 0
           ? <p className="hint">No slots yet. Create a slot first (View slots) to schedule interviews into it.</p>
           : (
             <div className={`field${formErr ? ' show-err' : ''}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <select className="select" aria-label="Candidate" value={jobseekerId} onChange={(e) => setJobseekerId(e.target.value)} style={{ maxWidth: 220 }}>
+              <select className="select" aria-label="Jobseeker" value={jobseekerId} onChange={(e) => setJobseekerId(e.target.value)} style={{ maxWidth: 220 }}>
                 {grantedCands.map((c) => <option key={c.jobseekerId} value={c.jobseekerId}>{c.revealed?.name ?? c.code} · {c.code}</option>)}
               </select>
               <select className="select" aria-label="Slot" value={slotId} onChange={(e) => { setSlotId(e.target.value); const s = slotItems.find((x) => x.id === e.target.value); if (s) setTime(s.start); }} style={{ maxWidth: 220 }}>

@@ -20,7 +20,7 @@ function renderEntry() {
         <MemoryRouter initialEntries={['/employer/kanban']}>
           <AuthProvider>
             <Routes>
-              <Route path="/employer/kanban" element={<EmployerPipelineEntry target="board" title="Kanban" subtitle="x" />} />
+              <Route path="/employer/kanban" element={<EmployerPipelineEntry target="board" title="Live Drive" subtitle="x" />} />
               <Route path="/employer/drives/:id/board" element={<div>BOARD PAGE</div>} />
               <Route path="/employer/drives" element={<div>DRIVES MARKETPLACE</div>} />
             </Routes>

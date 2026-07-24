@@ -7,8 +7,8 @@ import './employerBase.js';
 function errMsg(e: unknown): string { return e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Something went wrong'; }
 const GREEN_STAGES = new Set(['Offered', 'Accepted', 'Joined']);
 const KPI_DEFS: { key: string; label: string; suffix?: string; warn?: (v: number) => boolean }[] = [
-  { key: 'recommended', label: 'Candidates recommended' },
-  { key: 'shortlisted', label: 'Candidates shortlisted' },
+  { key: 'recommended', label: 'Jobseekers recommended' },
+  { key: 'shortlisted', label: 'Jobseekers shortlisted' },
   { key: 'interviewsScheduled', label: 'Interviews scheduled' },
   { key: 'offersSent', label: 'Offers sent' },
   { key: 'offersAccepted', label: 'Offers accepted' },

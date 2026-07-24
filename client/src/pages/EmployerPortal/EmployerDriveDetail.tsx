@@ -156,7 +156,7 @@ export function EmployerDriveDetail() {
                 <div><div className="fv">{data.eventDates.length ? data.eventDates.map(formatEventDate).join(', ') : '—'}</div><div className="fl">Event dates</div></div>
               </div>
               <div className="fact">
-                <div><div className="fv">{data.candCap}</div><div className="fl">Candidate cap</div></div>
+                <div><div className="fv">{data.candCap}</div><div className="fl">Jobseeker cap</div></div>
               </div>
               <div className="fact">
                 <div><div className="fv">{data.empCap}</div><div className="fl">Employer cap</div></div>
@@ -202,7 +202,7 @@ export function EmployerDriveDetail() {
               title={approvedForDrive ? undefined : 'Available once your registration is approved'}
               onClick={() => navigate(`/employer/drives/${id}/candidates`)}
             >
-              View candidates
+              View jobseekers
             </button>
             <div className="ap-note">
               <svg className="ic" viewBox="0 0 24 24" style={{ width: 13, height: 13 }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>

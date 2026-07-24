@@ -30,15 +30,15 @@ export function EmployerCandidatePassport() {
   if (passport.isLoading) return <div className="page-wrap"><div className="card" style={{ padding: 20 }}>Loading passport…</div></div>;
   if (passport.isError || !p) return (
     <div className="page-wrap">
-      <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>← Back to candidates</button>
-      <div className="card" style={{ padding: 20 }}><h3>Candidate not found</h3><p className="hint">This candidate isn&apos;t in this drive&apos;s pool.</p></div>
+      <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>← Back to jobseekers</button>
+      <div className="card" style={{ padding: 20 }}><h3>Jobseeker not found</h3><p className="hint">This jobseeker isn&apos;t in this drive&apos;s pool.</p></div>
     </div>
   );
 
   return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
-        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to candidates
+        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
 
       <div className="card pp-snap-head">
@@ -102,7 +102,7 @@ export function EmployerCandidatePassport() {
             const c = p.consent;
             const st = !c ? 'none' : c.status === 'requested' ? (c.expired ? 'expired' : 'waiting') : c.status === 'granted' ? 'interested' : 'declined';
             const busy = requestReveal.isPending || remindReveal.isPending || withdrawReveal.isPending;
-            const label = { none: 'Not requested', waiting: 'Waiting for the candidate to consent', expired: 'Request expired', interested: 'Consent granted — identity revealed', declined: 'Candidate declined' }[st];
+            const label = { none: 'Not requested', waiting: 'Waiting for the jobseeker to consent', expired: 'Request expired', interested: 'Consent granted — identity revealed', declined: 'Jobseeker declined' }[st];
             return (
               <>
                 <p className="hint">{label}{st === 'waiting' && c?.expiresAt ? ` · expires ${new Date(c.expiresAt).toLocaleDateString()}` : ''}</p>
@@ -111,7 +111,7 @@ export function EmployerCandidatePassport() {
                   {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => remindReveal.mutate(jsId)}>Send reminder</button>}
                   {(st === 'waiting' || st === 'expired') && <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => withdrawReveal.mutate(jsId)}>Withdraw</button>}
                 </div>
-                {st === 'none' && p.decision !== 'Shortlisted' && <p className="hint">Shortlist this candidate to request a reveal.</p>}
+                {st === 'none' && p.decision !== 'Shortlisted' && <p className="hint">Shortlist this jobseeker to request a reveal.</p>}
               </>
             );
           })()}

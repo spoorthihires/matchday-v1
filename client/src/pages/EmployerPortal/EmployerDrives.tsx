@@ -73,7 +73,7 @@ function DriveCard({ drive, onView, onRegister }: {
           <span className="mi-ic">
             <svg className="ic ic-sm" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /></svg>
           </span>
-          <div><div className="mv">{drive.candCap}</div><div className="ml2">Candidate cap</div></div>
+          <div><div className="mv">{drive.candCap}</div><div className="ml2">Jobseeker cap</div></div>
         </div>
         <div className="dmeta-item">
           <span className="mi-ic">
@@ -116,7 +116,7 @@ export function EmployerDrives() {
         </div>
         <span className="privacy-chip">
           <svg className="ic ic-sm" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
-          Aggregate view — no candidate identities shown
+          Aggregate view — no jobseeker identities shown
         </span>
       </div>
 

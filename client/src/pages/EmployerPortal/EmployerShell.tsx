@@ -53,7 +53,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         slug: 'registrations',
-        label: 'Registrations',
+        label: 'Registered Drives',
         path: '/employer/registrations',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
@@ -62,12 +62,14 @@ const NAV_SECTIONS: NavSection[] = [
         ),
       },
       {
-        slug: 'candidates',
-        label: 'Candidates',
-        path: '/employer/drives',
+        slug: 'kanban',
+        label: 'Live Drive',
+        // The pipeline board is per-drive; this lands on a resolver that opens the employer's
+        // approved drive's board (auto when one, a picker when several, else an empty state).
+        path: '/employer/kanban',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
-            <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6M21 20a6 6 0 00-4-5.6" />
+            <rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="14" rx="1" />
           </svg>
         ),
       },
@@ -84,14 +86,12 @@ const NAV_SECTIONS: NavSection[] = [
         ),
       },
       {
-        slug: 'kanban',
-        label: 'Kanban',
-        // The pipeline board is per-drive; this lands on a resolver that opens the employer's
-        // approved drive's board (auto when one, a picker when several, else an empty state).
-        path: '/employer/kanban',
+        slug: 'candidates',
+        label: 'Jobseekers',
+        path: '/employer/drives',
         icon: (
           <svg className="ic" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="14" rx="1" />
+            <circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6M21 20a6 6 0 00-4-5.6" />
           </svg>
         ),
       },
@@ -169,9 +169,12 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
         <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
           <div className="sb-brand">
             <span className="logo-mark">
-              <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4-8-4z" /><path d="M4 7v6l8 4 8-4V7" /></svg>
+              <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
+                <rect x="2" y="2" width="32" height="32" rx="5" stroke="#1E3A8A" strokeWidth="2.5" fill="white" />
+                <polyline points="8,18 15,25 28,11" stroke="#FF6F0B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
-            <span>Hiringhood<small>MatchDay</small></span>
+            <span className="brand-text"><span className="brand-name"><span className="match">Match</span><span className="day">Day</span></span><span className="brand-tagline">AI/ML &amp; Data Hiring Drive</span></span>
           </div>
 
           <nav className="sb-nav">
@@ -220,7 +223,7 @@ export function EmployerShell({ children }: { children?: ReactNode }) {
             </button>
             <div className="tb-search">
               <svg className="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-              <input placeholder="Search drives, candidates, IDs…" aria-label="Search" />
+              <input placeholder="Search drives, jobseekers, IDs…" aria-label="Search" />
             </div>
             <div className="tb-actions">
               <button

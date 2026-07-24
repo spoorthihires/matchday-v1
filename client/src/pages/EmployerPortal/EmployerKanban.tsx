@@ -62,12 +62,12 @@ export function EmployerKanban() {
   return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
-        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to candidates
+        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
       <div className="card">
         <h2>Hiring pipeline</h2>
         <p className="hint">
-          Private to your team. Identities appear once a candidate consents.{' '}
+          Private to your team. Identities appear once a jobseeker consents.{' '}
           <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/interviews`)}>Interviews</button>
           <button type="button" className="btn btn-ghost" onClick={() => navigate(`/employer/drives/${driveId}/offers`)}>Offer management</button>
         </p>
@@ -75,7 +75,7 @@ export function EmployerKanban() {
       {move.isError && <p className="otp-err" role="alert">{errMsg(move.error)}</p>}
       {board.isLoading ? <p className="hint">Loading…</p>
         : board.isError ? <p className="hint">{errMsg(board.error)}</p>
-        : items.length === 0 ? <p className="cand-empty hint">No candidates in the pipeline yet.</p>
+        : items.length === 0 ? <p className="cand-empty hint">No jobseekers in the pipeline yet.</p>
         : (
           <div className="kanban-board">
             {KANBAN_ALL.map((st) => {

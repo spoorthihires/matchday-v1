@@ -94,11 +94,11 @@ export function EmployerShortlist() {
   return (
     <div className="page-wrap">
       <button type="button" className="link-back dd-back" onClick={() => navigate(`/employer/drives/${driveId}/candidates`)}>
-        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to candidates
+        <svg className="ic ic-sm" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></svg> Back to jobseekers
       </button>
       <div className="card">
         <h2>Shortlist workspace — {drive.data?.name ?? '…'}</h2>
-        <p className="hint">Review, decide and package your shortlist. Identities stay redacted until a candidate confirms interest.</p>
+        <p className="hint">Review, decide and package your shortlist. Identities stay redacted until a jobseeker confirms interest.</p>
       </div>
 
       {dl && (
@@ -144,9 +144,9 @@ export function EmployerShortlist() {
       )}
 
       <div className="card">
-        {candidates.isLoading ? <p className="hint">Loading candidates…</p>
+        {candidates.isLoading ? <p className="hint">Loading jobseekers…</p>
           : candidates.isError ? <p className="hint">{errMsg(candidates.error)}</p>
-          : all.length === 0 ? <p className="cand-empty hint">No candidates in this drive's pool yet.</p>
+          : all.length === 0 ? <p className="cand-empty hint">No jobseekers in this drive's pool yet.</p>
           : (
             <div style={{ display: 'grid', gap: 8 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--grey)' }}>
@@ -170,7 +170,7 @@ export function EmployerShortlist() {
                   </div>
                 </div>
               ))}
-              {rows.length === 0 && <p className="hint">No candidates match these filters.</p>}
+              {rows.length === 0 && <p className="hint">No jobseekers match these filters.</p>}
             </div>
           )}
       </div>
